@@ -3,32 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#080C11">
-<title>Unit IQ</title>
+<meta name="theme-color" content="#1F3A63">
+<link rel="icon" type="image/png" href="/crest.png">
+<link rel="apple-touch-icon" href="/crest.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Clubhouse IQ">
+<title>Clubhouse IQ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --void:#080C11;
-  --deep:#0E141B;
-  --panel:#131C26;
-  --raised:#1A2531;
-  --edge:#243444;
-  --edge-lit:#33495E;
+  /* Country Club of Little Rock crest: navy, old gold, sky blue, limestone */
+  --void:#F3EFE5;
+  --deep:#FBF9F4;
+  --panel:#FFFFFF;
+  --raised:#EDE7D8;
+  --edge:#DDD5C3;
+  --edge-lit:#BFAE86;
 
-  --ice:#4FD3E8;
-  --ice-dim:#2A7F8F;
-  --ember:#FF7A3D;
-  --sulfur:#F2C14E;
-  --mint:#43D9A3;
-  --rose:#F2544B;
+  --ice:#1F3A63;
+  --ice-dim:#4F6F99;
+  --sky:#8DB8E0;
+  --ember:#B85C1E;
+  --sulfur:#9A7B32;
+  --mint:#2E7D5B;
+  --rose:#B3362D;
 
-  --text:#E6EDF4;
-  --mid:#9DB0C2;
-  --dim:#63788C;
+  --text:#1A2436;
+  --mid:#4A5466;
+  --dim:#7C8494;
 
-  --disp:'Barlow Condensed',Impact,sans-serif;
+  --disp:'Libre Caslon Text',Georgia,serif;
   --body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
   --mono:'IBM Plex Mono','Courier New',monospace;
   --r:4px;
@@ -39,45 +45,47 @@ body{
   background:var(--void);color:var(--text);font-family:var(--body);
   font-size:15px;line-height:1.5;min-height:100vh;
   background-image:
-    linear-gradient(rgba(79,211,232,.022) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(79,211,232,.022) 1px, transparent 1px);
+    linear-gradient(rgba(31,58,99,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31,58,99,.025) 1px, transparent 1px);
   background-size:36px 36px;
 }
 
 header{
-  background:linear-gradient(180deg,var(--deep) 0%, rgba(14,20,27,.95) 100%);
-  border-bottom:1px solid var(--edge);
+  background:#1F3A63;color:#F3EFE5;
+  border-bottom:3px solid #B79B5B;
   padding:14px 16px 0;position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);
 }
 .hdr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.brand{display:flex;align-items:center;gap:11px;min-width:0;}
+.brand img{height:46px;width:auto;flex-shrink:0;}
 .mark{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
-.mark .logo{font-family:var(--disp);font-size:27px;font-weight:700;letter-spacing:.5px;line-height:1;}
-.mark .logo em{color:var(--ice);font-style:normal;}
-.mark .tagline{font-family:var(--mono);font-size:9px;letter-spacing:2.2px;color:var(--dim);text-transform:uppercase;}
-.prop{font-family:var(--mono);font-size:9.5px;color:var(--dim);margin-top:5px;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.mark .logo{font-family:var(--disp);font-size:24px;font-weight:700;letter-spacing:.3px;line-height:1;color:#F3EFE5;}
+.mark .logo em{color:#D8BE7C;font-style:italic;}
+.mark .tagline{font-family:var(--mono);font-size:9px;letter-spacing:2.2px;color:#8DB8E0;text-transform:uppercase;}
+.prop{font-family:var(--mono);font-size:9.5px;color:#C9D6E6;margin-top:5px;letter-spacing:.8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-transform:uppercase;}
 .whobox{text-align:right;flex-shrink:0;}
-.whobox .nm{font-family:var(--mono);font-size:10px;color:var(--mid);}
-.whobox button{background:none;border:1px solid var(--edge);color:var(--dim);
+.whobox .nm{font-family:var(--mono);font-size:10px;color:#C9D6E6;}
+.whobox button{background:none;border:1px solid #4F6F99;color:#C9D6E6;
   font-family:var(--mono);font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:3px;
   margin-top:4px;text-transform:uppercase;cursor:pointer;transition:border-color .2s,color .2s;}
-.whobox button:hover{border-color:var(--ice-dim);color:var(--ice);}
+.whobox button:hover{border-color:#D8BE7C;color:#D8BE7C;}
 
 .tabs{display:flex;margin-top:12px;overflow-x:auto;scrollbar-width:none;}
 .tabs::-webkit-scrollbar{display:none;}
-.tab{font-family:var(--disp);font-size:16px;font-weight:600;letter-spacing:.8px;
-  text-transform:uppercase;color:var(--dim);padding:8px 15px 9px;
+.tab{font-family:var(--disp);font-size:14px;font-weight:400;letter-spacing:1.2px;
+  text-transform:uppercase;color:#9FB3CC;padding:8px 15px 9px;
   border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;
   transition:color .2s;position:relative;}
-.tab:hover{color:var(--mid);}
-.tab.on{color:var(--text);}
-.tab.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;
-  background:var(--ice);box-shadow:0 0 9px var(--ice);animation:tabIn .3s ease;}
+.tab:hover{color:#E6ECF4;}
+.tab.on{color:#FFFFFF;}
+.tab.on::after{content:'';position:absolute;left:0;right:0;bottom:-3px;height:3px;
+  background:#D8BE7C;animation:tabIn .3s ease;}
 @keyframes tabIn{from{transform:scaleX(0);}to{transform:scaleX(1);}}
 
 .wrap{max-width:760px;margin:0 auto;padding:16px 12px 80px;}
 
 .panel{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);
-  padding:15px;margin-bottom:12px;position:relative;
+  padding:15px;margin-bottom:12px;position:relative;box-shadow:0 1px 2px rgba(31,58,99,.05);
   animation:riseIn .34s cubic-bezier(.2,.7,.3,1) backwards;}
 @keyframes riseIn{from{opacity:0;transform:translateY(9px);}to{opacity:1;transform:none;}}
 
@@ -89,7 +97,7 @@ input,select,textarea{font-family:var(--body);font-size:16px;background:var(--de
   border:1px solid var(--edge);color:var(--text);border-radius:3px;padding:11px;width:100%;
   transition:border-color .18s,box-shadow .18s;}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ice-dim);
-  box-shadow:0 0 0 3px rgba(79,211,232,.09);}
+  box-shadow:0 0 0 3px rgba(31,58,99,.10);}
 input::placeholder,textarea::placeholder{color:var(--dim);}
 textarea{min-height:74px;resize:vertical;line-height:1.5;}
 select{appearance:none;padding-right:34px;background-image:
@@ -102,8 +110,8 @@ label.fl{font-family:var(--mono);font-size:9px;letter-spacing:1.6px;text-transfo
 
 button{font-family:var(--body);font-weight:600;font-size:14px;border:none;border-radius:3px;
   padding:12px 17px;cursor:pointer;transition:all .18s;}
-.btn{background:var(--ice);color:var(--void);font-weight:700;letter-spacing:.3px;}
-.btn:hover{background:#6FE0F2;box-shadow:0 0 18px rgba(79,211,232,.28);}
+.btn{background:var(--ice);color:#F3EFE5;font-weight:700;letter-spacing:.3px;}
+.btn:hover{background:#2B4E80;box-shadow:0 2px 10px rgba(31,58,99,.25);}
 .btn:active{transform:translateY(1px);}
 .btn:disabled{opacity:.45;cursor:default;box-shadow:none;}
 .btn-2{background:transparent;border:1px solid var(--edge);color:var(--mid);}
@@ -127,18 +135,20 @@ button{font-family:var(--body);font-weight:600;font-size:14px;border:none;border
   display:inline-block;margin-top:15px;border-bottom:1px solid var(--edge);}
 .tog:hover{color:var(--ice);}
 
-.plate{background:linear-gradient(135deg,var(--raised) 0%,var(--panel) 100%);
-  border:1px solid var(--edge-lit);border-radius:var(--r);padding:14px 15px;
+.plate{background:#1F3A63;color:#F3EFE5;
+  border:1px solid #B79B5B;border-radius:var(--r);padding:14px 15px;
   margin-bottom:12px;position:relative;overflow:hidden;
   animation:riseIn .34s cubic-bezier(.2,.7,.3,1);}
 .plate::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
-  background:var(--ice);box-shadow:0 0 14px var(--ice);}
-.plate.alert::before{background:var(--rose);box-shadow:0 0 14px var(--rose);}
+  background:#B79B5B;}
+.plate.alert::before{background:var(--rose);}
 .plate-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
 .plate .apt{font-family:var(--disp);font-size:34px;font-weight:700;line-height:.95;letter-spacing:1px;}
-.plate .loc{font-family:var(--mono);font-size:9.5px;color:var(--ice-dim);letter-spacing:1.4px;
+.plate .loc{font-family:var(--mono);font-size:9.5px;color:#D8BE7C;letter-spacing:1.4px;
   margin-top:4px;text-transform:uppercase;}
-.plate .sys{font-family:var(--mono);font-size:10px;color:var(--mid);margin-top:5px;}
+.plate .sys{font-family:var(--mono);font-size:10px;color:#C9D6E6;margin-top:5px;}
+.plate .status .lb{color:#9FB3CC;}
+.plate .led.unk{background:#7C8FA8;}
 .status{text-align:right;flex-shrink:0;}
 .status .lb{font-family:var(--mono);font-size:8.5px;letter-spacing:1.4px;color:var(--dim);text-transform:uppercase;}
 .status .vl{font-family:var(--mono);font-size:12px;font-weight:600;margin-top:3px;
@@ -160,7 +170,7 @@ button{font-family:var(--body);font-weight:600;font-size:14px;border:none;border
 .brief-body{font-size:14.5px;line-height:1.55;}
 .brief.thinking .brief-body{color:var(--dim);}
 .brief.thinking::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
-  background:linear-gradient(90deg,transparent,rgba(79,211,232,.09),transparent);
+  background:linear-gradient(90deg,transparent,rgba(31,58,99,.07),transparent);
   animation:scan 1.25s linear infinite;}
 @keyframes scan{to{left:130%;}}
 .caret{display:inline-block;width:7px;height:15px;background:var(--ice);vertical-align:-2px;
@@ -189,7 +199,7 @@ button{font-family:var(--body);font-weight:600;font-size:14px;border:none;border
   text-transform:none;opacity:.82;}
 .p-emergency{background:rgba(242,84,75,.14);color:var(--rose);border-left:4px solid var(--rose);}
 .p-same-day{background:rgba(255,122,61,.13);color:var(--ember);border-left:4px solid var(--ember);}
-.p-normal{background:rgba(79,211,232,.1);color:var(--ice);border-left:4px solid var(--ice);}
+.p-normal{background:rgba(31,58,99,.08);color:var(--ice);border-left:4px solid var(--ice);}
 .p-low{background:var(--raised);color:var(--mid);border-left:4px solid var(--dim);}
 
 .firstmove{background:linear-gradient(135deg,var(--raised),var(--panel));
@@ -217,7 +227,7 @@ button{font-family:var(--body);font-weight:600;font-size:14px;border:none;border
 .note b{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
   display:block;margin-bottom:3px;}
 .n-hist{background:rgba(242,193,78,.09);border:1px solid rgba(242,193,78,.28);color:var(--sulfur);}
-.n-sys{background:rgba(79,211,232,.08);border:1px solid rgba(79,211,232,.26);color:var(--ice);}
+.n-sys{background:rgba(31,58,99,.07);border:1px solid rgba(31,58,99,.25);color:var(--ice);}
 .n-warr{background:rgba(67,217,163,.08);border:1px solid rgba(67,217,163,.26);color:var(--mint);}
 .n-safe{background:rgba(242,84,75,.1);border:1px solid rgba(242,84,75,.28);color:var(--rose);}
 .n-code{background:var(--raised);border:1px solid var(--edge-lit);color:var(--text);}
@@ -264,8 +274,16 @@ td b{color:var(--text);font-family:var(--mono);}
 @keyframes sp{to{transform:rotate(360deg);}}
 
 .empty{text-align:center;padding:34px 18px;color:var(--dim);font-size:14px;}
-.empty .big{font-family:var(--disp);font-size:20px;color:var(--mid);text-transform:uppercase;
+.empty .big{font-family:var(--disp);font-size:18px;color:var(--mid);text-transform:uppercase;
   letter-spacing:1px;margin-bottom:6px;}
+.bldg{font-family:var(--mono);font-size:9px;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--sulfur);margin:12px 0 2px;}
+.bldg:first-child{margin-top:4px;}
+.chip.flag{border-color:rgba(179,54,45,.45);}
+.chip .x{color:var(--rose);}
+#dir{margin-top:10px;}
+#dir summary{font-family:var(--mono);font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--ice);cursor:pointer;padding:6px 0;list-style-position:inside;}
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none !important;transition:none !important;}
@@ -276,12 +294,15 @@ td b{color:var(--text);font-family:var(--mono);}
 
 <header>
   <div class="hdr-top">
-    <div>
-      <div class="mark">
-        <span class="logo">UNIT<em>IQ</em></span>
-        <span class="tagline">Asset Intelligence</span>
+    <div class="brand">
+      <img src="/crest.png" alt="Country Club of Little Rock crest">
+      <div>
+        <div class="mark">
+          <span class="logo">Clubhouse <em>IQ</em></span>
+        </div>
+        <div class="mark"><span class="tagline">Facilities &amp; Equipment</span></div>
+        <div class="prop" id="propLine">Country Club of Little Rock · Little Rock, AR</div>
       </div>
-      <div class="prop">THE VILLA AT RIVER POINTE · MAUMELLE, AR</div>
     </div>
     <div class="whobox hide" id="whobox">
       <div class="nm" id="who"></div>
@@ -299,13 +320,13 @@ td b{color:var(--text);font-family:var(--mono);}
 <div class="wrap auth" id="authView">
   <div class="panel">
     <h2 id="aTitle">Sign in</h2>
-    <div class="dim" id="aHint" style="margin-top:3px;">Maintenance staff access.</div>
+    <div class="dim" id="aHint" style="margin-top:3px;">Club maintenance staff access.</div>
     <div id="nameWrap" class="hide">
       <label class="fl">Your name</label>
       <input type="text" id="aName" placeholder="Stephen Harris">
     </div>
     <label class="fl">Email</label>
-    <input type="email" id="aEmail" autocomplete="email" placeholder="you@example.com">
+    <input type="email" id="aEmail" autocomplete="email" placeholder="you@cclr1902.org">
     <label class="fl">Password</label>
     <input type="password" id="aPass" autocomplete="current-password" placeholder="••••••••">
     <button class="btn full" style="margin-top:17px;" id="aGo">Sign in</button>
@@ -317,32 +338,36 @@ td b{color:var(--text);font-family:var(--mono);}
 <div class="wrap hide" id="appView">
 
   <div class="panel" id="lookupPanel">
-    <div class="eyebrow">Unit lookup</div>
+    <div class="eyebrow">Equipment lookup</div>
     <div class="row">
-      <input type="text" id="aptIn" placeholder="7A-204" autocomplete="off"
+      <input type="text" id="aptIn" placeholder="BLR-1" autocomplete="off"
              style="font-family:var(--mono);font-weight:600;font-size:19px;letter-spacing:1.5px;">
       <button class="btn" style="flex:0 0 auto;" id="openBtn">Open</button>
     </div>
-    <div class="chips" id="chips"></div>
+    <div class="dim" style="margin-top:8px;font-size:12px;">Type a new tag and press Open to add equipment.</div>
+    <details id="dir" open>
+      <summary id="dirSum">All equipment by building</summary>
+      <div id="chips"></div>
+    </details>
   </div>
 
   <div class="plate hide" id="plate">
     <div class="plate-top">
       <div>
-        <div class="apt" id="pApt">—</div>
+        <div class="apt" id="pApt"></div>
         <div class="loc" id="pLoc"></div>
         <div class="sys" id="pSys"></div>
       </div>
       <div class="status">
-        <div class="lb">Float switch</div>
-        <div class="vl"><span class="led unk" id="pLed"></span><span id="pSw">—</span></div>
+        <div class="lb" id="pSwLb">Safety device</div>
+        <div class="vl"><span class="led unk" id="pLed"></span><span id="pSw"></span></div>
       </div>
     </div>
   </div>
 
   <div class="brief hide" id="brief">
     <div class="brief-hd">
-      <span>Unit brief</span>
+      <span>Equipment brief</span>
       <span class="re" id="briefRe">regenerate</span>
     </div>
     <div class="brief-body" id="briefBody"></div>
@@ -351,26 +376,26 @@ td b{color:var(--text);font-family:var(--mono);}
   <div id="tab-diagnose">
     <div class="panel">
       <div class="eyebrow">Report</div>
-      <textarea id="reportIn" placeholder="What the tenant or dispatch said. e.g. Water dripping from hallway ceiling, AC still cooling"></textarea>
+      <textarea id="reportIn" placeholder="What staff or dispatch said. e.g. Garden Room warm, heat pump has a lockout light"></textarea>
       <div id="codeWrap" class="hide">
-        <label class="fl" style="color:var(--sulfur);">Fault code — read it off the equipment first</label>
-        <input type="text" id="codeIn" placeholder="CH 05 · U8 · 6607"
+        <label class="fl" style="color:var(--sulfur);">Fault or lockout code. Read it off the equipment first</label>
+        <input type="text" id="codeIn" placeholder="Flame failure · HP lockout · E4"
                style="font-family:var(--mono);font-weight:600;letter-spacing:1.5px;">
         <div class="dim" style="margin-top:5px;" id="codeHint"></div>
       </div>
       <button class="btn full" style="margin-top:12px;" id="goTriage">Run diagnosis</button>
-      <div class="dim" style="margin-top:9px;" id="tNote">Open a unit and the diagnosis uses its history.</div>
+      <div class="dim" style="margin-top:9px;" id="tNote">Open a piece of equipment and the diagnosis uses its history and the water loop status.</div>
       <div class="dim" style="margin-top:4px;" id="tFirst"></div>
     </div>
     <div id="triageOut"></div>
   </div>
 
   <div id="tab-record" class="hide">
-    <div id="recordBody"><div class="empty"><div class="big">No unit open</div>Look up an apartment to view its record.</div></div>
+    <div id="recordBody"><div class="empty"><div class="big">Nothing open</div>Look up a piece of equipment to view its record.</div></div>
   </div>
 
   <div id="tab-history" class="hide">
-    <div id="historyBody"><div class="empty"><div class="big">No unit open</div>Look up an apartment to view its history.</div></div>
+    <div id="historyBody"><div class="empty"><div class="big">Nothing open</div>Look up a piece of equipment to view its history.</div></div>
   </div>
 
   <div id="tab-reports" class="hide">
@@ -380,13 +405,14 @@ td b{color:var(--text);font-family:var(--mono);}
 </div>
 
 <script>
-let TOKEN = localStorage.getItem('uiq_token') || null;
-let ME=null, UNIT=null, LAST=null, TAB='diagnose', TYPES=[], TYPEMAP={};
+let TOKEN = null; try{ TOKEN = localStorage.getItem('ciq_token'); }catch(e){}
+const store = { set:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}}, del:k=>{try{localStorage.removeItem(k);}catch(e){}} };
+let ME=null, UNIT=null, LAST=null, TAB='diagnose', TYPES=[], TYPEMAP={}, BUILDINGS=[];
 
 const $ = id => document.getElementById(id);
 const esc = s => { const d=document.createElement('div'); d.textContent = s==null?'':s; return d.innerHTML; };
 const today = () => new Date().toISOString().slice(0,10);
-const profileFor = n => TYPEMAP[n] || {fields:[],manufacturers:[],requiresErrorCode:false,firstMove:''};
+const profileFor = n => TYPEMAP[n] || {fields:[],manufacturers:[],requiresErrorCode:false,firstMove:'',safetyLabel:'Safety device',waterLabel:'Water / drain notes'};
 
 async function api(p,o={}){
   const r = await fetch('/api'+p,{
@@ -405,7 +431,7 @@ $('aToggle').onclick=()=>{
   mode = mode==='login'?'signup':'login';
   const up = mode==='signup';
   $('aTitle').textContent = up?'Create account':'Sign in';
-  $('aHint').textContent = up?'Use your work email so edits are traceable.':'Maintenance staff access.';
+  $('aHint').textContent = up?'Use your work email so edits are traceable.':'Club maintenance staff access.';
   $('aGo').textContent = up?'Create account':'Sign in';
   $('aToggle').textContent = up?'Already have an account? Sign in':'Need an account? Create one';
   $('nameWrap').classList.toggle('hide',!up);
@@ -420,12 +446,12 @@ $('aGo').onclick=async()=>{
   try{
     const d = await api(mode==='signup'?'/signup':'/login',{method:'POST',
       body: mode==='signup'?{email,password,name}:{email,password}});
-    TOKEN=d.token; localStorage.setItem('uiq_token',TOKEN); ME=d.user; enterApp();
+    TOKEN=d.token; store.set('ciq_token',TOKEN); ME=d.user; enterApp();
   }catch(e){ aMsg(e.message,'err'); }
   finally{ $('aGo').disabled=false; }
 };
 $('outBtn').onclick=()=>{
-  localStorage.removeItem('uiq_token'); TOKEN=null; ME=null; UNIT=null;
+  store.del('ciq_token'); TOKEN=null; ME=null; UNIT=null;
   $('appView').classList.add('hide'); $('authView').classList.remove('hide');
   $('whobox').classList.add('hide'); $('tabs').classList.add('hide');
 };
@@ -436,7 +462,7 @@ function enterApp(){
   $('whobox').classList.remove('hide');
   $('tabs').classList.remove('hide');
   $('who').textContent = ME.name + (ME.role==='manager'?' · MGR':'');
-  loadTypes(); loadChips();
+  loadTypes().then(()=>{ if(UNIT){ drawPlate(); drawRecord(); } }); loadChips();
 }
 async function loadTypes(){
   try{ const d=await api('/system-types'); TYPES=d.types; TYPEMAP={};
@@ -465,6 +491,7 @@ async function openUnit(){
   try{
     const d=await api('/unit/'+encodeURIComponent(apt));
     UNIT=d.unit;
+    $('dir').open=false;
     drawPlate(); drawRecord(); drawHistory(); drawDiagnose();
     loadBrief(); loadChips();
   }catch(e){ alert(e.message); }
@@ -475,11 +502,12 @@ function drawPlate(){
   $('plate').classList.remove('hide');
   $('pApt').textContent=UNIT.apt;
   const b=[];
-  if(UNIT.building) b.push('BLDG '+UNIT.building);
-  if(UNIT.side) b.push(UNIT.side+' SIDE');
-  if(UNIT.floor) b.push('FL '+UNIT.floor);
+  b.push(UNIT.building||'No building set');
+  const serves=(UNIT.system_meta||{}).serves;
+  if(serves) b.push(serves);
   $('pLoc').textContent=b.join('  ·  ');
-  $('pSys').textContent=[UNIT.manufacturer,UNIT.system_type].filter(Boolean).join(' — ');
+  $('pSys').textContent=[UNIT.manufacturer,UNIT.system_type].filter(Boolean).join(' · ');
+  $('pSwLb').textContent=profileFor(UNIT.system_type).safetyLabel||'Safety device';
   const led=$('pLed'); led.className='led';
   const bad = UNIT.switch_present==='no'||UNIT.switch_functioning==='no';
   if(UNIT.switch_present==='no'){ led.classList.add('bad'); $('pSw').textContent='MISSING'; }
@@ -494,11 +522,11 @@ async function loadBrief(force){
   if(!UNIT) return;
   const el=$('brief'), body=$('briefBody');
   el.classList.remove('hide'); el.classList.add('thinking');
-  body.innerHTML='Reading unit history<span class="caret"></span>';
+  body.innerHTML='Reading equipment history<span class="caret"></span>';
   try{
     const d=await api('/unit/'+encodeURIComponent(UNIT.apt)+'/brief'+(force?'?force=1':''));
     el.classList.remove('thinking');
-    if(d.empty){ body.innerHTML='<span class="dim">Nothing recorded yet. Fill in the record and log a job — the brief writes itself from there.</span>'; return; }
+    if(d.empty){ body.innerHTML='<span class="dim">Nothing recorded yet. Fill in the record and log a job, and the brief writes itself from there.</span>'; return; }
     if(d.unavailable||!d.brief){ el.classList.add('hide'); return; }
     typeOut(body,d.brief);
   }catch(e){ el.classList.add('hide'); }
@@ -522,7 +550,7 @@ function drawDiagnose(){
   $('codeWrap').classList.toggle('hide',!p.requiresErrorCode);
   if(p.requiresErrorCode){
     const m=(p.manufacturers||[]).find(x=>x.name===UNIT.manufacturer);
-    $('codeHint').textContent = m ? m.codes : 'This system self-reports faults. Without the code the ranking is a guess.';
+    $('codeHint').textContent = m ? m.codes : 'This equipment reports its own faults. Without the code the ranking is a guess.';
   }
   const tag = UNIT.system_type+(UNIT.manufacturer?' / '+UNIT.manufacturer:'');
   $('tNote').textContent = UNIT.jobs.length
@@ -534,11 +562,23 @@ function drawDiagnose(){
 async function loadChips(){
   try{
     const d=await api('/units'); const box=$('chips'); box.innerHTML='';
-    d.units.slice(0,10).forEach(u=>{
-      const c=document.createElement('div'); c.className='chip';
-      c.innerHTML=esc(u.apt)+(u.job_count?' <b>'+u.job_count+'</b>':'');
-      c.onclick=()=>{ $('aptIn').value=u.apt; openUnit(); };
-      box.appendChild(c);
+    const groups={};
+    d.units.forEach(u=>{ const k=u.building||'Unassigned'; (groups[k]=groups[k]||[]).push(u); });
+    BUILDINGS=Object.keys(groups).filter(k=>k!=='Unassigned');
+    $('dirSum').textContent='All equipment by building ('+d.units.length+')';
+    Object.keys(groups).forEach(k=>{
+      const h=document.createElement('div'); h.className='bldg'; h.textContent=k+' · '+groups[k].length;
+      box.appendChild(h);
+      const row=document.createElement('div'); row.className='chips'; row.style.marginTop='6px';
+      groups[k].forEach(u=>{
+        const bad=u.switch_present==='no'||u.switch_functioning==='no';
+        const c=document.createElement('div'); c.className='chip'+(bad?' flag':'');
+        c.innerHTML=esc(u.apt)+(u.job_count?' <b>'+u.job_count+'</b>':'')+(bad?' <span class="x">!</span>':'');
+        c.title=u.system_type||'';
+        c.onclick=()=>{ $('aptIn').value=u.apt; openUnit(); window.scrollTo({top:0,behavior:'smooth'}); };
+        row.appendChild(c);
+      });
+      box.appendChild(row);
     });
   }catch(e){}
 }
@@ -587,7 +627,7 @@ function drawTriage(t){
     h+='</div>';
   }
   if(t.tenant_reply){
-    h+='<div class="eyebrow" style="margin-top:15px;">Message for the resident</div>'+
+    h+='<div class="eyebrow" style="margin-top:15px;">Message for staff</div>'+
        '<div style="background:var(--deep);border:1px solid var(--edge);border-radius:3px;padding:12px;font-size:14px;line-height:1.55;">'+esc(t.tenant_reply)+'</div>'+
        '<button class="btn-2 full" style="margin-top:8px;" onclick="copyTenant()">Copy message</button>';
   }
@@ -596,7 +636,7 @@ function drawTriage(t){
   if(UNIT){
     h+='<div class="panel"><div class="eyebrow">Log to '+esc(UNIT.apt)+'</div>'+
        '<label class="fl" style="margin-top:0;">What you actually found and did</label>'+
-       '<textarea id="lgWork" placeholder="Cleared primary drain, replaced float switch, relocated to low end of pan"></textarea>'+
+       '<textarea id="lgWork" placeholder="Cleaned hose kit strainer, water rise back to 10 F, reset lockout"></textarea>'+
        '<div class="row" style="margin-top:9px;">'+
          '<div><label class="fl" style="margin-top:0;">Vendor cost avoided</label><input type="number" id="lgCost" placeholder="0"></div>'+
          '<div><label class="fl" style="margin-top:0;">Hours</label><input type="number" step=".25" id="lgHrs" placeholder="0"></div>'+
@@ -639,30 +679,33 @@ function segHtml(id,val,labels){
 }
 function drawRecord(){
   if(!UNIT) return;
-  const types = TYPES.length?TYPES.map(t=>t.name)
-    :['Split system / air handler','Ceiling mount air handler','Ductless mini-split','VRF / VRV','Package unit','Other'];
-  let h='<div class="panel"><div class="eyebrow">Equipment class</div>';
-  h+='<label class="fl" style="margin-top:0;">System type</label>'+
+  const types = TYPES.length?TYPES.map(t=>t.name):[UNIT.system_type||'Other'];
+  const p0=profileFor(UNIT.system_type);
+  let h='<div class="panel"><div class="eyebrow">Location and type</div>';
+  h+='<label class="fl" style="margin-top:0;">Building</label>'+
+     '<input type="text" id="rBldg" list="bldgList" placeholder="Clubhouse, Central Plant, Indoor Tennis Center" value="'+esc(UNIT.building||'')+'">'+
+     '<datalist id="bldgList">'+BUILDINGS.map(b=>'<option value="'+esc(b)+'">').join('')+'</datalist>';
+  h+='<label class="fl">Equipment type</label>'+
      '<select id="rType" onchange="onType()">'+types.map(t=>
        '<option'+(UNIT.system_type===t?' selected':'')+'>'+esc(t)+'</option>').join('')+'</select>';
   h+='<label class="fl">Manufacturer</label><div id="mfrWrap"></div>';
   h+='<div id="sysFields"></div></div>';
 
-  h+='<div class="panel"><div class="eyebrow">Condensate</div>'+
-     '<textarea id="rDrain" placeholder="Routing, gravity or pumped, trap, termination, pitch, material, secondary pan, known defects">'+esc(UNIT.drain_design)+'</textarea>'+
-     '<label class="fl">Float switch present</label>'+segHtml('rP',UNIT.switch_present,['YES','NO','UNKNOWN'])+
-     '<label class="fl">Float switch functioning</label>'+segHtml('rF',UNIT.switch_functioning,['YES','NO','NOT TESTED'])+
-     '<textarea id="rSwN" style="margin-top:10px;" placeholder="Switch location, type, wiring notes">'+esc(UNIT.switch_notes)+'</textarea></div>';
+  h+='<div class="panel"><div class="eyebrow" id="waterEb">'+esc(p0.waterLabel||'Water / drain notes')+'</div>'+
+     '<textarea id="rDrain" placeholder="Piping, valves, drains, makeup, anything about the water side">'+esc(UNIT.drain_design)+'</textarea>'+
+     '<label class="fl"><span class="swl">'+esc(p0.safetyLabel||'Safety device')+'</span> present</label>'+segHtml('rP',UNIT.switch_present,['YES','NO','UNKNOWN'])+
+     '<label class="fl"><span class="swl">'+esc(p0.safetyLabel||'Safety device')+'</span> working</label>'+segHtml('rF',UNIT.switch_functioning,['YES','NO','NOT TESTED'])+
+     '<textarea id="rSwN" style="margin-top:10px;" placeholder="Location, type, last test, anything jumpered out">'+esc(UNIT.switch_notes)+'</textarea></div>';
 
   h+='<div class="panel"><div class="eyebrow">Notes</div>'+
-     '<textarea id="rNotes" placeholder="Access quirks, breaker location, anything the next tech should know">'+esc(UNIT.notes)+'</textarea>'+
+     '<textarea id="rNotes" placeholder="Access, disconnect location, who to call, anything the next tech should know">'+esc(UNIT.notes)+'</textarea>'+
      '<button class="btn full" style="margin-top:12px;" onclick="saveRecord()">Save record</button>'+
      '<div class="dim" id="rMsg" style="margin-top:9px;">'+
        (UNIT.updated_by?'Last updated by '+esc(UNIT.updated_by)+' · '+esc((UNIT.updated_at||'').slice(0,16)):'')+'</div></div>';
 
   h+='<div class="panel"><div class="eyebrow">Equipment registry</div>';
   if(!UNIT.equipment.length)
-    h+='<div class="dim" style="margin-bottom:10px;">Nothing on file. Add the air handler and condenser — warranty lookups alone pay for the effort.</div>';
+    h+='<div class="dim" style="margin-bottom:10px;">Nothing on file. Add components off the data plates. Warranty lookups alone pay for the effort.</div>';
   UNIT.equipment.forEach(e=>{
     let w='';
     if(e.install_date&&e.warranty_years){
@@ -682,7 +725,7 @@ function drawRecord(){
   });
   h+='<div class="row" style="margin-top:10px;"><input id="eC" placeholder="Component"><input id="eM" placeholder="Mfr"></div>'+
      '<div class="row" style="margin-top:7px;"><input id="eMo" placeholder="Model"><input id="eS" placeholder="Serial"></div>'+
-     '<div class="row" style="margin-top:7px;"><input id="eD" type="date"><input id="eW" type="number" placeholder="Yrs"><input id="eR" placeholder="R-410A"></div>'+
+     '<div class="row" style="margin-top:7px;"><input id="eD" type="date"><input id="eW" type="number" placeholder="Yrs"><input id="eR" placeholder="Refrig."></div>'+
      '<button class="btn-2 full" style="margin-top:10px;" onclick="addEq()">Add equipment</button></div>';
 
   $('recordBody').innerHTML=h;
@@ -707,7 +750,7 @@ function drawMfr(){
   }
   const cur=UNIT.manufacturer||'';
   const known=list.some(m=>m.name===cur);
-  box.innerHTML='<select id="rMfr" onchange="onMfr()"><option value="">— select —</option>'+
+  box.innerHTML='<select id="rMfr" onchange="onMfr()"><option value="">Select</option>'+
     list.map(m=>'<option'+(m.name===cur?' selected':'')+'>'+esc(m.name)+'</option>').join('')+
     (cur&&!known?'<option selected>'+esc(cur)+'</option>':'')+'</select>'+
     '<div class="dim" id="mfrCodes" style="margin-top:6px;line-height:1.45;"></div>';
@@ -726,11 +769,17 @@ function drawSysFields(){
   if(!p.fields||!p.fields.length){ box.innerHTML=''; return; }
   let h='<label class="fl">'+esc(name)+' details</label>';
   p.fields.forEach(f=>{
-    h+='<input type="text" style="margin-bottom:7px;" data-sys="'+esc(f.id)+'" placeholder="'+esc(f.label)+'" value="'+esc(meta[f.id]||'')+'">';
+    h+='<div class="dim" style="font-size:11.5px;margin:6px 0 3px;">'+esc(f.label)+'</div>'+
+       '<input type="text" style="margin-bottom:4px;" data-sys="'+esc(f.id)+'" placeholder="'+esc(f.label)+'" value="'+esc(meta[f.id]||'')+'">';
   });
   box.innerHTML=h;
 }
-function onType(){ drawMfr(); drawSysFields(); }
+function onType(){
+  drawMfr(); drawSysFields();
+  const p=profileFor($('rType').value);
+  if($('waterEb')) $('waterEb').textContent=p.waterLabel||'Water / drain notes';
+  document.querySelectorAll('.swl').forEach(el=>el.textContent=p.safetyLabel||'Safety device');
+}
 
 function segVal(id){
   const el=document.querySelector('#'+id+' div.y, #'+id+' div.n, #'+id+' div.u');
@@ -744,13 +793,14 @@ async function saveRecord(){
   try{
     const d=await api('/unit/'+encodeURIComponent(UNIT.apt),{method:'PUT',body:{
       system_type:$('rType').value,
+      building:$('rBldg').value.trim(),
       manufacturer:$('rMfr')?$('rMfr').value:'',
       system_meta:meta,
       drain_design:$('rDrain').value,
       switch_present:segVal('rP'), switch_functioning:segVal('rF'),
       switch_notes:$('rSwN').value, notes:$('rNotes').value
     }});
-    UNIT=d.unit; drawPlate(); drawDiagnose(); loadBrief();
+    UNIT=d.unit; drawPlate(); drawDiagnose(); loadBrief(); loadChips();
     $('rMsg').innerHTML='<span style="color:var(--mint)">Saved</span>';
   }catch(e){ $('rMsg').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'; }
 }
@@ -784,7 +834,7 @@ function drawHistory(){
   }
   h+='<div class="panel"><div class="eyebrow">Log a job</div>'+
      '<div class="row"><input type="date" id="jD" value="'+today()+'">'+
-     '<select id="jC"><option>HVAC</option><option>Plumbing</option><option>Electrical</option><option>Appliance</option><option>General</option></select></div>'+
+     '<select id="jC">'+['HVAC','Boiler','Cooling tower','Water treatment','Plumbing','Electrical','Refrigeration','Kitchen','Pool','Building','Grounds','General'].map(c=>'<option>'+c+'</option>').join('')+'</select></div>'+
      '<textarea id="jR" style="margin-top:9px;" placeholder="What was reported"></textarea>'+
      '<textarea id="jW" style="margin-top:9px;" placeholder="Diagnosis and work performed"></textarea>'+
      '<div class="row" style="margin-top:9px;"><input id="jP" placeholder="Parts used"><input id="jE" placeholder="Fault code" style="font-family:var(--mono)"></div>'+
@@ -805,7 +855,7 @@ function drawHistory(){
     if(j.work_performed) h+='<div class="ln"><b>Work</b> '+esc(j.work_performed)+'</div>';
     if(j.parts_used) h+='<div class="ln"><b>Parts</b> '+esc(j.parts_used)+'</div>';
     if(j.vendor_cost_avoided) h+='<div class="money">◆ $'+j.vendor_cost_avoided.toLocaleString()+' avoided'+
-       (j.cost_basis?' — '+esc(j.cost_basis):'')+'</div>';
+       (j.cost_basis?' · '+esc(j.cost_basis):'')+'</div>';
     h+='</div>';
   });
   h+='</div>';
@@ -845,27 +895,37 @@ async function loadReports(){
     }
     h+='</div>';
 
-    h+='<div class="panel"><div class="eyebrow">Float switch risk</div>';
-    if(!risk.switchRisk.length) h+='<div class="dim">No units flagged. Record switch status to populate this.</div>';
+    h+='<div class="panel"><div class="eyebrow">Water loop activity, last 45 days</div>';
+    if(!risk.loopEvents.length) h+='<div class="dim">Nothing logged on the loop or central plant.</div>';
     else{
-      h+='<div class="mid" style="margin-bottom:10px;">'+risk.switchRisk.length+' unit'+(risk.switchRisk.length>1?'s':'')+' with a missing or failed float switch. These are your summer ceiling repairs.</div>'+
-         '<table><tr><th>Unit</th><th>Present</th><th>Working</th></tr>';
-      risk.switchRisk.forEach(u=>h+='<tr><td><b>'+esc(u.apt)+'</b></td><td>'+esc(u.switch_present)+
-        '</td><td style="color:var(--rose)">'+esc(u.switch_functioning)+'</td></tr>');
+      h+='<div class="mid" style="margin-bottom:10px;">Boilers, tower, pumps, and heat pumps. Several heat pumps tripping close together usually means a loop problem.</div>'+
+         '<table><tr><th>Date</th><th>Equipment</th><th>Reported</th></tr>';
+      risk.loopEvents.forEach(e=>h+='<tr><td>'+esc(e.job_date.slice(5))+'</td><td><b>'+esc(e.apt)+'</b></td><td>'+
+        (e.error_code?'<span style="font-family:var(--mono);font-weight:600;color:var(--sulfur);font-size:12px">['+esc(e.error_code)+']</span> ':'')+esc(e.reported)+'</td></tr>');
       h+='</table>';
     }
     h+='</div>';
 
-    if(risk.byBuilding.length){
-      h+='<div class="panel"><div class="eyebrow">Building defect pattern</div>'+
-         '<div class="mid" style="margin-bottom:10px;">Multiple bad switches in one building is an install defect, not a coincidence.</div>'+
-         '<table><tr><th>Building</th><th>Bad switches</th><th>Logged</th></tr>';
-      risk.byBuilding.forEach(b=>h+='<tr><td><b>Bldg '+esc(b.building)+'</b></td><td style="color:var(--rose)">'+b.bad_switches+'</td><td>'+b.units_logged+'</td></tr>');
+    h+='<div class="panel"><div class="eyebrow">Safety devices out of service</div>';
+    if(!risk.switchRisk.length) h+='<div class="dim">Nothing flagged. Record safety device status on each piece of equipment to populate this.</div>';
+    else{
+      h+='<div class="mid" style="margin-bottom:10px;">'+risk.switchRisk.length+' piece'+(risk.switchRisk.length>1?'s':'')+' of equipment with a safety device missing, failed, or bypassed.</div>'+
+         '<table><tr><th>Equipment</th><th>Device</th><th>Status</th></tr>';
+      risk.switchRisk.forEach(u=>h+='<tr><td><b>'+esc(u.apt)+'</b><br><span class="dim" style="font-size:11px">'+esc(u.building||'')+'</span></td><td>'+esc(u.safety_label)+
+        '</td><td style="color:var(--rose)">'+(u.switch_present==='no'?'missing':'not working')+'</td></tr>');
+      h+='</table>';
+    }
+    h+='</div>';
+
+    if(risk.repeatUnits.length){
+      h+='<div class="panel"><div class="eyebrow">Repeat problems, last 12 months</div><table><tr><th>Equipment</th><th>Building</th><th>Jobs</th></tr>';
+      risk.repeatUnits.forEach(u=>h+='<tr><td><b>'+esc(u.apt)+'</b></td><td>'+esc(u.building||'')+'</td><td style="color:var(--sulfur)">'+u.c+'</td></tr>');
       h+='</table></div>';
     }
-    if(risk.repeatUnits.length){
-      h+='<div class="panel"><div class="eyebrow">Repeat water offenders</div><table><tr><th>Unit</th><th>Water jobs</th></tr>';
-      risk.repeatUnits.forEach(u=>h+='<tr><td><b>'+esc(u.apt)+'</b></td><td style="color:var(--sulfur)">'+u.c+'</td></tr>');
+    if(risk.byBuilding.length){
+      h+='<div class="panel"><div class="eyebrow">By building</div>'+
+         '<table><tr><th>Building</th><th>Equipment</th><th>Jobs</th><th>Safety flags</th></tr>';
+      risk.byBuilding.forEach(b=>h+='<tr><td><b>'+esc(b.building)+'</b></td><td>'+b.units_logged+'</td><td>'+b.jobs+'</td><td style="color:'+(b.bad_switches?'var(--rose)':'var(--dim)')+'">'+b.bad_switches+'</td></tr>');
       h+='</table></div>';
     }
 
@@ -874,7 +934,7 @@ async function loadReports(){
     if(!warr.equipment.length) h+='<div class="dim">No equipment with install dates on file.</div>';
     else{
       h+='<div class="mid" style="margin-bottom:10px;">'+inW.length+' component'+(inW.length===1?'':'s')+' still covered. Check here before buying a part.</div>'+
-         '<table><tr><th>Unit</th><th>Component</th><th style="text-align:right">Expires</th></tr>';
+         '<table><tr><th>Equipment</th><th>Component</th><th style="text-align:right">Expires</th></tr>';
       warr.equipment.slice(0,25).forEach(e=>h+='<tr><td><b>'+esc(e.apt)+'</b></td><td>'+esc(e.component)+
         '</td><td style="text-align:right" class="'+(e.in_warranty?'wi':'wo')+'">'+esc(e.expires)+'</td></tr>');
       h+='</table>';
@@ -888,12 +948,12 @@ async function loadReports(){
 }
 async function exportAll(){
   const d=await api('/export');
-  let o=(d.property?d.property.name:'Property')+' — HVAC ASSET LOG\nExported '+today()+'\n'+'='.repeat(46)+'\n\n';
+  let o=(d.property?d.property.name:'Property')+' · EQUIPMENT LOG\nExported '+today()+'\n'+'='.repeat(46)+'\n\n';
   d.units.forEach(u=>{
-    o+='UNIT '+u.apt+'  ['+[u.manufacturer,u.system_type].filter(Boolean).join(' ')+']\n';
-    if(u.drain_design) o+='  Drain: '+u.drain_design+'\n';
-    o+='  Float switch: present='+u.switch_present+' functioning='+u.switch_functioning+'\n';
-    if(u.switch_notes) o+='  Switch: '+u.switch_notes+'\n';
+    o+=u.apt+'  ['+[u.building,u.manufacturer,u.system_type].filter(Boolean).join(' · ')+']\n';
+    if(u.drain_design) o+='  Water side: '+u.drain_design+'\n';
+    o+='  Safety device: present='+u.switch_present+' working='+u.switch_functioning+'\n';
+    if(u.switch_notes) o+='  Safety notes: '+u.switch_notes+'\n';
     u.equipment.forEach(e=>o+='  Equip: '+[e.component,e.manufacturer,e.model].filter(Boolean).join(' ')+
       (e.serial?' SN '+e.serial:'')+(e.install_date?' installed '+e.install_date:'')+'\n');
     u.jobs.forEach(j=>o+='  ['+j.job_date+'] '+(j.error_code?'{'+j.error_code+'} ':'')+(j.reported||'')+
@@ -909,9 +969,9 @@ function toast(m){
   const t=document.createElement('div');
   t.textContent=m;
   t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'+
-    'background:#1A2531;border:1px solid #2A7F8F;color:#4FD3E8;'+
+    'background:#1F3A63;border:1px solid #B79B5B;color:#F3EFE5;'+
     'font-family:var(--mono);font-size:12px;padding:10px 18px;border-radius:3px;z-index:99;'+
-    'box-shadow:0 4px 24px rgba(0,0,0,.5);';
+    'box-shadow:0 4px 18px rgba(31,58,99,.3);';
   document.body.appendChild(t);
   setTimeout(()=>t.remove(),1900);
 }
@@ -920,10 +980,11 @@ function toast(m){
 (async()=>{
   let cfg={};
   try{ cfg = await (await fetch('/api/config')).json(); }catch(e){}
+  if(cfg.property) $('propLine').textContent = cfg.property + (cfg.city?' · '+cfg.city:'');
 
   if(TOKEN){
     try{ const d=await api('/me'); ME=d.user; enterApp(); return; }
-    catch(e){ localStorage.removeItem('uiq_token'); TOKEN=null; }
+    catch(e){ store.del('ciq_token'); TOKEN=null; }
   }
 
   if(cfg.demo){
@@ -938,9 +999,9 @@ function toast(m){
 
 function showDemoBanner(){
   const b=document.createElement('div');
-  b.innerHTML='<b>DEMO MODE</b> — signed in automatically as Demo Tech. Data here is sample data.';
-  b.style.cssText='background:rgba(242,193,78,.12);border-bottom:1px solid rgba(242,193,78,.35);'+
-    'color:#F2C14E;font-family:var(--mono);font-size:10px;letter-spacing:.8px;'+
+  b.innerHTML='<b>DEMO MODE</b> · Signed in automatically. Equipment and history here are sample data.';
+  b.style.cssText='background:#F6EBCB;border-bottom:1px solid #D8BE7C;'+
+    'color:#6B5320;font-family:var(--mono);font-size:10px;letter-spacing:.8px;'+
     'padding:7px 16px;text-align:center;';
   document.querySelector('header').insertAdjacentElement('afterend', b);
 }

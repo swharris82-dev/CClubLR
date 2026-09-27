@@ -1,7 +1,7 @@
 {
   "name": "clubhouse-iq",
   "version": "1.0.0",
-  "description": "HVAC asset intelligence and diagnostic triage for multifamily maintenance teams",
+  "description": "Equipment tracking, work history, and AI diagnostics for the Country Club of Little Rock",
   "main": "server.js",
   "type": "commonjs",
   "engines": {

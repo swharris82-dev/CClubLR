@@ -6,7 +6,7 @@ const fs = require('fs');
 const DATA_DIR = process.env.DATA_DIR || __dirname;
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-const db = new Database(path.join(DATA_DIR, 'unitiq.db'));
+const db = new Database(path.join(DATA_DIR, 'clubhouseiq.db'));
 db.pragma('journal_mode = WAL');
 
 db.exec(`
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS properties (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- One row per apartment. The HVAC record.
+-- One row per piece of equipment (asset tag), grouped by building. 'apt' holds the asset tag.
 CREATE TABLE IF NOT EXISTS units (
   id                  INTEGER PRIMARY KEY AUTOINCREMENT,
   property_id         INTEGER NOT NULL DEFAULT 1,
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS units (
   building            TEXT,
   side                TEXT,
   floor               INTEGER,
-  system_type         TEXT DEFAULT 'Split system / air handler',
+  system_type         TEXT DEFAULT 'Other',
   drain_design        TEXT DEFAULT '',
   switch_present      TEXT DEFAULT 'unk',
   switch_functioning  TEXT DEFAULT 'unk',
@@ -102,19 +102,15 @@ addColumnIfMissing('units', 'ai_brief_stamp', `ai_brief_stamp TEXT DEFAULT ''`);
 const propCount = db.prepare('SELECT COUNT(*) c FROM properties').get().c;
 if (propCount === 0) {
   db.prepare('INSERT INTO properties (id, name, city) VALUES (1, ?, ?)')
-    .run(process.env.PROPERTY_NAME || 'The Villa at River Pointe', process.env.PROPERTY_CITY || 'Maumelle, AR');
+    .run(process.env.PROPERTY_NAME || 'Country Club of Little Rock', process.env.PROPERTY_CITY || 'Little Rock, AR');
 }
 
 /* ---------------- helpers ---------------- */
 
+// Club assets are named by tag (BLR-1, CT-1, HP-CH-01). Building is set on the
+// record, not parsed from the tag.
 function parseApt(apt) {
-  const m = String(apt).match(/^(\d+)\s*([AB])?\s*-?\s*(\d+)?/i);
-  if (!m) return { building: null, side: null, floor: null };
-  const building = m[1] || null;
-  const side = m[2] ? m[2].toUpperCase() : null;
-  let floor = null;
-  if (m[3] && m[3].length >= 2) floor = parseInt(m[3][0], 10);
-  return { building, side, floor };
+  return { building: null, side: null, floor: null };
 }
 
 function getOrCreateUnit(apt, propertyId = 1) {

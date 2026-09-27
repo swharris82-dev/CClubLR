@@ -13,7 +13,7 @@ const MANUFACTURERS = {
   /* ---------- Ducted / conventional ---------- */
 
   'Carrier': {
-    families: ['split', 'ceiling', 'package'],
+    families: ['split', 'ceiling', 'package', 'wshp'],
     codes: 'Amber LED flash codes on the furnace/air handler control board; Infinity systems report alphanumeric codes at the wall control.',
     guidance: `CARRIER: Board LED flash codes are the primary diagnostic on ducted equipment — count the flashes before pulling panels. Infinity/Greenspeed communicating systems will not run correctly on a conventional thermostat and will throw comms faults if one was swapped in; always confirm the thermostat matches the system. Known weak points: inducer motor bearings, pressure switch hoses collecting condensate, and control board relay failure on older 58/59 series. Carrier and Bryant equipment are the same platform with different badges.`
   },
@@ -28,7 +28,7 @@ const MANUFACTURERS = {
     guidance: `PAYNE: Carrier's budget line. Same flash codes and cross-referenced parts, but lighter-duty components — expect earlier capacitor, contactor, and blower motor failure than the Carrier-badged equivalent. Cheap to repair, so recommend replacement of wear parts rather than testing marginal ones.`
   },
   'Trane': {
-    families: ['split', 'ceiling', 'package', 'vrf'],
+    families: ['split', 'ceiling', 'package', 'vrf', 'wshp'],
     codes: 'LED codes on the UC board; ComfortLink II and XL communicating controls display alphanumeric codes at the thermostat.',
     guidance: `TRANE: Spine Fin outdoor coils are easy to damage during cleaning — never recommend high-pressure washing. Communicating ComfortLink systems require matched indoor/outdoor equipment and a Trane thermostat; mismatched components throw comms faults that look like board failures. Known weak points: TXV failures on some XR/XB series, and variable-speed blower module failures on the indoor side. Trane and American Standard are the same equipment.`
   },
@@ -105,7 +105,7 @@ Multi V (VRF) uses a setting-based addressing scheme; DIP switch and auto-addres
 Known weak points: PCB failures after voltage events, indoor blower wheel fouling causing water spray from wall-mount heads (frequently misreported as a refrigerant leak), and LGRED heat-mode faults in low ambient. LG parts often require model-specific ordering — confirm the full model and serial before sourcing.`
   },
   'Daikin': {
-    families: ['ductless', 'vrf', 'split'],
+    families: ['ductless', 'vrf', 'split', 'wshp', 'package'],
     codes: 'Two-character codes (e.g. U4, E7, A6, L5) shown at the remote controller, indoor display, or outdoor seven-segment.',
     guidance: `DAIKIN: Codes follow a letter-number scheme. U-codes are system and communication faults (U4 is indoor-to-outdoor transmission, a wiring or addressing issue far more often than a board). E-codes are outdoor unit faults. A-codes are indoor unit faults. L-codes are inverter faults. F-codes are refrigerant/temperature abnormalities.
 VRV systems require correct refrigerant charge calculated from actual piping length — never top off, and treat charge-related codes as requiring a full charge calculation. VRV also stores fault history at the outdoor board, which is worth pulling on intermittent complaints.
@@ -156,8 +156,164 @@ Known weak points: inverter PCB failures and EEV coil faults. Parts availability
 
   /* ---------- Fallback ---------- */
 
+  /* ---------- Water-source heat pumps ---------- */
+
+  'ClimateMaster': {
+    families: ['wshp'],
+    codes: 'LED fault codes on the CXM / DXM control board inside the unit; count the flashes or read the status LED.',
+    guidance: `CLIMATEMASTER: The control board separates high pressure, low pressure, freeze protection (water coil and air coil thermistors), and condensate overflow lockouts. Read which one before doing anything. High pressure in cooling on a loop system is usually loop water temperature or flow. Freeze protection trips usually mean low water flow in heating or low airflow in cooling. Board resets by cycling power or the thermostat; a unit that relocks right away has a real problem, do not keep resetting it.`
+  },
+  'Florida Heat Pump (FHP)': {
+    families: ['wshp'],
+    codes: 'Lockout indicated at the control board LEDs and at the thermostat; FHP is now part of Bosch.',
+    guidance: `FHP: Same failure profile as other water-to-air units. Lockouts on high pressure, low pressure, and freeze protection. Older units on club loops often have scaled coaxial water coils from years of weak treatment, which shows up as high pressure lockouts in summer. Check water temperature rise across the coil against the data plate.`
+  },
+  'WaterFurnace': {
+    families: ['wshp'],
+    codes: 'Fault LED codes on the Aurora or FX control board.',
+    guidance: `WATERFURNACE: Aurora controls log fault history. Pull it. Treat lockouts the same as other water-to-air units: confirm loop temperature and flow at the unit before the refrigerant side.`
+  },
+
+  /* ---------- Boilers ---------- */
+
+  'Lochinvar': {
+    families: ['boiler', 'dhw'],
+    codes: 'Fault text displayed on the SMART SYSTEM or touchscreen control, with lockout history in the menu.',
+    guidance: `LOCHINVAR: Condensing boilers (Crest, Knight, FTXL) and water heaters. The control shows fault text; read it and check history. Common real failures: flame sensor fouling, igniter wear, condensate trap or neutralizer plugged (blocked condensate trips pressure switch or shuts the boiler down), low flow from pump or valve issues, and heat exchanger fouling from bad water quality. Annual combustion analysis and condensate trap cleaning prevent most calls.`
+  },
+  'Raypak': {
+    families: ['boiler', 'dhw', 'pool'],
+    codes: 'Status and fault LEDs or display on the ignition and temperature controls.',
+    guidance: `RAYPAK: Copper fin-tube boilers and pool heaters are very sensitive to water flow. Low flow scales and burns out tubes. Flow switch and pump interlock failures are common calls. On pool heaters, poor chemistry corrodes the heat exchanger.`
+  },
+  'AERCO': {
+    families: ['boiler', 'dhw'],
+    codes: 'Fault messages on the C-More or Edge controller display, with a fault log.',
+    guidance: `AERCO: Benchmark boilers. Read the fault log. Common real failures: igniter-injector wear, flame detector, air/fuel valve, O2 sensor where equipped, and condensate drain issues. These are modulating units; short cycling usually points to controls or low load, not a bad burner.`
+  },
+  'Cleaver-Brooks': {
+    families: ['boiler'],
+    codes: 'Flame safeguard lockout codes on the CB Hawk or Fireye display.',
+    guidance: `CLEAVER-BROOKS: Firetube and packaged boilers. Read the flame safeguard lockout. Common: flame scanner dirty or failed, pilot issues, low water cutoff trips, fuel train or gas pressure switch trips, air switch. Blow down the LWCO per schedule; a sticky LWCO is a serious safety problem.`
+  },
+  'Weil-McLain': {
+    families: ['boiler'],
+    codes: 'Ignition control LED status or display, depending on model.',
+    guidance: `WEIL-MCLAIN: Cast iron sectional boilers on older systems. Watch return water temperature. Long periods below about 130 F cause flue gas condensation and sections rot. Common: ignition control, thermocouple or flame sensor, gas valve, cracked sections showing as water in the firebox.`
+  },
+  'Burnham / Smith': {
+    families: ['boiler'],
+    codes: 'Ignition control status LEDs.',
+    guidance: `BURNHAM / SMITH: Cast iron sectional boilers. Same cautions as other cast iron: thermal shock and cold return water crack and rot sections. Check for a mixing or bypass arrangement on a heat pump loop.`
+  },
+  'Patterson-Kelley': {
+    families: ['boiler', 'dhw'],
+    codes: 'Fault display on the boiler control.',
+    guidance: `PATTERSON-KELLEY: Modulating commercial boilers. Read the fault on the control. Common: igniter, flame rod, blower, condensate trap, and low flow trips.`
+  },
+  'Fulton': {
+    families: ['boiler'],
+    codes: 'Fault display on the boiler control.',
+    guidance: `FULTON: Commercial hydronic and steam boilers. Read the fault on the control, check gas pressure, flame signal, and water flow.`
+  },
+
+  /* ---------- Cooling towers ---------- */
+
+  'BAC (Baltimore Aircoil)': {
+    families: ['tower'],
+    codes: 'No self-diagnostics on the tower itself. Faults show on the fan VFD, vibration switch, or BAS.',
+    guidance: `BAC: Open towers (Series 3000, VT) and closed-circuit fluid coolers (FXV). Common: fan belt wear and bearing failure, gear reducer oil, spray pump on closed circuit units, clogged nozzles, fouled fill or coil, makeup float valve, basin heater. Scale on the coil of a closed-circuit cooler cuts capacity a lot; tie it to water treatment.`
+  },
+  'EVAPCO': {
+    families: ['tower'],
+    codes: 'Faults show on the fan VFD, vibration switch, or BAS.',
+    guidance: `EVAPCO: Open towers and closed-circuit coolers. Same failure profile: fan drive, spray pump, nozzles, fill or coil fouling, makeup, basin heater. Check drift eliminators and louvers for debris.`
+  },
+  'Marley (SPX)': {
+    families: ['tower'],
+    codes: 'Faults show on the fan VFD, vibration switch, or BAS.',
+    guidance: `MARLEY: Common: Geareducer oil level and seal leaks, drive shaft coupling wear, fan pitch, hot water basin nozzles plugged on crossflow towers, fill fouling. Check oil and listen to the gearbox on every PM.`
+  },
+
+  /* ---------- Pumps ---------- */
+
+  'Bell & Gossett': {
+    families: ['pump', 'accessory'],
+    codes: 'None on the pump. VFD fault codes if equipped.',
+    guidance: `BELL & GOSSETT: Base-mounted e-1510 and inline pumps. Coupler failure is common: motor spins, pump does not. Mechanical seal leaks, bearing noise. Check the coupler, differential pressure, and suction strainer.`
+  },
+  'Taco': {
+    families: ['pump', 'accessory'],
+    codes: 'None on the pump. VFD fault codes if equipped.',
+    guidance: `TACO: Inline and base-mounted pumps and hydronic accessories. Common: seal leaks, bearing failure, coupler wear, air binding.`
+  },
+  'Armstrong': {
+    families: ['pump', 'accessory'],
+    codes: 'Design Envelope pumps show faults on the integrated controller; others use VFD codes.',
+    guidance: `ARMSTRONG: Inline and vertical inline pumps, some with integrated controls. Read the controller fault. Common: seal leaks, bearing wear, sensor faults on Design Envelope units.`
+  },
+  'Grundfos': {
+    families: ['pump', 'pool', 'dhw'],
+    codes: 'Integrated drive fault codes on E-series pumps; otherwise VFD codes.',
+    guidance: `GRUNDFOS: Read the drive fault on E-series pumps. Common: seal leaks, bearing noise, sensor or drive faults.`
+  },
+
+  /* ---------- Refrigeration and kitchen ---------- */
+
+  'Hoshizaki': {
+    families: ['ice'],
+    codes: 'Alarm beeps and LED codes on the control board.',
+    guidance: `HOSHIZAKI: Count the alarm beeps or read the board LEDs. Common: scale on the evaporator, water valve, float switch, harvest problems, dirty condenser. Descale and sanitize on schedule.`
+  },
+  'Manitowoc': {
+    families: ['ice'],
+    codes: 'Fault codes on the display or control board, depending on series.',
+    guidance: `MANITOWOC: Read the fault. Common: scale, ice thickness probe, water level probe, harvest assist, dirty condenser. Descale and sanitize on schedule.`
+  },
+  'Scotsman': {
+    families: ['ice'],
+    codes: 'Status lights or code display on the controller.',
+    guidance: `SCOTSMAN: Read the status. Common: scale, water level sensor, harvest problems, auger issues on nugget and flake machines.`
+  },
+  'Heatcraft': {
+    families: ['walkin'],
+    codes: 'Controller alarms on units with electronic controls; otherwise none.',
+    guidance: `HEATCRAFT: Walk-in evaporators and condensing units. Common: failed defrost heaters or termination, evaporator fan motors, dirty condenser coils, low charge.`
+  },
+  'Kolpak': {
+    families: ['walkin'],
+    codes: 'Controller alarms where equipped.',
+    guidance: `KOLPAK: Walk-in boxes and refrigeration. Check door gaskets, heater wires on freezer doors, and the refrigeration system as with any walk-in.`
+  },
+
+  /* ---------- Pool ---------- */
+
+  'Pentair': {
+    families: ['pool'],
+    codes: 'Fault display on IntelliFlo drives and heaters.',
+    guidance: `PENTAIR: Read the drive or heater fault. Common: pump prime loss, suction air leaks, drive faults, heater ignition and flow switch.`
+  },
+  'Hayward': {
+    families: ['pool'],
+    codes: 'Fault display on variable-speed drives, heaters, and controllers.',
+    guidance: `HAYWARD: Read the fault. Common: pump prime loss, seal leaks, heater ignition and pressure switch, chlorinator cell scaling.`
+  },
+
+  /* ---------- Controls ---------- */
+
+  'Johnson Controls (Metasys)': {
+    families: ['bas'],
+    codes: 'Alarm log on the Metasys ADS / NAE, point status and override flags.',
+    guidance: `JOHNSON CONTROLS: Check the alarm log, whether points are in operator override, and NAE communication status. A trunk full of offline devices is usually a network or power issue at one location.`
+  },
+  'Honeywell / Trane / Siemens controls': {
+    families: ['bas'],
+    codes: 'Alarm log and point status on the front end.',
+    guidance: `CONTROLS: Check the alarm log, overrides, and communication status before trusting any sensor value.`
+  },
+
   'Other / Unknown': {
-    families: ['split', 'ceiling', 'ductless', 'vrf', 'package', 'other'],
+    families: ['split', 'ceiling', 'ductless', 'vrf', 'package', 'other', 'boiler', 'tower', 'pump', 'hx', 'accessory', 'chem', 'wshp', 'walkin', 'ice', 'kitchen', 'pool', 'dhw', 'bas'],
     codes: 'Unknown — identify from the data plate.',
     guidance: `MANUFACTURER NOT IDENTIFIED: Instruct the tech to pull the full model and serial from the data plate before ordering parts or condemning components. Keep recommendations generic to the system type and avoid brand-specific code interpretation.`
   }

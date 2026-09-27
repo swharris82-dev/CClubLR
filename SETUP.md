@@ -1,20 +1,19 @@
-# Unit IQ — Setup
+# Clubhouse IQ Setup
 
-HVAC asset intelligence and diagnostic triage for multifamily maintenance.
-Node + SQLite. One codebase, no external database to configure.
+Equipment tracking, work history, and AI diagnostics for the Country Club of Little Rock.
+Node + SQLite. One codebase, no external database to configure. Forked from Unit IQ.
 
 ## What it does
 
-- **Diagnose** — describe the problem, get ranked causes with odds, the check
-  that confirms each one, a truck list, and a message for the resident. The
-  diagnosis runs *with that unit's documented history in context*, so a repeat
-  failure gets called out instead of re-diagnosed from zero.
-- **Unit Record** — system type, condensate drain design, float switch status,
-  and an equipment registry with model, serial, install date, and warranty.
-- **History** — every job on that unit, who logged it, and the vendor cost
-  avoided.
-- **Reports** — total cost avoided by month, float-switch risk list, building
-  defect patterns, repeat water offenders, and warranty watch.
+- **Equipment directory.** Every piece of equipment has a tag (BLR-1, CT-1, P-1, HP-CH-01) and a building (Central Plant, Clubhouse, Indoor Tennis Center, Pool Pavilion, and so on).
+- **Diagnose.** Describe the problem, get ranked causes with odds, the check that confirms each one, a truck list, and a message for the staff member who reported it. Runs with the equipment's history AND the water loop status, so a heat pump lockout gets tied to a tower or pump problem when that is the real cause.
+- **Record.** Equipment type, manufacturer, type-specific details (boiler certificate dates, tower fan drive, pump lead/lag), the safety device for that type (low water cutoff, vibration switch, flow switch, condensate switch), and a registry with model, serial, install date, and warranty.
+- **History.** Every job, who logged it, and vendor cost avoided.
+- **Reports.** Cost avoided by month, water loop activity, safety devices out of service, repeat problems, work by building, and warranty watch.
+
+## Sample data
+
+`seed.js` loads the club's buildings with a central plant (2 boilers, cooling tower, plate heat exchanger, 3 pumps, expansion tank, water treatment, controls) and heat pumps and kitchen, pool, and tennis equipment. Models, serials, and counts are placeholders. Replace them from the data plates.
 
 ## Put a demo on your phone
 
@@ -29,7 +28,7 @@ any phone, with no login and no laptop.
    - `DEMO_MODE` = `true`
    - `ANTHROPIC_API_KEY` = your key
    - `JWT_SECRET` = any long random string
-6. Deploy. You get a URL like `unit-iq.onrender.com`.
+6. Deploy. You get a URL like `clubhouse-iq.onrender.com`.
 
 Open it on your phone. It loads straight into the app with the sample property
 already populated — no signup, nothing to type. In demo mode the app reseeds
