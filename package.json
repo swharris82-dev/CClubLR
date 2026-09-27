@@ -1,0 +1,19 @@
+{
+  "name": "clubhouse-iq",
+  "version": "1.0.0",
+  "description": "HVAC asset intelligence and diagnostic triage for multifamily maintenance teams",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "better-sqlite3": "^11.3.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#080C11">
+<title>Unit IQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#080C11;
+  --deep:#0E141B;
+  --panel:#131C26;
+  --raised:#1A2531;
+  --edge:#243444;
+  --edge-lit:#33495E;
+
+  --ice:#4FD3E8;
+  --ice-dim:#2A7F8F;
+  --ember:#FF7A3D;
+  --sulfur:#F2C14E;
+  --mint:#43D9A3;
+  --rose:#F2544B;
+
+  --text:#E6EDF4;
+  --mid:#9DB0C2;
+  --dim:#63788C;
+
+  --disp:'Barlow Condensed',Impact,sans-serif;
+  --body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --mono:'IBM Plex Mono','Courier New',monospace;
+  --r:4px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--void);color:var(--text);font-family:var(--body);
+  font-size:15px;line-height:1.5;min-height:100vh;
+  background-image:
+    linear-gradient(rgba(79,211,232,.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79,211,232,.022) 1px, transparent 1px);
+  background-size:36px 36px;
+}
+
+header{
+  background:linear-gradient(180deg,var(--deep) 0%, rgba(14,20,27,.95) 100%);
+  border-bottom:1px solid var(--edge);
+  padding:14px 16px 0;position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);
+}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.mark{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
+.mark .logo{font-family:var(--disp);font-size:27px;font-weight:700;letter-spacing:.5px;line-height:1;}
+.mark .logo em{color:var(--ice);font-style:normal;}
+.mark .tagline{font-family:var(--mono);font-size:9px;letter-spacing:2.2px;color:var(--dim);text-transform:uppercase;}
+.prop{font-family:var(--mono);font-size:9.5px;color:var(--dim);margin-top:5px;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.whobox{text-align:right;flex-shrink:0;}
+.whobox .nm{font-family:var(--mono);font-size:10px;color:var(--mid);}
+.whobox button{background:none;border:1px solid var(--edge);color:var(--dim);
+  font-family:var(--mono);font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:3px;
+  margin-top:4px;text-transform:uppercase;cursor:pointer;transition:border-color .2s,color .2s;}
+.whobox button:hover{border-color:var(--ice-dim);color:var(--ice);}
+
+.tabs{display:flex;margin-top:12px;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{font-family:var(--disp);font-size:16px;font-weight:600;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--dim);padding:8px 15px 9px;
+  border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;
+  transition:color .2s;position:relative;}
+.tab:hover{color:var(--mid);}
+.tab.on{color:var(--text);}
+.tab.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;
+  background:var(--ice);box-shadow:0 0 9px var(--ice);animation:tabIn .3s ease;}
+@keyframes tabIn{from{transform:scaleX(0);}to{transform:scaleX(1);}}
+
+.wrap{max-width:760px;margin:0 auto;padding:16px 12px 80px;}
+
+.panel{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);
+  padding:15px;margin-bottom:12px;position:relative;
+  animation:riseIn .34s cubic-bezier(.2,.7,.3,1) backwards;}
+@keyframes riseIn{from{opacity:0;transform:translateY(9px);}to{opacity:1;transform:none;}}
+
+.eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--ice-dim);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.eyebrow::after{content:'';flex:1;height:1px;background:var(--edge);}
+
+input,select,textarea{font-family:var(--body);font-size:16px;background:var(--deep);
+  border:1px solid var(--edge);color:var(--text);border-radius:3px;padding:11px;width:100%;
+  transition:border-color .18s,box-shadow .18s;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ice-dim);
+  box-shadow:0 0 0 3px rgba(79,211,232,.09);}
+input::placeholder,textarea::placeholder{color:var(--dim);}
+textarea{min-height:74px;resize:vertical;line-height:1.5;}
+select{appearance:none;padding-right:34px;background-image:
+  linear-gradient(45deg,transparent 50%,var(--dim) 50%),
+  linear-gradient(135deg,var(--dim) 50%,transparent 50%);
+  background-position:calc(100% - 16px) 50%, calc(100% - 11px) 50%;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;}
+label.fl{font-family:var(--mono);font-size:9px;letter-spacing:1.6px;text-transform:uppercase;
+  color:var(--dim);display:block;margin:13px 0 5px;}
+
+button{font-family:var(--body);font-weight:600;font-size:14px;border:none;border-radius:3px;
+  padding:12px 17px;cursor:pointer;transition:all .18s;}
+.btn{background:var(--ice);color:var(--void);font-weight:700;letter-spacing:.3px;}
+.btn:hover{background:#6FE0F2;box-shadow:0 0 18px rgba(79,211,232,.28);}
+.btn:active{transform:translateY(1px);}
+.btn:disabled{opacity:.45;cursor:default;box-shadow:none;}
+.btn-2{background:transparent;border:1px solid var(--edge);color:var(--mid);}
+.btn-2:hover{border-color:var(--ice-dim);color:var(--ice);}
+.full{width:100%;}
+.row{display:flex;gap:9px;}
+.row>*{flex:1;}
+.hide{display:none !important;}
+.dim{color:var(--dim);font-size:13px;}
+.mid{color:var(--mid);font-size:13px;}
+
+.auth{max-width:380px;margin:44px auto;}
+.auth .panel{padding:22px;}
+.auth h2{font-family:var(--disp);font-size:26px;font-weight:600;letter-spacing:.5px;
+  margin:0;text-transform:uppercase;}
+.msg{font-size:13px;padding:10px 12px;border-radius:3px;margin-top:13px;display:none;font-family:var(--mono);}
+.msg.on{display:block;animation:riseIn .25s;}
+.msg.err{background:rgba(242,84,75,.1);color:var(--rose);border:1px solid rgba(242,84,75,.3);}
+.msg.ok{background:rgba(67,217,163,.1);color:var(--mint);border:1px solid rgba(67,217,163,.3);}
+.tog{color:var(--ice-dim);font-family:var(--mono);font-size:11px;cursor:pointer;
+  display:inline-block;margin-top:15px;border-bottom:1px solid var(--edge);}
+.tog:hover{color:var(--ice);}
+
+.plate{background:linear-gradient(135deg,var(--raised) 0%,var(--panel) 100%);
+  border:1px solid var(--edge-lit);border-radius:var(--r);padding:14px 15px;
+  margin-bottom:12px;position:relative;overflow:hidden;
+  animation:riseIn .34s cubic-bezier(.2,.7,.3,1);}
+.plate::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--ice);box-shadow:0 0 14px var(--ice);}
+.plate.alert::before{background:var(--rose);box-shadow:0 0 14px var(--rose);}
+.plate-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.plate .apt{font-family:var(--disp);font-size:34px;font-weight:700;line-height:.95;letter-spacing:1px;}
+.plate .loc{font-family:var(--mono);font-size:9.5px;color:var(--ice-dim);letter-spacing:1.4px;
+  margin-top:4px;text-transform:uppercase;}
+.plate .sys{font-family:var(--mono);font-size:10px;color:var(--mid);margin-top:5px;}
+.status{text-align:right;flex-shrink:0;}
+.status .lb{font-family:var(--mono);font-size:8.5px;letter-spacing:1.4px;color:var(--dim);text-transform:uppercase;}
+.status .vl{font-family:var(--mono);font-size:12px;font-weight:600;margin-top:3px;
+  display:flex;align-items:center;justify-content:flex-end;gap:5px;}
+.led{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.led.ok{background:var(--mint);box-shadow:0 0 8px var(--mint);}
+.led.bad{background:var(--rose);box-shadow:0 0 8px var(--rose);animation:pulse 1.6s infinite;}
+.led.unk{background:var(--dim);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+.brief{background:var(--deep);border:1px solid var(--edge);border-left:3px solid var(--ice);
+  border-radius:var(--r);padding:13px 15px;margin-bottom:12px;position:relative;overflow:hidden;
+  animation:riseIn .34s cubic-bezier(.2,.7,.3,1);}
+.brief-hd{font-family:var(--mono);font-size:8.5px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--ice-dim);display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.brief-hd .re{margin-left:auto;cursor:pointer;color:var(--dim);letter-spacing:1px;
+  border-bottom:1px solid transparent;}
+.brief-hd .re:hover{color:var(--ice);border-bottom-color:var(--ice-dim);}
+.brief-body{font-size:14.5px;line-height:1.55;}
+.brief.thinking .brief-body{color:var(--dim);}
+.brief.thinking::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(79,211,232,.09),transparent);
+  animation:scan 1.25s linear infinite;}
+@keyframes scan{to{left:130%;}}
+.caret{display:inline-block;width:7px;height:15px;background:var(--ice);vertical-align:-2px;
+  margin-left:2px;animation:blink .9s step-end infinite;}
+@keyframes blink{50%{opacity:0;}}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.chip{font-family:var(--mono);font-size:11.5px;background:var(--deep);border:1px solid var(--edge);
+  border-radius:20px;padding:5px 12px;cursor:pointer;color:var(--mid);transition:all .18s;}
+.chip:hover{border-color:var(--ice-dim);color:var(--ice);}
+.chip b{color:var(--sulfur);font-weight:600;}
+
+.seg{display:flex;gap:6px;}
+.seg div{flex:1;text-align:center;padding:10px 4px;border:1px solid var(--edge);border-radius:3px;
+  background:var(--deep);font-family:var(--mono);font-size:11.5px;font-weight:600;
+  letter-spacing:.8px;cursor:pointer;color:var(--dim);transition:all .18s;}
+.seg div:hover{border-color:var(--edge-lit);color:var(--mid);}
+.seg div.y{background:rgba(67,217,163,.13);color:var(--mint);border-color:var(--mint);}
+.seg div.n{background:rgba(242,84,75,.13);color:var(--rose);border-color:var(--rose);}
+.seg div.u{background:var(--raised);color:var(--mid);border-color:var(--edge-lit);}
+
+.prio{font-family:var(--disp);font-size:20px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;padding:11px 14px;border-radius:3px;margin-bottom:11px;
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;animation:riseIn .3s;}
+.prio small{font-family:var(--body);font-size:12.5px;font-weight:400;letter-spacing:0;
+  text-transform:none;opacity:.82;}
+.p-emergency{background:rgba(242,84,75,.14);color:var(--rose);border-left:4px solid var(--rose);}
+.p-same-day{background:rgba(255,122,61,.13);color:var(--ember);border-left:4px solid var(--ember);}
+.p-normal{background:rgba(79,211,232,.1);color:var(--ice);border-left:4px solid var(--ice);}
+.p-low{background:var(--raised);color:var(--mid);border-left:4px solid var(--dim);}
+
+.firstmove{background:linear-gradient(135deg,var(--raised),var(--panel));
+  border:1px solid var(--edge-lit);border-radius:3px;padding:12px 14px;margin-bottom:11px;
+  animation:riseIn .3s .05s backwards;}
+.firstmove .k{font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--sulfur);text-transform:uppercase;}
+.firstmove .v{font-size:14.5px;margin-top:4px;font-weight:500;}
+
+.cause{background:var(--deep);border:1px solid var(--edge);border-radius:3px;padding:12px;
+  margin-bottom:8px;animation:riseIn .32s backwards;}
+.cause .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+.cause .nm{font-weight:600;font-size:15px;}
+.cause .od{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--ice);}
+.bar{height:3px;background:var(--edge);border-radius:2px;margin-top:8px;overflow:hidden;}
+.bar i{display:block;height:100%;width:0;border-radius:2px;
+  background:linear-gradient(90deg,var(--ice-dim),var(--ice));
+  transition:width .7s cubic-bezier(.2,.8,.3,1);}
+.cause .why{font-size:13.5px;color:var(--mid);margin-top:8px;line-height:1.5;}
+.cause .ck{font-size:13.5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--edge);}
+.cause .ck b{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--sulfur);
+  text-transform:uppercase;display:block;margin-bottom:3px;}
+
+.note{border-radius:3px;padding:10px 13px;margin-bottom:8px;font-size:13.5px;
+  animation:riseIn .3s;line-height:1.5;}
+.note b{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  display:block;margin-bottom:3px;}
+.n-hist{background:rgba(242,193,78,.09);border:1px solid rgba(242,193,78,.28);color:var(--sulfur);}
+.n-sys{background:rgba(79,211,232,.08);border:1px solid rgba(79,211,232,.26);color:var(--ice);}
+.n-warr{background:rgba(67,217,163,.08);border:1px solid rgba(67,217,163,.26);color:var(--mint);}
+.n-safe{background:rgba(242,84,75,.1);border:1px solid rgba(242,84,75,.28);color:var(--rose);}
+.n-code{background:var(--raised);border:1px solid var(--edge-lit);color:var(--text);}
+
+.pill{display:inline-block;background:var(--deep);border:1px solid var(--edge);border-radius:20px;
+  padding:6px 13px;font-size:12.5px;margin:0 6px 6px 0;font-family:var(--mono);color:var(--mid);}
+
+.job{background:var(--deep);border:1px solid var(--edge);border-left:3px solid var(--edge-lit);
+  border-radius:3px;padding:12px;margin-bottom:8px;animation:riseIn .3s backwards;}
+.job .dt{font-family:var(--mono);font-size:10.5px;color:var(--ice-dim);letter-spacing:1px;
+  font-weight:600;text-transform:uppercase;}
+.job .by{font-family:var(--mono);font-size:9.5px;color:var(--dim);margin-top:1px;}
+.job .ln{font-size:13.5px;margin-top:6px;line-height:1.5;}
+.job .ln b{font-family:var(--mono);font-size:9px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase;}
+.job .code{font-family:var(--mono);font-weight:600;color:var(--sulfur);}
+.job .money{font-family:var(--mono);font-size:11.5px;color:var(--mint);margin-top:7px;}
+.rm{float:right;font-family:var(--mono);font-size:9.5px;color:var(--dim);cursor:pointer;
+  letter-spacing:1px;text-transform:uppercase;}
+.rm:hover{color:var(--rose);}
+
+.equip{background:var(--deep);border:1px solid var(--edge);border-radius:3px;padding:11px;
+  margin-bottom:7px;font-size:13px;line-height:1.6;}
+.equip .cn{font-family:var(--disp);font-size:16px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;}
+.wi{font-family:var(--mono);font-size:10.5px;color:var(--mint);letter-spacing:.5px;}
+.wo{font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.5px;}
+
+.hero-n{font-family:var(--disp);font-size:52px;font-weight:700;color:var(--mint);
+  line-height:1;letter-spacing:-1px;}
+.stats{display:flex;gap:9px;}
+.stat{flex:1;background:var(--deep);border:1px solid var(--edge);border-radius:3px;
+  padding:12px 9px;text-align:center;}
+.stat .n{font-family:var(--disp);font-size:24px;font-weight:700;line-height:1;}
+.stat .l{font-family:var(--mono);font-size:8.5px;letter-spacing:1.2px;color:var(--dim);
+  margin-top:5px;text-transform:uppercase;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--dim);text-align:left;padding:7px 5px;border-bottom:1px solid var(--edge);}
+td{padding:9px 5px;border-bottom:1px solid rgba(36,52,68,.5);color:var(--mid);}
+td b{color:var(--text);font-family:var(--mono);}
+
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--edge);
+  border-top-color:var(--ice);border-radius:50%;animation:sp .65s linear infinite;
+  vertical-align:-2px;margin-right:7px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+.empty{text-align:center;padding:34px 18px;color:var(--dim);font-size:14px;}
+.empty .big{font-family:var(--disp);font-size:20px;color:var(--mid);text-transform:uppercase;
+  letter-spacing:1px;margin-bottom:6px;}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-top">
+    <div>
+      <div class="mark">
+        <span class="logo">UNIT<em>IQ</em></span>
+        <span class="tagline">Asset Intelligence</span>
+      </div>
+      <div class="prop">THE VILLA AT RIVER POINTE · MAUMELLE, AR</div>
+    </div>
+    <div class="whobox hide" id="whobox">
+      <div class="nm" id="who"></div>
+      <button id="outBtn">Sign out</button>
+    </div>
+  </div>
+  <div class="tabs hide" id="tabs">
+    <div class="tab on" data-tab="diagnose">Diagnose</div>
+    <div class="tab" data-tab="record">Record</div>
+    <div class="tab" data-tab="history">History</div>
+    <div class="tab" data-tab="reports">Reports</div>
+  </div>
+</header>
+
+<div class="wrap auth" id="authView">
+  <div class="panel">
+    <h2 id="aTitle">Sign in</h2>
+    <div class="dim" id="aHint" style="margin-top:3px;">Maintenance staff access.</div>
+    <div id="nameWrap" class="hide">
+      <label class="fl">Your name</label>
+      <input type="text" id="aName" placeholder="Stephen Harris">
+    </div>
+    <label class="fl">Email</label>
+    <input type="email" id="aEmail" autocomplete="email" placeholder="you@example.com">
+    <label class="fl">Password</label>
+    <input type="password" id="aPass" autocomplete="current-password" placeholder="••••••••">
+    <button class="btn full" style="margin-top:17px;" id="aGo">Sign in</button>
+    <div class="msg" id="aMsg"></div>
+    <span class="tog" id="aToggle">Need an account? Create one</span>
+  </div>
+</div>
+
+<div class="wrap hide" id="appView">
+
+  <div class="panel" id="lookupPanel">
+    <div class="eyebrow">Unit lookup</div>
+    <div class="row">
+      <input type="text" id="aptIn" placeholder="7A-204" autocomplete="off"
+             style="font-family:var(--mono);font-weight:600;font-size:19px;letter-spacing:1.5px;">
+      <button class="btn" style="flex:0 0 auto;" id="openBtn">Open</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="plate hide" id="plate">
+    <div class="plate-top">
+      <div>
+        <div class="apt" id="pApt">—</div>
+        <div class="loc" id="pLoc"></div>
+        <div class="sys" id="pSys"></div>
+      </div>
+      <div class="status">
+        <div class="lb">Float switch</div>
+        <div class="vl"><span class="led unk" id="pLed"></span><span id="pSw">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="brief hide" id="brief">
+    <div class="brief-hd">
+      <span>Unit brief</span>
+      <span class="re" id="briefRe">regenerate</span>
+    </div>
+    <div class="brief-body" id="briefBody"></div>
+  </div>
+
+  <div id="tab-diagnose">
+    <div class="panel">
+      <div class="eyebrow">Report</div>
+      <textarea id="reportIn" placeholder="What the tenant or dispatch said. e.g. Water dripping from hallway ceiling, AC still cooling"></textarea>
+      <div id="codeWrap" class="hide">
+        <label class="fl" style="color:var(--sulfur);">Fault code — read it off the equipment first</label>
+        <input type="text" id="codeIn" placeholder="CH 05 · U8 · 6607"
+               style="font-family:var(--mono);font-weight:600;letter-spacing:1.5px;">
+        <div class="dim" style="margin-top:5px;" id="codeHint"></div>
+      </div>
+      <button class="btn full" style="margin-top:12px;" id="goTriage">Run diagnosis</button>
+      <div class="dim" style="margin-top:9px;" id="tNote">Open a unit and the diagnosis uses its history.</div>
+      <div class="dim" style="margin-top:4px;" id="tFirst"></div>
+    </div>
+    <div id="triageOut"></div>
+  </div>
+
+  <div id="tab-record" class="hide">
+    <div id="recordBody"><div class="empty"><div class="big">No unit open</div>Look up an apartment to view its record.</div></div>
+  </div>
+
+  <div id="tab-history" class="hide">
+    <div id="historyBody"><div class="empty"><div class="big">No unit open</div>Look up an apartment to view its history.</div></div>
+  </div>
+
+  <div id="tab-reports" class="hide">
+    <div id="reportsBody"></div>
+  </div>
+
+</div>
+
+<script>
+let TOKEN = localStorage.getItem('uiq_token') || null;
+let ME=null, UNIT=null, LAST=null, TAB='diagnose', TYPES=[], TYPEMAP={};
+
+const $ = id => document.getElementById(id);
+const esc = s => { const d=document.createElement('div'); d.textContent = s==null?'':s; return d.innerHTML; };
+const today = () => new Date().toISOString().slice(0,10);
+const profileFor = n => TYPEMAP[n] || {fields:[],manufacturers:[],requiresErrorCode:false,firstMove:''};
+
+async function api(p,o={}){
+  const r = await fetch('/api'+p,{
+    method:o.method||'GET',
+    headers:Object.assign({'Content-Type':'application/json'},TOKEN?{Authorization:'Bearer '+TOKEN}:{}),
+    body:o.body?JSON.stringify(o.body):undefined
+  });
+  const d = await r.json().catch(()=>({error:'Bad response'}));
+  if(!r.ok) throw new Error(d.error||'Request failed');
+  return d;
+}
+
+/* ---------- auth ---------- */
+let mode='login';
+$('aToggle').onclick=()=>{
+  mode = mode==='login'?'signup':'login';
+  const up = mode==='signup';
+  $('aTitle').textContent = up?'Create account':'Sign in';
+  $('aHint').textContent = up?'Use your work email so edits are traceable.':'Maintenance staff access.';
+  $('aGo').textContent = up?'Create account':'Sign in';
+  $('aToggle').textContent = up?'Already have an account? Sign in':'Need an account? Create one';
+  $('nameWrap').classList.toggle('hide',!up);
+  $('aMsg').className='msg';
+};
+const aMsg=(t,k)=>{ $('aMsg').textContent=t; $('aMsg').className='msg on '+k; };
+
+$('aGo').onclick=async()=>{
+  const email=$('aEmail').value.trim(), password=$('aPass').value, name=$('aName').value.trim();
+  if(!email||!password) return aMsg('Enter your email and password.','err');
+  $('aGo').disabled=true;
+  try{
+    const d = await api(mode==='signup'?'/signup':'/login',{method:'POST',
+      body: mode==='signup'?{email,password,name}:{email,password}});
+    TOKEN=d.token; localStorage.setItem('uiq_token',TOKEN); ME=d.user; enterApp();
+  }catch(e){ aMsg(e.message,'err'); }
+  finally{ $('aGo').disabled=false; }
+};
+$('outBtn').onclick=()=>{
+  localStorage.removeItem('uiq_token'); TOKEN=null; ME=null; UNIT=null;
+  $('appView').classList.add('hide'); $('authView').classList.remove('hide');
+  $('whobox').classList.add('hide'); $('tabs').classList.add('hide');
+};
+
+function enterApp(){
+  $('authView').classList.add('hide');
+  $('appView').classList.remove('hide');
+  $('whobox').classList.remove('hide');
+  $('tabs').classList.remove('hide');
+  $('who').textContent = ME.name + (ME.role==='manager'?' · MGR':'');
+  loadTypes(); loadChips();
+}
+async function loadTypes(){
+  try{ const d=await api('/system-types'); TYPES=d.types; TYPEMAP={};
+       TYPES.forEach(t=>TYPEMAP[t.name]=t); }catch(e){}
+}
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on'); TAB=t.dataset.tab;
+  ['diagnose','record','history','reports'].forEach(n=>$('tab-'+n).classList.toggle('hide',n!==TAB));
+  const uc = TAB!=='reports';
+  $('lookupPanel').classList.toggle('hide',!uc);
+  $('plate').classList.toggle('hide',!uc||!UNIT);
+  $('brief').classList.toggle('hide',!uc||!UNIT);
+  if(TAB==='reports') loadReports();
+});
+
+/* ---------- unit ---------- */
+$('openBtn').onclick=openUnit;
+$('aptIn').addEventListener('keydown',e=>{ if(e.key==='Enter') openUnit(); });
+
+async function openUnit(){
+  const apt=$('aptIn').value.trim().toUpperCase();
+  if(!apt) return;
+  try{
+    const d=await api('/unit/'+encodeURIComponent(apt));
+    UNIT=d.unit;
+    drawPlate(); drawRecord(); drawHistory(); drawDiagnose();
+    loadBrief(); loadChips();
+  }catch(e){ alert(e.message); }
+}
+
+function drawPlate(){
+  if(!UNIT) return;
+  $('plate').classList.remove('hide');
+  $('pApt').textContent=UNIT.apt;
+  const b=[];
+  if(UNIT.building) b.push('BLDG '+UNIT.building);
+  if(UNIT.side) b.push(UNIT.side+' SIDE');
+  if(UNIT.floor) b.push('FL '+UNIT.floor);
+  $('pLoc').textContent=b.join('  ·  ');
+  $('pSys').textContent=[UNIT.manufacturer,UNIT.system_type].filter(Boolean).join(' — ');
+  const led=$('pLed'); led.className='led';
+  const bad = UNIT.switch_present==='no'||UNIT.switch_functioning==='no';
+  if(UNIT.switch_present==='no'){ led.classList.add('bad'); $('pSw').textContent='MISSING'; }
+  else if(UNIT.switch_functioning==='no'){ led.classList.add('bad'); $('pSw').textContent='FAILED'; }
+  else if(UNIT.switch_present==='yes'&&UNIT.switch_functioning==='yes'){ led.classList.add('ok'); $('pSw').textContent='OK'; }
+  else { led.classList.add('unk'); $('pSw').textContent='UNKNOWN'; }
+  $('plate').classList.toggle('alert',bad);
+}
+
+/* ---------- AI brief ---------- */
+async function loadBrief(force){
+  if(!UNIT) return;
+  const el=$('brief'), body=$('briefBody');
+  el.classList.remove('hide'); el.classList.add('thinking');
+  body.innerHTML='Reading unit history<span class="caret"></span>';
+  try{
+    const d=await api('/unit/'+encodeURIComponent(UNIT.apt)+'/brief'+(force?'?force=1':''));
+    el.classList.remove('thinking');
+    if(d.empty){ body.innerHTML='<span class="dim">Nothing recorded yet. Fill in the record and log a job — the brief writes itself from there.</span>'; return; }
+    if(d.unavailable||!d.brief){ el.classList.add('hide'); return; }
+    typeOut(body,d.brief);
+  }catch(e){ el.classList.add('hide'); }
+}
+function typeOut(el,text){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ el.textContent=text; return; }
+  el.textContent=''; let i=0;
+  const car=document.createElement('span'); car.className='caret'; el.appendChild(car);
+  const step=()=>{
+    if(i>=text.length){ car.remove(); return; }
+    car.insertAdjacentText('beforebegin',text.slice(i,i+3)); i+=3;
+    setTimeout(step,12);
+  };
+  step();
+}
+$('briefRe').onclick=()=>loadBrief(true);
+
+function drawDiagnose(){
+  if(!UNIT){ $('codeWrap').classList.add('hide'); return; }
+  const p=profileFor(UNIT.system_type);
+  $('codeWrap').classList.toggle('hide',!p.requiresErrorCode);
+  if(p.requiresErrorCode){
+    const m=(p.manufacturers||[]).find(x=>x.name===UNIT.manufacturer);
+    $('codeHint').textContent = m ? m.codes : 'This system self-reports faults. Without the code the ranking is a guess.';
+  }
+  const tag = UNIT.system_type+(UNIT.manufacturer?' / '+UNIT.manufacturer:'');
+  $('tNote').textContent = UNIT.jobs.length
+    ? 'Routed for '+tag+', using '+UNIT.jobs.length+' prior job'+(UNIT.jobs.length>1?'s':'')+'.'
+    : 'Routed for '+tag+'. No history yet.';
+  $('tFirst').innerHTML = p.firstMove ? '<b style="color:var(--mid)">First move:</b> '+esc(p.firstMove) : '';
+}
+
+async function loadChips(){
+  try{
+    const d=await api('/units'); const box=$('chips'); box.innerHTML='';
+    d.units.slice(0,10).forEach(u=>{
+      const c=document.createElement('div'); c.className='chip';
+      c.innerHTML=esc(u.apt)+(u.job_count?' <b>'+u.job_count+'</b>':'');
+      c.onclick=()=>{ $('aptIn').value=u.apt; openUnit(); };
+      box.appendChild(c);
+    });
+  }catch(e){}
+}
+
+/* ---------- triage ---------- */
+$('goTriage').onclick=async()=>{
+  const report=$('reportIn').value.trim();
+  if(!report) return alert('Describe the problem first.');
+  const b=$('goTriage'); b.disabled=true; b.innerHTML='<span class="spin"></span>Analyzing';
+  $('triageOut').innerHTML='';
+  try{
+    const d=await api('/triage',{method:'POST',body:{
+      apt:UNIT?UNIT.apt:null, report, error_code:$('codeIn')?$('codeIn').value.trim():''
+    }});
+    LAST=d.triage; window._rep=report; drawTriage(d.triage);
+  }catch(e){
+    $('triageOut').innerHTML='<div class="panel"><div class="note n-safe"><b>Failed</b>'+esc(e.message)+'</div></div>';
+  }finally{ b.disabled=false; b.textContent='Run diagnosis'; }
+};
+
+function drawTriage(t){
+  const p=(t.priority||'normal').toLowerCase();
+  let h='<div class="panel">';
+  h+='<div class="prio p-'+esc(p)+'">'+esc(p.replace('-',' '))+
+     (t.priority_reason?'<small>'+esc(t.priority_reason)+'</small>':'')+'</div>';
+  if(t.first_move) h+='<div class="firstmove"><div class="k">Do this first</div><div class="v">'+esc(t.first_move)+'</div></div>';
+  if(t.code_meaning) h+='<div class="note n-code"><b>Code</b>'+esc(t.code_meaning)+'</div>';
+  (t.history_flags||[]).forEach(f=>h+='<div class="note n-hist"><b>History</b>'+esc(f)+'</div>');
+  if(t.systemic_flag) h+='<div class="note n-sys"><b>System level</b>'+esc(t.systemic_flag)+'</div>';
+  if(t.warranty_note) h+='<div class="note n-warr"><b>Warranty</b>'+esc(t.warranty_note)+'</div>';
+  (t.safety||[]).forEach(s=>h+='<div class="note n-safe"><b>Safety</b>'+esc(s)+'</div>');
+
+  h+='<div class="eyebrow" style="margin-top:15px;">Ranked causes</div>';
+  (t.causes||[]).forEach((c,i)=>{
+    const pct=parseInt(String(c.odds).replace(/\D/g,''))||0;
+    h+='<div class="cause" style="animation-delay:'+(i*.07)+'s">'+
+       '<div class="top"><span class="nm">'+esc(c.cause)+'</span><span class="od">'+esc(c.odds)+'</span></div>'+
+       '<div class="bar"><i data-w="'+pct+'"></i></div>'+
+       (c.why?'<div class="why">'+esc(c.why)+'</div>':'')+
+       (c.check?'<div class="ck"><b>Confirm by</b>'+esc(c.check)+'</div>':'')+'</div>';
+  });
+
+  if((t.truck_list||[]).length){
+    h+='<div class="eyebrow" style="margin-top:15px;">Bring on the truck</div><div>';
+    t.truck_list.forEach(x=>h+='<span class="pill">'+esc(x)+'</span>');
+    h+='</div>';
+  }
+  if(t.tenant_reply){
+    h+='<div class="eyebrow" style="margin-top:15px;">Message for the resident</div>'+
+       '<div style="background:var(--deep);border:1px solid var(--edge);border-radius:3px;padding:12px;font-size:14px;line-height:1.55;">'+esc(t.tenant_reply)+'</div>'+
+       '<button class="btn-2 full" style="margin-top:8px;" onclick="copyTenant()">Copy message</button>';
+  }
+  h+='</div>';
+
+  if(UNIT){
+    h+='<div class="panel"><div class="eyebrow">Log to '+esc(UNIT.apt)+'</div>'+
+       '<label class="fl" style="margin-top:0;">What you actually found and did</label>'+
+       '<textarea id="lgWork" placeholder="Cleared primary drain, replaced float switch, relocated to low end of pan"></textarea>'+
+       '<div class="row" style="margin-top:9px;">'+
+         '<div><label class="fl" style="margin-top:0;">Vendor cost avoided</label><input type="number" id="lgCost" placeholder="0"></div>'+
+         '<div><label class="fl" style="margin-top:0;">Hours</label><input type="number" step=".25" id="lgHrs" placeholder="0"></div>'+
+       '</div>'+
+       '<label class="fl">Basis for that figure</label>'+
+       '<input type="text" id="lgBasis" placeholder="Contractor quote, typical call-out rate">'+
+       '<button class="btn full" style="margin-top:12px;" onclick="logJob()">Save to history</button>'+
+       '<div class="dim" id="lgMsg" style="margin-top:9px;"></div></div>';
+  }
+  $('triageOut').innerHTML=h;
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.bar i').forEach(el=>{ el.style.width=el.dataset.w+'%'; });
+  });
+}
+function copyTenant(){
+  navigator.clipboard.writeText(LAST.tenant_reply||'')
+    .then(()=>toast('Copied'),()=>prompt('Copy:',LAST.tenant_reply||''));
+}
+async function logJob(){
+  const top=(LAST.causes||[])[0];
+  try{
+    const d=await api('/unit/'+encodeURIComponent(UNIT.apt)+'/job',{method:'POST',body:{
+      job_date:today(), reported:window._rep||'', priority:LAST.priority||'normal',
+      diagnosis: top?(top.cause+' ('+top.odds+')'):'',
+      work_performed:$('lgWork').value.trim(),
+      error_code:$('codeIn')?$('codeIn').value.trim():'',
+      vendor_cost_avoided:$('lgCost').value||0, hours:$('lgHrs').value||0,
+      cost_basis:$('lgBasis').value.trim(), triage_json:LAST
+    }});
+    UNIT=d.unit; drawHistory(); drawPlate(); loadBrief();
+    $('lgMsg').innerHTML='<span style="color:var(--mint)">Saved to '+esc(UNIT.apt)+'</span>';
+  }catch(e){ $('lgMsg').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'; }
+}
+
+/* ---------- record ---------- */
+function segHtml(id,val,labels){
+  const keys=['yes','no','unk'];
+  return '<div class="seg" id="'+id+'">'+keys.map((k,i)=>
+    '<div data-v="'+k+'" class="'+(val===k?(k==='yes'?'y':k==='no'?'n':'u'):'')+'">'+labels[i]+'</div>').join('')+'</div>';
+}
+function drawRecord(){
+  if(!UNIT) return;
+  const types = TYPES.length?TYPES.map(t=>t.name)
+    :['Split system / air handler','Ceiling mount air handler','Ductless mini-split','VRF / VRV','Package unit','Other'];
+  let h='<div class="panel"><div class="eyebrow">Equipment class</div>';
+  h+='<label class="fl" style="margin-top:0;">System type</label>'+
+     '<select id="rType" onchange="onType()">'+types.map(t=>
+       '<option'+(UNIT.system_type===t?' selected':'')+'>'+esc(t)+'</option>').join('')+'</select>';
+  h+='<label class="fl">Manufacturer</label><div id="mfrWrap"></div>';
+  h+='<div id="sysFields"></div></div>';
+
+  h+='<div class="panel"><div class="eyebrow">Condensate</div>'+
+     '<textarea id="rDrain" placeholder="Routing, gravity or pumped, trap, termination, pitch, material, secondary pan, known defects">'+esc(UNIT.drain_design)+'</textarea>'+
+     '<label class="fl">Float switch present</label>'+segHtml('rP',UNIT.switch_present,['YES','NO','UNKNOWN'])+
+     '<label class="fl">Float switch functioning</label>'+segHtml('rF',UNIT.switch_functioning,['YES','NO','NOT TESTED'])+
+     '<textarea id="rSwN" style="margin-top:10px;" placeholder="Switch location, type, wiring notes">'+esc(UNIT.switch_notes)+'</textarea></div>';
+
+  h+='<div class="panel"><div class="eyebrow">Notes</div>'+
+     '<textarea id="rNotes" placeholder="Access quirks, breaker location, anything the next tech should know">'+esc(UNIT.notes)+'</textarea>'+
+     '<button class="btn full" style="margin-top:12px;" onclick="saveRecord()">Save record</button>'+
+     '<div class="dim" id="rMsg" style="margin-top:9px;">'+
+       (UNIT.updated_by?'Last updated by '+esc(UNIT.updated_by)+' · '+esc((UNIT.updated_at||'').slice(0,16)):'')+'</div></div>';
+
+  h+='<div class="panel"><div class="eyebrow">Equipment registry</div>';
+  if(!UNIT.equipment.length)
+    h+='<div class="dim" style="margin-bottom:10px;">Nothing on file. Add the air handler and condenser — warranty lookups alone pay for the effort.</div>';
+  UNIT.equipment.forEach(e=>{
+    let w='';
+    if(e.install_date&&e.warranty_years){
+      const inst=new Date(e.install_date);
+      if(!isNaN(inst)){ const x=new Date(inst); x.setFullYear(x.getFullYear()+e.warranty_years);
+        w = x>new Date()
+          ? '<span class="wi">◆ IN WARRANTY until '+x.toISOString().slice(0,10)+'</span>'
+          : '<span class="wo">warranty expired '+x.toISOString().slice(0,10)+'</span>'; }
+    }
+    h+='<div class="equip"><span class="rm" onclick="delEq('+e.id+')">remove</span>'+
+       '<div class="cn">'+esc(e.component)+'</div>'+
+       esc([e.manufacturer,e.model].filter(Boolean).join(' '))+
+       (e.serial?'<br><span class="dim">SN</span> <span style="font-family:var(--mono)">'+esc(e.serial)+'</span>':'')+
+       (e.refrigerant?' <span class="dim">·</span> '+esc(e.refrigerant):'')+
+       (e.install_date?'<br><span class="dim">Installed</span> '+esc(e.install_date):'')+
+       (w?'<br>'+w:'')+'</div>';
+  });
+  h+='<div class="row" style="margin-top:10px;"><input id="eC" placeholder="Component"><input id="eM" placeholder="Mfr"></div>'+
+     '<div class="row" style="margin-top:7px;"><input id="eMo" placeholder="Model"><input id="eS" placeholder="Serial"></div>'+
+     '<div class="row" style="margin-top:7px;"><input id="eD" type="date"><input id="eW" type="number" placeholder="Yrs"><input id="eR" placeholder="R-410A"></div>'+
+     '<button class="btn-2 full" style="margin-top:10px;" onclick="addEq()">Add equipment</button></div>';
+
+  $('recordBody').innerHTML=h;
+  $('rType').value=UNIT.system_type;
+  drawMfr(); drawSysFields();
+  ['rP','rF'].forEach(id=>{
+    document.querySelectorAll('#'+id+' div').forEach(d=>{
+      d.onclick=()=>{
+        document.querySelectorAll('#'+id+' div').forEach(x=>x.className='');
+        const v=d.dataset.v; d.className = v==='yes'?'y':v==='no'?'n':'u';
+      };
+    });
+  });
+}
+function drawMfr(){
+  const box=$('mfrWrap'); if(!box) return;
+  const p=profileFor($('rType')?$('rType').value:UNIT.system_type);
+  const list=p.manufacturers||[];
+  if(!list.length){
+    box.innerHTML='<input type="text" id="rMfr" placeholder="Manufacturer" value="'+esc(UNIT.manufacturer||'')+'">';
+    return;
+  }
+  const cur=UNIT.manufacturer||'';
+  const known=list.some(m=>m.name===cur);
+  box.innerHTML='<select id="rMfr" onchange="onMfr()"><option value="">— select —</option>'+
+    list.map(m=>'<option'+(m.name===cur?' selected':'')+'>'+esc(m.name)+'</option>').join('')+
+    (cur&&!known?'<option selected>'+esc(cur)+'</option>':'')+'</select>'+
+    '<div class="dim" id="mfrCodes" style="margin-top:6px;line-height:1.45;"></div>';
+  onMfr();
+}
+function onMfr(){
+  const sel=$('rMfr'), out=$('mfrCodes'); if(!sel||!out) return;
+  const p=profileFor($('rType').value);
+  const m=(p.manufacturers||[]).find(x=>x.name===sel.value);
+  out.innerHTML = m ? '<b style="color:var(--mid);font-family:var(--mono);font-size:9px;letter-spacing:1.4px;">WHERE CODES ARE READ</b><br>'+esc(m.codes) : '';
+}
+function drawSysFields(){
+  const box=$('sysFields'); if(!box) return;
+  const name=$('rType')?$('rType').value:UNIT.system_type;
+  const p=profileFor(name), meta=UNIT.system_meta||{};
+  if(!p.fields||!p.fields.length){ box.innerHTML=''; return; }
+  let h='<label class="fl">'+esc(name)+' details</label>';
+  p.fields.forEach(f=>{
+    h+='<input type="text" style="margin-bottom:7px;" data-sys="'+esc(f.id)+'" placeholder="'+esc(f.label)+'" value="'+esc(meta[f.id]||'')+'">';
+  });
+  box.innerHTML=h;
+}
+function onType(){ drawMfr(); drawSysFields(); }
+
+function segVal(id){
+  const el=document.querySelector('#'+id+' div.y, #'+id+' div.n, #'+id+' div.u');
+  return el?el.dataset.v:'unk';
+}
+async function saveRecord(){
+  const meta={};
+  document.querySelectorAll('#sysFields [data-sys]').forEach(el=>{
+    if(el.value.trim()) meta[el.dataset.sys]=el.value.trim();
+  });
+  try{
+    const d=await api('/unit/'+encodeURIComponent(UNIT.apt),{method:'PUT',body:{
+      system_type:$('rType').value,
+      manufacturer:$('rMfr')?$('rMfr').value:'',
+      system_meta:meta,
+      drain_design:$('rDrain').value,
+      switch_present:segVal('rP'), switch_functioning:segVal('rF'),
+      switch_notes:$('rSwN').value, notes:$('rNotes').value
+    }});
+    UNIT=d.unit; drawPlate(); drawDiagnose(); loadBrief();
+    $('rMsg').innerHTML='<span style="color:var(--mint)">Saved</span>';
+  }catch(e){ $('rMsg').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'; }
+}
+async function addEq(){
+  if(!$('eC').value.trim()) return alert('Component name is required.');
+  try{
+    const d=await api('/unit/'+encodeURIComponent(UNIT.apt)+'/equipment',{method:'POST',body:{
+      component:$('eC').value.trim(), manufacturer:$('eM').value.trim(),
+      model:$('eMo').value.trim(), serial:$('eS').value.trim(),
+      install_date:$('eD').value, warranty_years:$('eW').value||0, refrigerant:$('eR').value.trim()
+    }});
+    UNIT=d.unit; drawRecord(); loadBrief();
+  }catch(e){ alert(e.message); }
+}
+async function delEq(id){
+  if(!confirm('Remove this equipment record?')) return;
+  const d=await api('/equipment/'+id,{method:'DELETE'}); UNIT=d.unit; drawRecord(); loadBrief();
+}
+
+/* ---------- history ---------- */
+function drawHistory(){
+  if(!UNIT) return;
+  const saved=UNIT.jobs.reduce((s,j)=>s+(j.vendor_cost_avoided||0),0);
+  let h='';
+  if(UNIT.jobs.length){
+    h+='<div class="panel"><div class="stats">'+
+       '<div class="stat"><div class="n">'+UNIT.jobs.length+'</div><div class="l">jobs</div></div>'+
+       '<div class="stat"><div class="n" style="color:var(--mint)">$'+saved.toLocaleString()+'</div><div class="l">cost avoided</div></div>'+
+       '<div class="stat"><div class="n">'+UNIT.equipment.length+'</div><div class="l">components</div></div>'+
+       '</div></div>';
+  }
+  h+='<div class="panel"><div class="eyebrow">Log a job</div>'+
+     '<div class="row"><input type="date" id="jD" value="'+today()+'">'+
+     '<select id="jC"><option>HVAC</option><option>Plumbing</option><option>Electrical</option><option>Appliance</option><option>General</option></select></div>'+
+     '<textarea id="jR" style="margin-top:9px;" placeholder="What was reported"></textarea>'+
+     '<textarea id="jW" style="margin-top:9px;" placeholder="Diagnosis and work performed"></textarea>'+
+     '<div class="row" style="margin-top:9px;"><input id="jP" placeholder="Parts used"><input id="jE" placeholder="Fault code" style="font-family:var(--mono)"></div>'+
+     '<div class="row" style="margin-top:9px;"><input type="number" id="jV" placeholder="Cost avoided $"><input type="number" step=".25" id="jH" placeholder="Hours"></div>'+
+     '<button class="btn full" style="margin-top:12px;" onclick="addJob()">Add to history</button>'+
+     '<div class="dim" id="jMsg" style="margin-top:9px;"></div></div>';
+
+  h+='<div class="panel"><div class="eyebrow">Service history</div>';
+  if(!UNIT.jobs.length) h+='<div class="dim">Nothing logged yet.</div>';
+  UNIT.jobs.forEach((j,i)=>{
+    h+='<div class="job" style="animation-delay:'+(i*.04)+'s"><span class="rm" onclick="delJob('+j.id+')">remove</span>'+
+       '<div class="dt">'+esc(j.job_date)+'  ·  '+esc(j.category)+
+       (j.priority&&j.priority!=='normal'?'  ·  '+esc(j.priority):'')+'</div>'+
+       (j.logged_by?'<div class="by">'+esc(j.logged_by)+'</div>':'');
+    if(j.error_code) h+='<div class="ln"><b>Code</b> <span class="code">'+esc(j.error_code)+'</span></div>';
+    if(j.reported) h+='<div class="ln"><b>Reported</b> '+esc(j.reported)+'</div>';
+    if(j.diagnosis) h+='<div class="ln"><b>Diagnosis</b> '+esc(j.diagnosis)+'</div>';
+    if(j.work_performed) h+='<div class="ln"><b>Work</b> '+esc(j.work_performed)+'</div>';
+    if(j.parts_used) h+='<div class="ln"><b>Parts</b> '+esc(j.parts_used)+'</div>';
+    if(j.vendor_cost_avoided) h+='<div class="money">◆ $'+j.vendor_cost_avoided.toLocaleString()+' avoided'+
+       (j.cost_basis?' — '+esc(j.cost_basis):'')+'</div>';
+    h+='</div>';
+  });
+  h+='</div>';
+  $('historyBody').innerHTML=h;
+}
+async function addJob(){
+  try{
+    const d=await api('/unit/'+encodeURIComponent(UNIT.apt)+'/job',{method:'POST',body:{
+      job_date:$('jD').value||today(), category:$('jC').value,
+      reported:$('jR').value.trim(), work_performed:$('jW').value.trim(),
+      parts_used:$('jP').value.trim(), error_code:$('jE').value.trim(),
+      vendor_cost_avoided:$('jV').value||0, hours:$('jH').value||0
+    }});
+    UNIT=d.unit; drawHistory(); loadBrief();
+  }catch(e){ $('jMsg').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'; }
+}
+async function delJob(id){
+  if(!confirm('Remove this job?')) return;
+  const d=await api('/job/'+id,{method:'DELETE'}); UNIT=d.unit; drawHistory(); loadBrief();
+}
+
+/* ---------- reports ---------- */
+async function loadReports(){
+  $('reportsBody').innerHTML='<div class="panel"><span class="spin"></span><span class="dim">Loading</span></div>';
+  try{
+    const [cost,risk,warr]=await Promise.all([
+      api('/reports/cost-avoided'),api('/reports/risk'),api('/reports/warranty')]);
+    let h='';
+    h+='<div class="panel"><div class="eyebrow">Vendor cost avoided</div>'+
+       '<div class="hero-n">$'+Math.round(cost.total.total).toLocaleString()+'</div>'+
+       '<div class="dim" style="margin-top:5px;">'+cost.total.jobs+' jobs · '+cost.total.hours+' hours logged</div>';
+    if(cost.byMonth.length){
+      h+='<table style="margin-top:14px;"><tr><th>Month</th><th>Jobs</th><th style="text-align:right">Avoided</th></tr>';
+      cost.byMonth.forEach(m=>h+='<tr><td><b>'+esc(m.month)+'</b></td><td>'+m.jobs+
+        '</td><td style="text-align:right;color:var(--mint);font-family:var(--mono)">$'+Math.round(m.total).toLocaleString()+'</td></tr>');
+      h+='</table>';
+    }
+    h+='</div>';
+
+    h+='<div class="panel"><div class="eyebrow">Float switch risk</div>';
+    if(!risk.switchRisk.length) h+='<div class="dim">No units flagged. Record switch status to populate this.</div>';
+    else{
+      h+='<div class="mid" style="margin-bottom:10px;">'+risk.switchRisk.length+' unit'+(risk.switchRisk.length>1?'s':'')+' with a missing or failed float switch. These are your summer ceiling repairs.</div>'+
+         '<table><tr><th>Unit</th><th>Present</th><th>Working</th></tr>';
+      risk.switchRisk.forEach(u=>h+='<tr><td><b>'+esc(u.apt)+'</b></td><td>'+esc(u.switch_present)+
+        '</td><td style="color:var(--rose)">'+esc(u.switch_functioning)+'</td></tr>');
+      h+='</table>';
+    }
+    h+='</div>';
+
+    if(risk.byBuilding.length){
+      h+='<div class="panel"><div class="eyebrow">Building defect pattern</div>'+
+         '<div class="mid" style="margin-bottom:10px;">Multiple bad switches in one building is an install defect, not a coincidence.</div>'+
+         '<table><tr><th>Building</th><th>Bad switches</th><th>Logged</th></tr>';
+      risk.byBuilding.forEach(b=>h+='<tr><td><b>Bldg '+esc(b.building)+'</b></td><td style="color:var(--rose)">'+b.bad_switches+'</td><td>'+b.units_logged+'</td></tr>');
+      h+='</table></div>';
+    }
+    if(risk.repeatUnits.length){
+      h+='<div class="panel"><div class="eyebrow">Repeat water offenders</div><table><tr><th>Unit</th><th>Water jobs</th></tr>';
+      risk.repeatUnits.forEach(u=>h+='<tr><td><b>'+esc(u.apt)+'</b></td><td style="color:var(--sulfur)">'+u.c+'</td></tr>');
+      h+='</table></div>';
+    }
+
+    const inW=warr.equipment.filter(e=>e.in_warranty);
+    h+='<div class="panel"><div class="eyebrow">Warranty watch</div>';
+    if(!warr.equipment.length) h+='<div class="dim">No equipment with install dates on file.</div>';
+    else{
+      h+='<div class="mid" style="margin-bottom:10px;">'+inW.length+' component'+(inW.length===1?'':'s')+' still covered. Check here before buying a part.</div>'+
+         '<table><tr><th>Unit</th><th>Component</th><th style="text-align:right">Expires</th></tr>';
+      warr.equipment.slice(0,25).forEach(e=>h+='<tr><td><b>'+esc(e.apt)+'</b></td><td>'+esc(e.component)+
+        '</td><td style="text-align:right" class="'+(e.in_warranty?'wi':'wo')+'">'+esc(e.expires)+'</td></tr>');
+      h+='</table>';
+    }
+    h+='</div>';
+    h+='<button class="btn-2 full" onclick="exportAll()">Export everything</button>';
+    $('reportsBody').innerHTML=h;
+  }catch(e){
+    $('reportsBody').innerHTML='<div class="panel"><div class="note n-safe"><b>Failed</b>'+esc(e.message)+'</div></div>';
+  }
+}
+async function exportAll(){
+  const d=await api('/export');
+  let o=(d.property?d.property.name:'Property')+' — HVAC ASSET LOG\nExported '+today()+'\n'+'='.repeat(46)+'\n\n';
+  d.units.forEach(u=>{
+    o+='UNIT '+u.apt+'  ['+[u.manufacturer,u.system_type].filter(Boolean).join(' ')+']\n';
+    if(u.drain_design) o+='  Drain: '+u.drain_design+'\n';
+    o+='  Float switch: present='+u.switch_present+' functioning='+u.switch_functioning+'\n';
+    if(u.switch_notes) o+='  Switch: '+u.switch_notes+'\n';
+    u.equipment.forEach(e=>o+='  Equip: '+[e.component,e.manufacturer,e.model].filter(Boolean).join(' ')+
+      (e.serial?' SN '+e.serial:'')+(e.install_date?' installed '+e.install_date:'')+'\n');
+    u.jobs.forEach(j=>o+='  ['+j.job_date+'] '+(j.error_code?'{'+j.error_code+'} ':'')+(j.reported||'')+
+      (j.diagnosis?' | Dx: '+j.diagnosis:'')+(j.work_performed?' | Work: '+j.work_performed:'')+
+      (j.vendor_cost_avoided?' | $'+j.vendor_cost_avoided+' avoided':'')+'\n');
+    o+='\n';
+  });
+  try{ await navigator.clipboard.writeText(o); toast('Copied full export'); }
+  catch(e){ prompt('Copy:',o); }
+}
+
+function toast(m){
+  const t=document.createElement('div');
+  t.textContent=m;
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'+
+    'background:#1A2531;border:1px solid #2A7F8F;color:#4FD3E8;'+
+    'font-family:var(--mono);font-size:12px;padding:10px 18px;border-radius:3px;z-index:99;'+
+    'box-shadow:0 4px 24px rgba(0,0,0,.5);';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),1900);
+}
+
+/* ---------- boot ---------- */
+(async()=>{
+  let cfg={};
+  try{ cfg = await (await fetch('/api/config')).json(); }catch(e){}
+
+  if(TOKEN){
+    try{ const d=await api('/me'); ME=d.user; enterApp(); return; }
+    catch(e){ localStorage.removeItem('uiq_token'); TOKEN=null; }
+  }
+
+  if(cfg.demo){
+    try{
+      const d=await (await fetch('/api/demo-session',{method:'POST'})).json();
+      TOKEN=d.token; ME=d.user; enterApp();
+      showDemoBanner();
+      return;
+    }catch(e){}
+  }
+})();
+
+function showDemoBanner(){
+  const b=document.createElement('div');
+  b.innerHTML='<b>DEMO MODE</b> — signed in automatically as Demo Tech. Data here is sample data.';
+  b.style.cssText='background:rgba(242,193,78,.12);border-bottom:1px solid rgba(242,193,78,.35);'+
+    'color:#F2C14E;font-family:var(--mono);font-size:10px;letter-spacing:.8px;'+
+    'padding:7px 16px;text-align:center;';
+  document.querySelector('header').insertAdjacentElement('afterend', b);
+}
+</script>
+</body>
+</html>
