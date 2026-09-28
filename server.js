@@ -93,6 +93,9 @@ app.post('/api/login', (req, res) => {
 
 app.get('/api/me', auth, (req, res) => res.json({ user: req.user }));
 
+/* ================= WORK ORDERS, PM, REQUESTS, DASHBOARD ================= */
+require('./workorders')(app, auth);
+
 /* ================= UNITS ================= */
 
 // Equipment type catalog. Drives the Record form and the diagnose tab.

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Request Signs</title>
+<link rel="icon" type="image/png" href="/crest.png">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1F3A63;--gold:#B79B5B;--bg:#F3EFE5;--text:#1A2436;--mid:#4A5466;}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);}
+.bar{background:var(--navy);color:#F3EFE5;padding:14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-bottom:3px solid var(--gold);}
+.bar b{font-family:'Libre Caslon Text',serif;font-size:18px;}
+.bar span{font-size:13px;color:#C9D6E6;flex:1;min-width:200px;}
+.bar button{background:#D8BE7C;color:var(--navy);border:none;border-radius:4px;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;padding:16px;max-width:1100px;margin:0 auto;}
+.sign{background:#fff;border:2px solid var(--navy);border-radius:10px;padding:24px 20px;text-align:center;page-break-inside:avoid;break-inside:avoid;}
+.sign img.crest{height:70px;}
+.sign h2{font-family:'Libre Caslon Text',serif;font-size:24px;color:var(--navy);margin:8px 0 2px;}
+.sign .b{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:700;}
+.sign img.qr{width:220px;height:220px;margin:14px auto 8px;display:block;}
+.sign p{margin:0;color:var(--mid);font-size:14px;line-height:1.45;}
+.sign .url{font-size:11px;color:#7C8494;margin-top:8px;word-break:break-all;}
+@media print{
+  .bar{display:none;}
+  body{background:#fff;}
+  .grid{display:block;padding:0;}
+  .sign{width:100%;height:48vh;margin:0 0 2vh;display:flex;flex-direction:column;justify-content:center;border-width:3px;}
+  .sign img.qr{width:260px;height:260px;}
+}
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>Maintenance request signs</b>
+  <span>One sign per building. Print, laminate, and post near the time clock, kitchen, pro shop, and front desk. Scanning opens the request page with that building already picked.</span>
+  <button onclick="window.print()">Print</button>
+</div>
+<div class="grid" id="grid"></div>
+<script>
+const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;};
+(async()=>{
+  const info=await (await fetch('/api/public/info')).json();
+  const base=(await (await fetch('/api/public/request-url')).json()).url;
+  const list=[''].concat(info.buildings);
+  document.getElementById('grid').innerHTML=list.map(b=>
+    '<div class="sign"><div><img class="crest" src="/crest.png" alt=""></div>'+
+    '<h2>Need maintenance?</h2><div class="b">'+esc(b||'Any building')+'</div>'+
+    '<img class="qr" src="/api/public/qr.svg'+(b?'?b='+encodeURIComponent(b):'')+'" alt="QR code">'+
+    '<p>Scan with your phone camera to report a problem.<br>For emergencies, call maintenance too.</p>'+
+    '<div class="url">'+esc(base+(b?'?b='+encodeURIComponent(b):''))+'</div></div>').join('');
+})();
+</script>
+</body>
+</html>

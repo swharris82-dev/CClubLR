@@ -9,6 +9,10 @@ Node + SQLite. One codebase, no external database to configure. Forked from Unit
 - **Diagnose.** Describe the problem, get ranked causes with odds, the check that confirms each one, a truck list, and a message for the staff member who reported it. Runs with the equipment's history AND the water loop status, so a heat pump lockout gets tied to a tower or pump problem when that is the real cause.
 - **Record.** Equipment type, manufacturer, type-specific details (boiler certificate dates, tower fan drive, pump lead/lag), the safety device for that type (low water cutoff, vibration switch, flow switch, condensate switch), and a registry with model, serial, install date, and warranty.
 - **History.** Every job, who logged it, and vendor cost avoided.
+- **Work orders.** Every request and repair is a work order with a priority, due date, assignee, notes timeline, and photo. Tie one to a piece of equipment and closing it writes the job into that equipment's service history automatically. Filters for Open, New requests, Mine, PM due, and Done.
+- **PM schedule.** Recurring preventive maintenance by equipment: LWCO tests, tower inspections, pump rotation, filter changes, water tests. "Load standard plan" builds the whole schedule from the equipment on file. Each task opens its own work order before it comes due, with a checklist, and closing it rolls the next due date forward.
+- **Staff request page.** `/request` is a no-login page any employee can open on their phone to report a problem, with building, location, urgency, and a photo. It lands in New requests. They can check status from the same phone. `/signs` prints a QR sign per building that opens the page with that building already picked.
+- **Dashboard.** Open repairs, new requests, overdue work, PM on-time rate, what needs attention, opened vs closed by week, how long work has been waiting, open work by building, labor hours, and vendor cost avoided this month and year.
 - **Reports.** Cost avoided by month, water loop activity, safety devices out of service, repeat problems, work by building, and warranty watch.
 
 ## Sample data
@@ -195,3 +199,9 @@ native app.
 - Data lives in `unitiq.db` in your `DATA_DIR`. Back it up periodically.
 - The Export button on Reports copies everything as plain text for emailing.
 - Triage costs a fraction of a cent per run through the Anthropic API.
+
+
+## Optional environment variables for the request page
+
+- `MAINT_PHONE` = the maintenance phone number. Shown on the request page when someone picks Emergency, as a tap-to-call link.
+- `PUBLIC_URL` = the address staff should use, like `https://clubhouse-iq.onrender.com`. The QR signs use it. If it is not set, the signs use whatever address you opened `/signs` from.

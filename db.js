@@ -98,6 +98,75 @@ addColumnIfMissing('units', 'ai_brief', `ai_brief TEXT DEFAULT ''`);
 addColumnIfMissing('units', 'ai_brief_at', `ai_brief_at TEXT`);
 addColumnIfMissing('units', 'ai_brief_stamp', `ai_brief_stamp TEXT DEFAULT ''`);
 
+/* ---------------- work orders and preventive maintenance ---------------- */
+db.exec(`
+-- A work order is a request or task. It can be tied to a piece of equipment
+-- (unit_id) or just a building and location ("Men's locker room, sink 3").
+CREATE TABLE IF NOT EXISTS work_orders (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  unit_id           INTEGER,
+  building          TEXT DEFAULT '',
+  location          TEXT DEFAULT '',
+  title             TEXT NOT NULL,
+  description       TEXT DEFAULT '',
+  category          TEXT DEFAULT 'General',
+  priority          TEXT DEFAULT 'normal',
+  status            TEXT DEFAULT 'open',
+  source            TEXT DEFAULT 'tech',
+  pm_id             INTEGER,
+  requested_by      TEXT DEFAULT '',
+  requester_dept    TEXT DEFAULT '',
+  requester_contact TEXT DEFAULT '',
+  assigned_to       TEXT DEFAULT '',
+  due_date          TEXT,
+  photo             TEXT,
+  track_code        TEXT,
+  resolution        TEXT DEFAULT '',
+  hours             REAL DEFAULT 0,
+  cost_avoided      REAL DEFAULT 0,
+  job_id            INTEGER,
+  created_by        TEXT DEFAULT '',
+  created_at        TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at        TEXT NOT NULL DEFAULT (datetime('now')),
+  started_at        TEXT,
+  completed_at      TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_wo_status ON work_orders(status);
+CREATE INDEX IF NOT EXISTS idx_wo_unit ON work_orders(unit_id);
+CREATE INDEX IF NOT EXISTS idx_wo_pm ON work_orders(pm_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_wo_track ON work_orders(track_code);
+
+CREATE TABLE IF NOT EXISTS wo_notes (
+  id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  wo_id  INTEGER NOT NULL,
+  kind   TEXT DEFAULT 'note',
+  body   TEXT NOT NULL,
+  by     TEXT DEFAULT '',
+  at     TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY(wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_won_wo ON wo_notes(wo_id);
+
+-- Recurring preventive maintenance. When a task comes due, a work order is
+-- opened for it automatically. Closing that work order rolls the due date.
+CREATE TABLE IF NOT EXISTS pm_tasks (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  unit_id     INTEGER,
+  building    TEXT DEFAULT '',
+  title       TEXT NOT NULL,
+  checklist   TEXT DEFAULT '',
+  category    TEXT DEFAULT 'HVAC',
+  freq_days   INTEGER NOT NULL DEFAULT 30,
+  lead_days   INTEGER NOT NULL DEFAULT 7,
+  next_due    TEXT NOT NULL,
+  last_done   TEXT,
+  active      INTEGER NOT NULL DEFAULT 1,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_pm_unit ON pm_tasks(unit_id);
+`);
+addColumnIfMissing('jobs', 'wo_id', `wo_id INTEGER`);
+
 // Seed a default property so single-property installs just work.
 const propCount = db.prepare('SELECT COUNT(*) c FROM properties').get().c;
 if (propCount === 0) {
@@ -133,6 +202,10 @@ function unitFull(unitId) {
   catch (e) { unit.system_meta = {}; }
   unit.equipment = db.prepare('SELECT * FROM equipment WHERE unit_id=? ORDER BY component').all(unitId);
   unit.jobs = db.prepare('SELECT * FROM jobs WHERE unit_id=? ORDER BY date(job_date) DESC, id DESC').all(unitId);
+  unit.open_wos = db.prepare(`SELECT id, title, priority, status, due_date, source FROM work_orders
+    WHERE unit_id=? AND status NOT IN ('done','cancelled') ORDER BY id DESC`).all(unitId);
+  unit.pms = db.prepare(`SELECT id, title, freq_days, next_due, last_done FROM pm_tasks
+    WHERE unit_id=? AND active=1 ORDER BY date(next_due)`).all(unitId);
   return unit;
 }
 

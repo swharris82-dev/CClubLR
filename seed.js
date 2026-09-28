@@ -314,7 +314,116 @@ function seed() {
     });
     created++;
   }
+  seedWork();
   return { created, skipped };
+}
+
+/* Sample work orders and a PM schedule so the Work and Dashboard tabs have
+   something to show. Only runs on an empty work order table. */
+function seedWork() {
+  if (db.prepare('SELECT COUNT(*) c FROM work_orders').get().c) return;
+  const { createStarterPlan } = require('./workorders');
+  createStarterPlan('Seed data');
+
+  // Age a few PMs so the schedule shows overdue and upcoming work.
+  const pms = db.prepare('SELECT id, freq_days FROM pm_tasks ORDER BY id').all();
+  pms.forEach((p, i) => {
+    let due;
+    if (i % 9 === 0) due = daysAgo(3 + (i % 5));        // overdue
+    else if (i % 4 === 0) due = daysAgo(-(1 + (i % 6))); // due this week
+    else due = daysAgo(-(8 + (i * 5) % Math.max(p.freq_days, 20)));
+    db.prepare('UPDATE pm_tasks SET next_due=?, last_done=? WHERE id=?')
+      .run(due, daysAgo(Math.max(1, p.freq_days - 10)), p.id);
+  });
+
+  const unitId = tag => (db.prepare('SELECT id FROM units WHERE apt=?').get(tag) || {}).id || null;
+  const ts = (d, h = 9) => `${daysAgo(d)} ${String(h).padStart(2, '0')}:15:00`;
+  const ins = db.prepare(`
+    INSERT INTO work_orders (unit_id, building, location, title, description, category, priority, status, source,
+      requested_by, requester_dept, assigned_to, due_date, resolution, hours, cost_avoided, created_by,
+      created_at, updated_at, started_at, completed_at, track_code)
+    VALUES (@unit_id,@building,@location,@title,@description,@category,@priority,@status,@source,
+      @requested_by,@requester_dept,@assigned_to,@due_date,@resolution,@hours,@cost_avoided,@created_by,
+      @created_at,@updated_at,@started_at,@completed_at,@track_code)`);
+  const note = db.prepare('INSERT INTO wo_notes (wo_id, kind, body, by, at) VALUES (?,?,?,?,?)');
+  const TECH = 'Stephen Harris';
+
+  const rows = [
+    // New requests waiting on the tech
+    { building: 'Clubhouse', location: 'Main Dining Room', title: 'Main Dining Room: Room is warm near the windows', description: 'Room is warm near the windows and the vent is blowing room temperature air. Lunch service starts at 11.', category: 'HVAC', priority: 'high', status: 'new', source: 'request', requested_by: 'Maria G.', requester_dept: 'Dining / Banquets', c: 0, due: 1 },
+    { building: 'Indoor Tennis Center', location: "Women's locker room", title: "Women's locker room: Shower 2 will not shut off all the way", description: 'Shower 2 will not shut off all the way. Dripping steady.', category: 'Plumbing', priority: 'normal', status: 'new', source: 'request', requested_by: 'Kyle R.', requester_dept: 'Tennis', c: 0, due: 7 },
+    { building: 'Clubhouse', location: 'Kitchen', title: 'Kitchen: Walk-in cooler reading 44 degrees', description: 'Walk-in cooler reading 44 degrees on the door display this morning.', category: 'Refrigeration', priority: 'emergency', status: 'new', source: 'request', requested_by: 'Chef Daniel', requester_dept: 'Kitchen', apt: 'KIT-WIC-1', c: 0, due: 0 },
+    // In the queue
+    { building: 'Central Plant', title: 'Tower basin makeup float sticking', description: 'Basin running low in the afternoons. Float arm binding.', category: 'Cooling tower', priority: 'high', status: 'in_progress', source: 'tech', apt: 'CT-1', assigned_to: TECH, c: 1, due: -1, started: 1 },
+    { building: 'Golf Shop', location: 'Front entry', title: 'Front entry door closer leaking oil', description: 'Door slams. Closer is leaking.', category: 'Building', priority: 'normal', status: 'open', source: 'request', requested_by: 'Front counter', requester_dept: 'Golf Shop', assigned_to: TECH, c: 9, due: -2 },
+    { building: 'Pool Pavilion', title: 'Order replacement chlorinator O-ring', description: 'Waiting on part from the supplier.', category: 'Pool', priority: 'low', status: 'on_hold', source: 'tech', apt: 'POOL-1', assigned_to: TECH, c: 6, due: 20 },
+    { building: 'Clubhouse', location: 'Ballroom', title: 'Ballroom: two ceiling lights out over the dance floor', description: 'Event Saturday.', category: 'Electrical', priority: 'normal', status: 'open', source: 'request', requested_by: 'Events office', requester_dept: 'Dining / Banquets', c: 2, due: 3 },
+  ];
+  // Completed work spread across the last eight weeks for the trend line.
+  const done = [
+    ['Clubhouse', 'HP-CH-02', 'Heat pump lockout, Grill Room', 'HVAC', 'Cleaned hose kit strainer, reset lockout, water rise back to 10 F.', 1.5, 350, 2],
+    ['Central Plant', 'BLR-1', 'Boiler short cycling', 'Boiler', 'Adjusted lead boiler differential, cleaned flame sensor.', 2, 650, 5],
+    ['Indoor Tennis Center', 'RTU-TN-1', 'Court 3 side warm', 'HVAC', 'Replaced slipped belt on supply fan.', 1, 300, 9],
+    ['Clubhouse', null, 'Men\'s grill restroom toilet running', 'Plumbing', 'Replaced flapper and fill valve.', 0.75, 180, 11],
+    ['Fitness Center', 'HP-FC-01', 'No cooling in cardio room', 'HVAC', 'Condensate switch tripped. Cleared drain, flushed trap, tested switch.', 1, 275, 16],
+    ['Clubhouse', 'KIT-ICE-1', 'Ice machine slow to harvest', 'Kitchen', 'Descaled and sanitized, replaced water filter.', 2, 400, 20],
+    ['Pool Pavilion', 'POOL-1', 'Filter pressure high', 'Pool', 'Backwashed filter, cleaned pump basket.', 0.5, 150, 24],
+    ['Clubhouse', null, 'Card room outlet dead', 'Electrical', 'Reset tripped GFCI in adjacent restroom, labeled it.', 0.5, 150, 30],
+    ['Central Plant', 'P-2', 'Loop pump noisy', 'HVAC', 'Greased motor bearings, checked alignment. Monitoring.', 1.5, 450, 36],
+    ['Golf Shop', 'SS-GS-1', 'Pro shop warm', 'HVAC', 'Cleaned outdoor coil, replaced filter.', 1.5, 300, 43],
+    ['Clubhouse', null, 'Kitchen dish area floor drain slow', 'Plumbing', 'Snaked floor drain, cleared grease.', 1, 250, 49],
+  ];
+
+  let seq = 0;
+  db.transaction(() => {
+    rows.forEach(r => {
+      const info = ins.run({
+        unit_id: r.apt ? unitId(r.apt) : null, building: r.building, location: r.location || '',
+        title: r.title, description: r.description || '', category: r.category, priority: r.priority,
+        status: r.status, source: r.source, requested_by: r.requested_by || '', requester_dept: r.requester_dept || '',
+        assigned_to: r.assigned_to || '', due_date: daysAgo(-r.due), resolution: '', hours: 0, cost_avoided: 0,
+        created_by: r.requested_by || TECH, created_at: ts(r.c, 8), updated_at: ts(r.c, 8),
+        started_at: r.started ? ts(r.started, 10) : null, completed_at: null,
+        track_code: r.source === 'request' ? 'SAMPLE' + String(++seq).padStart(2, '0') : null
+      });
+      note.run(info.lastInsertRowid, 'status', r.source === 'request' ? 'Submitted through the request page.' : 'Created.', r.requested_by || TECH, ts(r.c, 8));
+      if (r.status === 'in_progress') note.run(info.lastInsertRowid, 'note', 'Float arm is binding on the bracket. Parts on hand to rebuild.', TECH, ts(0, 9));
+      if (r.status === 'on_hold') note.run(info.lastInsertRowid, 'status', 'Status: On hold. Waiting on part.', TECH, ts(5, 14));
+    });
+    done.forEach(([b, tag, title, cat, work, hrs, cost, d]) => {
+      const uid = tag ? unitId(tag) : null;
+      const info = ins.run({
+        unit_id: uid, building: b, location: '', title, description: '', category: cat, priority: 'normal',
+        status: 'done', source: d % 3 === 0 ? 'tech' : 'request', requested_by: '', requester_dept: '',
+        assigned_to: TECH, due_date: daysAgo(d - 2), resolution: work, hours: hrs, cost_avoided: uid ? 0 : cost,
+        created_by: TECH, created_at: ts(d + 1, 8), updated_at: ts(d, 15), started_at: ts(d, 9), completed_at: ts(d, 15),
+        track_code: null
+      });
+      note.run(info.lastInsertRowid, 'status', `Completed in ${hrs} hr.`, TECH, ts(d, 15));
+      if (uid) {
+        const j = db.prepare(`INSERT INTO jobs (unit_id, job_date, reported, category, priority, work_performed,
+            vendor_cost_avoided, cost_basis, hours, logged_by, wo_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)`)
+          .run(uid, daysAgo(d), `WO #${info.lastInsertRowid}: ${title}`, cat, 'normal', work, cost, 'Typical contractor call-out', hrs, TECH, info.lastInsertRowid);
+        db.prepare('UPDATE work_orders SET job_id=? WHERE id=?').run(j.lastInsertRowid, info.lastInsertRowid);
+      }
+    });
+    // A few PMs done on time and one late, for the compliance number.
+    [[4, 0], [12, 0], [19, 2], [27, 0], [33, 0]].forEach(([d, late], k) => {
+      const pm = pms[k + 1];
+      if (!pm) return;
+      const p = db.prepare('SELECT p.*, u.apt FROM pm_tasks p LEFT JOIN units u ON u.id=p.unit_id WHERE p.id=?').get(pm.id);
+      ins.run({
+        unit_id: p.unit_id, building: p.building, location: '', title: `PM: ${p.title}` + (p.apt ? ` (${p.apt})` : ''),
+        description: p.checklist, category: p.category, priority: 'normal', status: 'done', source: 'pm',
+        requested_by: '', requester_dept: '', assigned_to: TECH, due_date: daysAgo(d + late), resolution: 'Checklist completed.',
+        hours: 0.5, cost_avoided: 0, created_by: 'PM schedule', created_at: ts(d + 5, 7), updated_at: ts(d, 13),
+        started_at: ts(d, 11), completed_at: ts(d, 13), track_code: null
+      });
+    });
+  })();
+  // Tie PM work orders to their tasks now that the table has rows.
+  db.prepare(`UPDATE work_orders SET pm_id=(SELECT id FROM pm_tasks p WHERE 'PM: ' || p.title || CASE WHEN p.unit_id IS NULL THEN '' ELSE ' (' || (SELECT apt FROM units WHERE id=p.unit_id) || ')' END = work_orders.title LIMIT 1)
+              WHERE source='pm' AND pm_id IS NULL`).run();
 }
 
 if (require.main === module) {

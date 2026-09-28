@@ -285,6 +285,112 @@ td b{color:var(--text);font-family:var(--mono);}
 #dir summary{font-family:var(--mono);font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;
   color:var(--ice);cursor:pointer;padding:6px 0;list-style-position:inside;}
 
+/* ---------- work orders ---------- */
+.tab .bdg{display:inline-block;min-width:17px;height:17px;line-height:17px;padding:0 5px;margin-left:6px;
+  border-radius:9px;background:#D8BE7C;color:#1F3A63;font-family:var(--mono);font-size:10px;font-weight:700;
+  letter-spacing:0;text-align:center;vertical-align:1px;}
+.subnav{display:flex;gap:6px;margin-bottom:12px;}
+.subnav div{flex:1;text-align:center;padding:10px 6px;border:1px solid var(--edge);border-radius:3px;background:var(--panel);
+  font-family:var(--disp);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--mid);cursor:pointer;}
+.subnav div.on{background:var(--ice);border-color:var(--ice);color:#F3EFE5;}
+.filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:10px;}
+.filters::-webkit-scrollbar{display:none;}
+.filters div{flex:0 0 auto;font-family:var(--mono);font-size:11px;letter-spacing:.6px;padding:6px 12px;border-radius:20px;
+  border:1px solid var(--edge);background:var(--deep);color:var(--mid);cursor:pointer;white-space:nowrap;}
+.filters div.on{border-color:var(--ice);color:var(--ice);background:rgba(31,58,99,.07);font-weight:600;}
+.filters div b{color:var(--sulfur);margin-left:3px;}
+.woc{background:var(--panel);border:1px solid var(--edge);border-left:4px solid var(--edge-lit);border-radius:3px;
+  padding:11px 12px;margin-bottom:8px;cursor:pointer;animation:riseIn .28s backwards;transition:border-color .15s,box-shadow .15s;}
+.woc:hover{box-shadow:0 2px 10px rgba(31,58,99,.08);}
+.woc.pr-emergency{border-left-color:var(--rose);}
+.woc.pr-high{border-left-color:var(--ember);}
+.woc.pr-normal{border-left-color:var(--ice-dim);}
+.woc.pr-low{border-left-color:var(--edge-lit);}
+.woc .t{font-weight:600;font-size:14.5px;line-height:1.35;}
+.woc .m{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:4px;letter-spacing:.3px;}
+.woc .r{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;align-items:center;}
+.tag{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+  padding:3px 7px;border-radius:3px;border:1px solid var(--edge);color:var(--mid);background:var(--deep);white-space:nowrap;}
+.tag.s-new{background:#F6EBCB;border-color:#D8BE7C;color:#6B5320;}
+.tag.s-open{background:rgba(141,184,224,.18);border-color:rgba(79,111,153,.4);color:var(--ice);}
+.tag.s-in_progress{background:var(--ice);border-color:var(--ice);color:#F3EFE5;}
+.tag.s-on_hold{background:rgba(184,92,30,.1);border-color:rgba(184,92,30,.4);color:var(--ember);}
+.tag.s-done{background:rgba(46,125,91,.1);border-color:rgba(46,125,91,.35);color:var(--mint);}
+.tag.s-cancelled{color:var(--dim);}
+.tag.p-emergency{background:var(--rose);border-color:var(--rose);color:#fff;}
+.tag.p-high{background:rgba(184,92,30,.12);border-color:rgba(184,92,30,.45);color:var(--ember);}
+.tag.late{background:rgba(179,54,45,.1);border-color:rgba(179,54,45,.4);color:var(--rose);}
+.tag.tpm{background:rgba(46,125,91,.08);border-color:rgba(46,125,91,.3);color:var(--mint);}
+.tag.eq{font-family:var(--mono);color:var(--ice);border-color:var(--edge-lit);}
+
+/* bottom sheet for a single work order */
+.sheet-bg{position:fixed;inset:0;background:rgba(15,26,45,.45);z-index:80;display:flex;align-items:flex-end;justify-content:center;
+  animation:fadeIn .18s;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.sheet{background:var(--void);width:100%;max-width:760px;max-height:92vh;overflow-y:auto;border-radius:10px 10px 0 0;
+  border-top:3px solid #B79B5B;padding:0 0 30px;animation:sheetUp .26s cubic-bezier(.2,.8,.3,1);}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:.4;}to{transform:none;opacity:1;}}
+.sheet-hd{position:sticky;top:0;background:#1F3A63;color:#F3EFE5;padding:14px 16px 12px;z-index:2;}
+.sheet-hd .no{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:#D8BE7C;text-transform:uppercase;}
+.sheet-hd .tt{font-family:var(--disp);font-size:20px;font-weight:700;line-height:1.25;margin-top:3px;padding-right:40px;}
+.sheet-hd .x{position:absolute;right:10px;top:10px;background:none;border:1px solid #4F6F99;color:#C9D6E6;
+  font-size:16px;line-height:1;padding:7px 10px;border-radius:3px;}
+.sheet-bd{padding:12px 12px 0;}
+.kv{display:grid;grid-template-columns:100px 1fr;gap:5px 10px;font-size:13.5px;}
+.kv .k{font-family:var(--mono);font-size:9px;letter-spacing:1.3px;text-transform:uppercase;color:var(--dim);padding-top:3px;}
+.acts{display:flex;gap:7px;flex-wrap:wrap;}
+.acts button{flex:1 1 auto;}
+.btn-good{background:var(--mint);color:#fff;font-weight:700;}
+.btn-good:hover{background:#256A4C;}
+.tl{border-left:2px solid var(--edge);margin-left:4px;padding-left:12px;}
+.tl .it{position:relative;padding:0 0 11px;font-size:13.5px;}
+.tl .it::before{content:'';position:absolute;left:-17px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--edge-lit);}
+.tl .it.note::before{background:var(--ice);}
+.tl .it .w{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:.5px;}
+.ck-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--edge);font-size:14px;cursor:pointer;}
+.ck-row input{width:20px;height:20px;flex:0 0 20px;margin:1px 0 0;accent-color:var(--mint);}
+.wo-photo{width:100%;max-height:340px;object-fit:contain;border-radius:3px;border:1px solid var(--edge);background:#fff;}
+
+/* PM schedule */
+.pm{background:var(--panel);border:1px solid var(--edge);border-radius:3px;padding:10px 12px;margin-bottom:7px;
+  display:flex;gap:10px;align-items:center;}
+.pm .dd{flex:0 0 58px;text-align:center;border-right:1px solid var(--edge);padding-right:8px;}
+.pm .dd .d{font-family:var(--disp);font-size:20px;font-weight:700;line-height:1;}
+.pm .dd .mo{font-family:var(--mono);font-size:9px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase;margin-top:2px;}
+.pm.late .dd .d{color:var(--rose);}
+.pm .bd{flex:1;min-width:0;}
+.pm .bd .t{font-weight:600;font-size:14px;line-height:1.3;}
+.pm .bd .m{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px;}
+.pm .go{flex:0 0 auto;}
+.pm .go button{padding:8px 11px;font-size:12.5px;}
+
+/* dashboard */
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;}
+@media(min-width:560px){.kpis{grid-template-columns:repeat(4,1fr);}}
+.kpi{background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:13px 12px;cursor:default;}
+.kpi.click{cursor:pointer;}
+.kpi.click:hover{border-color:var(--ice-dim);}
+.kpi .n{font-family:var(--disp);font-size:32px;font-weight:700;line-height:1;color:var(--text);}
+.kpi .l{font-family:var(--mono);font-size:9px;letter-spacing:1.3px;text-transform:uppercase;color:var(--dim);margin-top:6px;}
+.kpi .s{font-size:12px;color:var(--mid);margin-top:4px;}
+.kpi.bad .n{color:var(--rose);}
+.kpi.good .n{color:var(--mint);}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mid);margin-bottom:6px;}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;}
+.chart-wrap{position:relative;}
+.chart-tip{position:absolute;pointer-events:none;background:#1F3A63;color:#F3EFE5;font-size:12px;padding:6px 9px;border-radius:3px;
+  white-space:nowrap;transform:translate(-50%,-100%);margin-top:-6px;display:none;z-index:3;font-family:var(--body);}
+.age{display:flex;height:26px;border-radius:3px;overflow:hidden;gap:2px;background:var(--panel);}
+.age div{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10.5px;font-weight:600;color:#fff;min-width:0;}
+.age-l{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;color:var(--dim);margin-top:5px;letter-spacing:.5px;}
+.att{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--edge);cursor:pointer;}
+.att:last-child{border-bottom:none;}
+.att .t{font-size:14px;font-weight:600;line-height:1.3;}
+.att .m{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px;}
+.linkbox{font-family:var(--mono);font-size:12px;background:var(--deep);border:1px solid var(--edge);border-radius:3px;
+  padding:9px 11px;word-break:break-all;color:var(--ice);}
+.unit-wo{margin-top:8px;font-family:var(--mono);font-size:10px;color:#D8BE7C;letter-spacing:.6px;cursor:pointer;}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none !important;transition:none !important;}
 }
@@ -310,9 +416,11 @@ td b{color:var(--text);font-family:var(--mono);}
     </div>
   </div>
   <div class="tabs hide" id="tabs">
-    <div class="tab on" data-tab="diagnose">Diagnose</div>
+    <div class="tab on" data-tab="work">Work<span class="bdg hide" id="woBadge"></span></div>
+    <div class="tab" data-tab="diagnose">Diagnose</div>
     <div class="tab" data-tab="record">Record</div>
     <div class="tab" data-tab="history">History</div>
+    <div class="tab" data-tab="dash">Dashboard</div>
     <div class="tab" data-tab="reports">Reports</div>
   </div>
 </header>
@@ -337,7 +445,7 @@ td b{color:var(--text);font-family:var(--mono);}
 
 <div class="wrap hide" id="appView">
 
-  <div class="panel" id="lookupPanel">
+  <div class="panel hide" id="lookupPanel">
     <div class="eyebrow">Equipment lookup</div>
     <div class="row">
       <input type="text" id="aptIn" placeholder="BLR-1" autocomplete="off"
@@ -357,6 +465,7 @@ td b{color:var(--text);font-family:var(--mono);}
         <div class="apt" id="pApt"></div>
         <div class="loc" id="pLoc"></div>
         <div class="sys" id="pSys"></div>
+        <div class="unit-wo hide" id="pWo"></div>
       </div>
       <div class="status">
         <div class="lb" id="pSwLb">Safety device</div>
@@ -373,7 +482,25 @@ td b{color:var(--text);font-family:var(--mono);}
     <div class="brief-body" id="briefBody"></div>
   </div>
 
-  <div id="tab-diagnose">
+  <div id="tab-work">
+    <div class="subnav" id="workNav">
+      <div class="on" data-w="wo">Work orders</div>
+      <div data-w="pm">PM schedule</div>
+    </div>
+    <div id="woPane">
+      <div class="filters" id="woFilters"></div>
+      <button class="btn full" style="margin-bottom:12px;" onclick="newWoForm()">+ New work order</button>
+      <div id="woNewBox"></div>
+      <div id="woList"></div>
+    </div>
+    <div id="pmPane" class="hide"></div>
+  </div>
+
+  <div id="tab-dash" class="hide">
+    <div id="dashBody"></div>
+  </div>
+
+  <div id="tab-diagnose" class="hide">
     <div class="panel">
       <div class="eyebrow">Report</div>
       <textarea id="reportIn" placeholder="What staff or dispatch said. e.g. Garden Room warm, heat pump has a lockout light"></textarea>
@@ -407,7 +534,7 @@ td b{color:var(--text);font-family:var(--mono);}
 <script>
 let TOKEN = null; try{ TOKEN = localStorage.getItem('ciq_token'); }catch(e){}
 const store = { set:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}}, del:k=>{try{localStorage.removeItem(k);}catch(e){}} };
-let ME=null, UNIT=null, LAST=null, TAB='diagnose', TYPES=[], TYPEMAP={}, BUILDINGS=[];
+let ME=null, UNIT=null, LAST=null, TAB='work', TYPES=[], TYPEMAP={}, BUILDINGS=[];
 
 const $ = id => document.getElementById(id);
 const esc = s => { const d=document.createElement('div'); d.textContent = s==null?'':s; return d.innerHTML; };
@@ -463,6 +590,8 @@ function enterApp(){
   $('tabs').classList.remove('hide');
   $('who').textContent = ME.name + (ME.role==='manager'?' · MGR':'');
   loadTypes().then(()=>{ if(UNIT){ drawPlate(); drawRecord(); } }); loadChips();
+  loadMeta().then(()=>showTab(TAB));
+  clearInterval(window._badgeT); window._badgeT=setInterval(refreshBadge,60000);
 }
 async function loadTypes(){
   try{ const d=await api('/system-types'); TYPES=d.types; TYPEMAP={};
@@ -470,16 +599,20 @@ async function loadTypes(){
 }
 
 /* ---------- tabs ---------- */
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
-  t.classList.add('on'); TAB=t.dataset.tab;
-  ['diagnose','record','history','reports'].forEach(n=>$('tab-'+n).classList.toggle('hide',n!==TAB));
-  const uc = TAB!=='reports';
+const ALLTABS=['work','diagnose','record','history','dash','reports'];
+function showTab(name){
+  TAB=name;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.tab===name));
+  ALLTABS.forEach(n=>$('tab-'+n).classList.toggle('hide',n!==TAB));
+  const uc = ['diagnose','record','history'].includes(TAB);
   $('lookupPanel').classList.toggle('hide',!uc);
   $('plate').classList.toggle('hide',!uc||!UNIT);
   $('brief').classList.toggle('hide',!uc||!UNIT);
   if(TAB==='reports') loadReports();
-});
+  if(TAB==='dash') loadDash();
+  if(TAB==='work') (WORKVIEW==='pm'?loadPm():loadWos());
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>showTab(t.dataset.tab));
 
 /* ---------- unit ---------- */
 $('openBtn').onclick=openUnit;
@@ -515,6 +648,14 @@ function drawPlate(){
   else if(UNIT.switch_present==='yes'&&UNIT.switch_functioning==='yes'){ led.classList.add('ok'); $('pSw').textContent='OK'; }
   else { led.classList.add('unk'); $('pSw').textContent='UNKNOWN'; }
   $('plate').classList.toggle('alert',bad);
+  const bits=[];
+  const ow=(UNIT.open_wos||[]).length;
+  if(ow) bits.push(ow+' open work order'+(ow>1?'s':''));
+  const np=(UNIT.pms||[])[0];
+  if(np) bits.push('next PM '+fmtDate(np.next_due)+(np.next_due<today()?' (overdue)':''));
+  $('pWo').textContent=bits.join('  ·  ');
+  $('pWo').classList.toggle('hide',!bits.length);
+  $('pWo').onclick=()=>{ WOFILTER='open'; WOUNIT=UNIT.apt; WORKVIEW='wo'; showTab('work'); };
 }
 
 /* ---------- AI brief ---------- */
@@ -702,6 +843,19 @@ function drawRecord(){
      '<button class="btn full" style="margin-top:12px;" onclick="saveRecord()">Save record</button>'+
      '<div class="dim" id="rMsg" style="margin-top:9px;">'+
        (UNIT.updated_by?'Last updated by '+esc(UNIT.updated_by)+' · '+esc((UNIT.updated_at||'').slice(0,16)):'')+'</div></div>';
+
+  h+='<div class="panel"><div class="eyebrow">Work on this equipment</div>';
+  (UNIT.open_wos||[]).forEach(w=>{
+    h+='<div class="att" onclick="openWo('+w.id+')"><div style="flex:1;min-width:0"><div class="t">'+esc(w.title)+'</div>'+
+       '<div class="m">#'+w.id+' · '+esc(STAFF_LABEL[w.status]||w.status)+(w.due_date?' · due '+esc(fmtDate(w.due_date)):'')+'</div></div>'+prTag(w.priority)+'</div>';
+  });
+  (UNIT.pms||[]).forEach(p=>{
+    h+='<div class="att" onclick="WORKVIEW=\'pm\';showTab(\'work\')"><div style="flex:1;min-width:0"><div class="t">'+esc(p.title)+'</div>'+
+       '<div class="m">PM every '+esc(freqLabel(p.freq_days))+' · next '+esc(fmtDate(p.next_due))+'</div></div><span class="tag tpm">PM</span></div>';
+  });
+  if(!(UNIT.open_wos||[]).length&&!(UNIT.pms||[]).length) h+='<div class="dim" style="margin-bottom:6px;">No open work orders or PM tasks on this equipment.</div>';
+  h+='<div class="row" style="margin-top:10px;"><button class="btn-2" onclick="newWoForm(UNIT.apt)">+ Work order</button>'+
+     '<button class="btn-2" onclick="newPmForm(UNIT.apt)">+ PM task</button></div></div>';
 
   h+='<div class="panel"><div class="eyebrow">Equipment registry</div>';
   if(!UNIT.equipment.length)
@@ -1048,6 +1202,449 @@ function toast(m){
     'box-shadow:0 4px 18px rgba(31,58,99,.3);';
   document.body.appendChild(t);
   setTimeout(()=>t.remove(),1900);
+}
+
+/* =================== WORK ORDERS =================== */
+let META={statuses:[],statusLabel:{},priorities:['emergency','high','normal','low'],categories:[],buildings:[],staff:[],tags:[]};
+let WORKVIEW='wo', WOFILTER='open', WOUNIT='', WOS=[], WO=null;
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtDate(d){ if(!d) return ''; const p=String(d).slice(0,10).split('-'); return MON[+p[1]-1]+' '+(+p[2]); }
+function fmtWhen(ts){ if(!ts) return ''; const d=String(ts).replace(' ','T'); const dt=new Date(d.endsWith('Z')?d:d+'Z');
+  if(isNaN(dt)) return ts; return MON[dt.getMonth()]+' '+dt.getDate()+', '+dt.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}); }
+function ago(ts){ if(!ts) return ''; const d=String(ts).replace(' ','T'); const dt=new Date(d.endsWith('Z')?d:d+'Z');
+  const m=Math.round((Date.now()-dt)/60000); if(m<60) return m<=1?'just now':m+' min ago';
+  const h=Math.round(m/60); if(h<24) return h+' hr ago'; const dd=Math.round(h/24); return dd+' day'+(dd>1?'s':'')+' ago'; }
+const statusLabel=s=>(META.statusLabel&&META.statusLabel[s])||({new:'New request',open:'Open',in_progress:'In progress',on_hold:'On hold',done:'Done',cancelled:'Cancelled'})[s]||s;
+const STAFF_LABEL={new:'New request',open:'Open',in_progress:'In progress',on_hold:'On hold',done:'Done',cancelled:'Cancelled'};
+function stTag(s){ return '<span class="tag s-'+esc(s)+'">'+esc(STAFF_LABEL[s]||s)+'</span>'; }
+function prTag(p){ return (p==='emergency'||p==='high')?'<span class="tag p-'+esc(p)+'">'+esc(p)+'</span>':''; }
+function freqLabel(n){ n=+n; const m={1:'day',7:'week',14:'2 weeks',30:'month',60:'2 months',90:'quarter',180:'6 months',365:'year'};
+  return m[n]||(n+' days'); }
+const FREQS=[[7,'Weekly'],[14,'Every 2 weeks'],[30,'Monthly'],[60,'Every 2 months'],[90,'Quarterly'],[180,'Every 6 months'],[365,'Yearly']];
+
+async function loadMeta(){ try{ META=await api('/wo-meta'); }catch(e){} }
+async function refreshBadge(){
+  if(!TOKEN) return;
+  try{ const d=await api('/workorders?view=new'); setBadge(d.counts.new); }catch(e){}
+}
+function setBadge(n){ const b=$('woBadge'); b.textContent=n; b.classList.toggle('hide',!n); }
+function staffOptions(cur){
+  const names=[...new Set([ME&&ME.name].concat(META.staff||[]).concat(cur?[cur]:[]).filter(Boolean))];
+  return '<option value="">Unassigned</option>'+names.map(n=>'<option'+(n===cur?' selected':'')+'>'+esc(n)+'</option>').join('');
+}
+function tagList(){ return '<datalist id="tagList">'+(META.tags||[]).map(t=>'<option value="'+esc(t.apt)+'">'+esc((t.building||'')+' · '+(t.system_type||''))+'</option>').join('')+'</datalist>'; }
+function bldgList(){ return '<datalist id="woBldgList">'+(META.buildings||[]).map(b=>'<option value="'+esc(b)+'">').join('')+'</datalist>'; }
+
+$('workNav').querySelectorAll('div').forEach(d=>d.onclick=()=>{
+  WORKVIEW=d.dataset.w;
+  $('workNav').querySelectorAll('div').forEach(x=>x.classList.toggle('on',x===d));
+  $('woPane').classList.toggle('hide',WORKVIEW!=='wo'); $('pmPane').classList.toggle('hide',WORKVIEW!=='pm');
+  WORKVIEW==='pm'?loadPm():loadWos();
+});
+function syncWorkNav(){
+  $('workNav').querySelectorAll('div').forEach(x=>x.classList.toggle('on',x.dataset.w===WORKVIEW));
+  $('woPane').classList.toggle('hide',WORKVIEW!=='wo'); $('pmPane').classList.toggle('hide',WORKVIEW!=='pm');
+}
+
+async function loadWos(){
+  syncWorkNav();
+  if(!WOS.length) $('woList').innerHTML='<div class="panel"><span class="spin"></span><span class="dim">Loading work</span></div>';
+  try{
+    const d=await api('/workorders?view='+WOFILTER+(WOUNIT?'&unit='+encodeURIComponent(WOUNIT):''));
+    WOS=d.workorders; setBadge(d.counts.new); drawWoFilters(d.counts); drawWos(d.today);
+  }catch(e){ $('woList').innerHTML='<div class="panel"><div class="note n-safe"><b>Failed</b>'+esc(e.message)+'</div></div>'; }
+}
+function drawWoFilters(c){
+  const f=[['open','Open',c.open],['new','New requests',c.new],['mine','Mine',c.mine],['pm','PM due',c.pm],['done','Done',null]];
+  let h=f.map(([k,l,n])=>'<div data-f="'+k+'" class="'+(WOFILTER===k?'on':'')+'">'+l+(n?'<b>'+n+'</b>':'')+'</div>').join('');
+  if(WOUNIT) h='<div class="on" data-clear="1">'+esc(WOUNIT)+' ✕</div>'+h;
+  $('woFilters').innerHTML=h;
+  $('woFilters').querySelectorAll('div').forEach(el=>el.onclick=()=>{
+    if(el.dataset.clear){ WOUNIT=''; } else WOFILTER=el.dataset.f;
+    loadWos();
+  });
+}
+function drawWos(t){
+  if(!WOS.length){
+    const msg={open:'Nothing open. Nice.',new:'No new requests.',mine:'Nothing assigned to you.',pm:'No PM work due.',done:'Nothing closed yet.'}[WOFILTER];
+    $('woList').innerHTML='<div class="empty"><div class="big">'+esc(msg)+'</div>Staff requests and scheduled PM show up here.</div>'; return;
+  }
+  $('woList').innerHTML=WOS.map((w,i)=>{
+    const late=w.due_date&&w.due_date<t&&!['done','cancelled'].includes(w.status);
+    const where=[w.building,w.location].filter(Boolean).join(' · ');
+    const who=w.source==='request'?(w.requested_by+(w.requester_dept?' ('+w.requester_dept+')':'')):'';
+    return '<div class="woc pr-'+esc(w.priority)+'" style="animation-delay:'+Math.min(i*.03,.3)+'s" onclick="openWo('+w.id+')">'+
+      '<div class="t">'+esc(w.title)+'</div>'+
+      '<div class="m">#'+w.id+(where?' · '+esc(where):'')+(who?' · '+esc(who):'')+' · '+esc(WOFILTER==='done'?('closed '+ago(w.completed_at)):ago(w.created_at))+'</div>'+
+      '<div class="r">'+stTag(w.status)+prTag(w.priority)+(w.source==='pm'?'<span class="tag tpm">PM</span>':'')+
+        (w.apt?'<span class="tag eq">'+esc(w.apt)+'</span>':'')+
+        (late?'<span class="tag late">overdue '+esc(fmtDate(w.due_date))+'</span>':(w.due_date&&WOFILTER!=='done'?'<span class="tag">due '+esc(fmtDate(w.due_date))+'</span>':''))+
+        (w.has_photo?'<span class="tag">photo</span>':'')+
+        (w.assigned_to?'<span class="tag" style="text-transform:none;letter-spacing:.3px">'+esc(w.assigned_to)+'</span>':'')+
+      '</div></div>';
+  }).join('');
+}
+
+/* ----- new work order ----- */
+function newWoForm(apt){
+  WORKVIEW='wo'; if(TAB!=='work') showTab('work'); else syncWorkNav();
+  const u=apt?(META.tags||[]).find(t=>t.apt===apt):null;
+  $('woNewBox').innerHTML='<div class="panel" id="woNew"><div class="eyebrow">New work order</div>'+
+    '<label class="fl" style="margin-top:0;">Title</label><input id="nwT" maxlength="160" placeholder="Grill Room heat pump tripping">'+
+    '<div class="row"><div><label class="fl">Building</label><input id="nwB" list="woBldgList" value="'+esc(u?u.building||'':'')+'" placeholder="Clubhouse"></div>'+
+    '<div><label class="fl">Equipment tag</label><input id="nwA" list="tagList" value="'+esc(apt||'')+'" placeholder="Optional" style="font-family:var(--mono);text-transform:uppercase"></div></div>'+
+    '<label class="fl">Location</label><input id="nwL" maxlength="120" placeholder="Room, area, fixture">'+
+    '<label class="fl">Details</label><textarea id="nwD" placeholder="What is wrong, what you know so far"></textarea>'+
+    '<div class="row"><div><label class="fl">Priority</label><select id="nwP">'+META.priorities.map(p=>'<option'+(p==='normal'?' selected':'')+'>'+p+'</option>').join('')+'</select></div>'+
+    '<div><label class="fl">Category</label><select id="nwC">'+(META.categories||['General']).map(c=>'<option'+(c==='General'?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select></div></div>'+
+    '<div class="row"><div><label class="fl">Assign to</label><select id="nwS">'+staffOptions(ME?ME.name:'')+'</select></div>'+
+    '<div><label class="fl">Due</label><input type="date" id="nwDue"></div></div>'+
+    '<div class="dim" style="margin-top:6px;font-size:12px;">Leave due blank and it is set from priority: emergency today, high tomorrow, normal a week, low a month.</div>'+
+    '<div class="row" style="margin-top:12px;"><button class="btn-2" onclick="$(\'woNewBox\').innerHTML=\'\'">Cancel</button><button class="btn" onclick="saveNewWo()">Create</button></div>'+
+    '<div class="dim" id="nwMsg" style="margin-top:8px;"></div>'+tagList()+bldgList()+'</div>';
+  $('nwT').focus();
+  $('woNew').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function saveNewWo(){
+  try{
+    const d=await api('/workorders',{method:'POST',body:{
+      title:$('nwT').value.trim(), building:$('nwB').value.trim(), apt:$('nwA').value.trim(),
+      location:$('nwL').value.trim(), description:$('nwD').value.trim(), priority:$('nwP').value,
+      category:$('nwC').value, assigned_to:$('nwS').value, due_date:$('nwDue').value
+    }});
+    $('woNewBox').innerHTML=''; toast('Work order #'+d.workorder.id+' created');
+    WOFILTER='open'; loadWos(); refreshUnitIfOpen();
+  }catch(e){ $('nwMsg').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'; }
+}
+async function refreshUnitIfOpen(){
+  if(!UNIT) return;
+  try{ const d=await api('/unit/'+encodeURIComponent(UNIT.apt)); UNIT=d.unit; drawPlate(); drawRecord(); drawHistory(); }catch(e){}
+}
+
+/* ----- work order sheet ----- */
+async function openWo(id){
+  try{ const d=await api('/workorders/'+id); WO=d.workorder; drawWoSheet(); }
+  catch(e){ alert(e.message); }
+}
+function closeSheet(){ const s=$('sheetBg'); if(s) s.remove(); document.body.style.overflow=''; }
+function drawWoSheet(scrollTo){
+  const w=WO; const open=!['done','cancelled'].includes(w.status);
+  let bg=$('sheetBg');
+  if(!bg){ bg=document.createElement('div'); bg.id='sheetBg'; bg.className='sheet-bg';
+    bg.onclick=e=>{ if(e.target===bg) closeSheet(); }; document.body.appendChild(bg); document.body.style.overflow='hidden'; }
+  const where=[w.building,w.location].filter(Boolean).join(' · ');
+  let h='<div class="sheet"><div class="sheet-hd"><div class="no">Work order #'+w.id+(w.source==='request'?' · staff request':w.source==='pm'?' · preventive maintenance':'')+'</div>'+
+        '<div class="tt">'+esc(w.title)+'</div><button class="x" onclick="closeSheet()">✕</button>'+
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">'+stTag(w.status)+prTag(w.priority)+(w.apt?'<span class="tag eq" style="background:#fff">'+esc(w.apt)+'</span>':'')+'</div></div><div class="sheet-bd">';
+
+  // actions
+  if(open){
+    h+='<div class="panel"><div class="acts">';
+    if(w.status==='new') h+='<button class="btn" onclick="woSet({status:\'open\',assigned_to:ME.name})">Accept</button>';
+    if(w.status!=='in_progress') h+='<button class="btn" onclick="woStart()">Start work</button>';
+    else h+='<button class="btn-2" onclick="woHold()">Put on hold</button>';
+    h+='<button class="btn btn-good" onclick="completeForm()">Complete</button></div>';
+    if(w.apt) h+='<div class="acts" style="margin-top:7px;"><button class="btn-2" onclick="woDiagnose()">Diagnose '+esc(w.apt)+'</button><button class="btn-2" onclick="woOpenUnit()">Open equipment</button></div>';
+    h+='<div id="cmpBox"></div></div>';
+  }else if(w.resolution){
+    h+='<div class="panel"><div class="eyebrow">Resolution</div><div style="font-size:14px;white-space:pre-wrap;">'+esc(w.resolution)+'</div>'+
+       '<div class="dim" style="margin-top:6px;">'+(w.hours?w.hours+' hr':'')+(w.cost_avoided?' · $'+Math.round(w.cost_avoided).toLocaleString()+' avoided':'')+(w.job_id?' · logged to '+esc(w.apt)+' history':'')+'</div>'+
+       '<button class="btn-2 full" style="margin-top:10px;" onclick="woSet({status:\'open\'})">Reopen</button></div>';
+  }
+
+  // details
+  h+='<div class="panel"><div class="eyebrow">Details</div><div class="kv">';
+  if(where) h+='<div class="k">Where</div><div>'+esc(where)+'</div>';
+  if(w.source==='request') h+='<div class="k">Requested by</div><div>'+esc(w.requested_by)+(w.requester_dept?' · '+esc(w.requester_dept):'')+
+     (w.requester_contact?'<br><a href="tel:'+esc(w.requester_contact.replace(/[^0-9+]/g,''))+'" style="color:var(--ice)">'+esc(w.requester_contact)+'</a>':'')+'</div>';
+  h+='<div class="k">Opened</div><div>'+esc(fmtWhen(w.created_at))+(w.created_by&&w.source!=='request'?' by '+esc(w.created_by):'')+'</div>';
+  if(w.completed_at) h+='<div class="k">Closed</div><div>'+esc(fmtWhen(w.completed_at))+'</div>';
+  h+='</div>';
+  if(w.description) h+='<div style="margin-top:12px;font-size:14px;white-space:pre-wrap;line-height:1.55;">'+esc(w.description)+'</div>';
+  if(w.has_photo) h+='<div style="margin-top:12px;"><img class="wo-photo" id="woImg" alt="Photo from the request"></div>';
+  if(open){
+    h+='<div class="row" style="margin-top:12px;"><div><label class="fl" style="margin-top:0;">Priority</label><select onchange="woSet({priority:this.value})">'+
+       META.priorities.map(p=>'<option'+(p===w.priority?' selected':'')+'>'+p+'</option>').join('')+'</select></div>'+
+       '<div><label class="fl" style="margin-top:0;">Assigned</label><select onchange="woSet({assigned_to:this.value})">'+staffOptions(w.assigned_to)+'</select></div></div>'+
+       '<div class="row"><div><label class="fl">Due</label><input type="date" value="'+esc(w.due_date||'')+'" onchange="woSet({due_date:this.value})"></div>'+
+       '<div><label class="fl">Category</label><select onchange="woSet({category:this.value})">'+(META.categories||[]).map(c=>'<option'+(c===w.category?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select></div></div>'+
+       '<div class="row"><div><label class="fl">Equipment tag</label><input list="tagList" value="'+esc(w.apt||'')+'" placeholder="Link equipment" style="font-family:var(--mono);text-transform:uppercase" onchange="woSet({apt:this.value.trim()})"></div>'+
+       '<div><label class="fl">Building</label><input list="woBldgList" value="'+esc(w.building||'')+'" onchange="woSet({building:this.value.trim()})"></div></div>'+tagList()+bldgList();
+    h+='<button class="btn-2 full" style="margin-top:12px;color:var(--rose)" onclick="woCancel()">Cancel work order</button>';
+  }
+  h+='</div>';
+
+  // timeline
+  h+='<div class="panel"><div class="eyebrow">Activity</div><div class="tl">'+
+     (w.notes||[]).map(n=>'<div class="it '+esc(n.kind)+'"><div>'+esc(n.body)+'</div><div class="w">'+esc(n.by||'')+' · '+esc(fmtWhen(n.at))+'</div></div>').join('')+
+     '</div><div class="row" style="margin-top:8px;"><input id="woNote" placeholder="Add a note: parts ordered, vendor called, found..."><button class="btn" style="flex:0 0 auto" onclick="woAddNote()">Add</button></div></div>';
+  h+='</div></div>';
+  bg.innerHTML=h;
+  if(w.has_photo) loadWoPhoto(w.id);
+  if(scrollTo==='cmp') completeForm();
+}
+async function loadWoPhoto(id){
+  try{
+    const r=await fetch('/api/workorders/'+id+'/photo',{headers:TOKEN?{Authorization:'Bearer '+TOKEN}:{}});
+    if(!r.ok) return; const b=await r.blob(); const el=$('woImg'); if(el) el.src=URL.createObjectURL(b);
+  }catch(e){}
+}
+async function woSet(body){
+  try{ const d=await api('/workorders/'+WO.id,{method:'PUT',body}); WO=d.workorder; drawWoSheet(); afterWoChange(); }
+  catch(e){ alert(e.message); }
+}
+function woStart(){ const b={status:'in_progress'}; if(!WO.assigned_to) b.assigned_to=ME.name; woSet(b); }
+function woHold(){ const why=prompt('Why is it on hold? (waiting on part, vendor, access)'); if(why===null) return;
+  (async()=>{ if(why.trim()) await api('/workorders/'+WO.id+'/note',{method:'POST',body:{body:'On hold: '+why.trim()}}); woSet({status:'on_hold'}); })(); }
+function woCancel(){ if(!confirm('Cancel this work order?')) return; woSet({status:'cancelled'}); }
+async function woAddNote(){
+  const v=$('woNote').value.trim(); if(!v) return;
+  try{ const d=await api('/workorders/'+WO.id+'/note',{method:'POST',body:{body:v}}); WO=d.workorder; drawWoSheet(); }
+  catch(e){ alert(e.message); }
+}
+function afterWoChange(){ if(TAB==='work'&&WORKVIEW==='wo') loadWos(); if(TAB==='dash') loadDash(); if(TAB==='work'&&WORKVIEW==='pm') loadPm(); }
+async function woOpenUnit(){ const a=WO.apt; closeSheet(); $('aptIn').value=a; showTab('record'); await openUnit(); }
+async function woDiagnose(){
+  const a=WO.apt, rep=[WO.title,WO.description].filter(Boolean).join('. ');
+  closeSheet(); $('aptIn').value=a; showTab('diagnose'); await openUnit(); $('reportIn').value=rep;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function completeForm(){
+  const w=WO, box=$('cmpBox'); if(!box) return;
+  const list=(w.pm&&w.pm.checklist?w.pm.checklist:(w.source==='pm'?w.description:'')).split('\n').map(s=>s.trim()).filter(Boolean);
+  let h='<div style="margin-top:14px;border-top:1px solid var(--edge);padding-top:12px;"><div class="eyebrow">Close it out</div>';
+  if(list.length){
+    h+='<div id="ckList">'+list.map((c,i)=>'<label class="ck-row"><input type="checkbox" data-c="'+esc(c)+'" checked><span>'+esc(c)+'</span></label>').join('')+'</div>';
+  }
+  h+='<label class="fl">What you found and did</label><textarea id="cmR" placeholder="'+(list.length?'Readings, anything out of spec':'Replaced fill valve and flapper, tested 3 flushes')+'"></textarea>'+
+     '<div class="row"><div><label class="fl">Hours</label><input type="number" step=".25" id="cmH" placeholder="0"></div>'+
+     '<div><label class="fl">Vendor cost avoided</label><input type="number" id="cmV" placeholder="$0"></div></div>'+
+     '<label class="fl">Parts used</label><input id="cmP" placeholder="Optional">'+
+     (w.apt?'<div class="dim" style="margin-top:8px;">Saves to '+esc(w.apt)+' service history too.</div>':'')+
+     (w.pm?'<div class="dim" style="margin-top:4px;">Next one is scheduled '+esc(freqLabel(w.pm.freq_days))+' from today.</div>':'')+
+     '<button class="btn btn-good full" style="margin-top:12px;" onclick="submitComplete()">Mark complete</button>'+
+     '<div class="dim" id="cmMsg" style="margin-top:8px;"></div></div>';
+  box.innerHTML=h;
+  box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function submitComplete(){
+  const done=[],skip=[];
+  document.querySelectorAll('#ckList input').forEach(el=>(el.checked?done:skip).push(el.dataset.c));
+  try{
+    const d=await api('/workorders/'+WO.id+'/complete',{method:'POST',body:{
+      resolution:$('cmR').value.trim(), hours:$('cmH').value||0, cost_avoided:$('cmV').value||0,
+      parts_used:$('cmP').value.trim(), checklist_done:done, checklist_skipped:skip
+    }});
+    WO=d.workorder; toast('Work order #'+WO.id+' closed'); drawWoSheet(); afterWoChange(); refreshUnitIfOpen();
+  }catch(e){ $('cmMsg').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'; }
+}
+
+/* =================== PM SCHEDULE =================== */
+let PMS=[];
+async function loadPm(){
+  syncWorkNav();
+  if(!PMS.length) $('pmPane').innerHTML='<div class="panel"><span class="spin"></span><span class="dim">Loading schedule</span></div>';
+  try{ const d=await api('/pm'); PMS=d.pms; drawPm(d.today); }
+  catch(e){ $('pmPane').innerHTML='<div class="panel"><div class="note n-safe"><b>Failed</b>'+esc(e.message)+'</div></div>'; }
+}
+function drawPm(t){
+  const in14=(()=>{ const d=new Date(t+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()+14); return d.toISOString().slice(0,10); })();
+  const late=PMS.filter(p=>p.next_due<t), soon=PMS.filter(p=>p.next_due>=t&&p.next_due<=in14), later=PMS.filter(p=>p.next_due>in14);
+  let h='<div class="panel"><div class="stats">'+
+    '<div class="stat"><div class="n">'+PMS.length+'</div><div class="l">PM tasks</div></div>'+
+    '<div class="stat"><div class="n" style="color:'+(late.length?'var(--rose)':'var(--text)')+'">'+late.length+'</div><div class="l">overdue</div></div>'+
+    '<div class="stat"><div class="n">'+soon.length+'</div><div class="l">next 14 days</div></div></div>'+
+    '<div class="row" style="margin-top:12px;"><button class="btn" onclick="newPmForm()">+ PM task</button>'+
+    '<button class="btn-2" onclick="starterPlan()">Load standard plan</button></div>'+
+    '<div class="dim" style="margin-top:8px;font-size:12px;">Standard plan adds the usual PM for every piece of equipment on file by type: LWCO tests, tower inspections, pump rotation, filter changes, water tests. Skips anything already scheduled.</div>'+
+    '<div id="pmNewBox"></div></div>';
+  if(!PMS.length) h+='<div class="empty"><div class="big">No PM scheduled</div>Load the standard plan or add tasks one at a time.</div>';
+  const sec=(title,list)=>{ if(!list.length) return '';
+    return '<div class="bldg" style="margin:14px 0 8px">'+title+' · '+list.length+'</div>'+list.map(p=>pmRow(p,t)).join(''); };
+  h+=sec('Overdue',late)+sec('Next 14 days',soon)+sec('Later',later);
+  $('pmPane').innerHTML=h;
+}
+function pmRow(p,t){
+  const d=p.next_due.split('-');
+  return '<div class="pm'+(p.next_due<t?' late':'')+'"><div class="dd"><div class="d">'+(+d[2])+'</div><div class="mo">'+MON[+d[1]-1]+'</div></div>'+
+    '<div class="bd"><div class="t">'+esc(p.title)+'</div><div class="m">'+(p.apt?esc(p.apt)+' · ':'')+esc(p.bldg||'')+' · every '+esc(freqLabel(p.freq_days))+
+    (p.last_done?' · last '+esc(fmtDate(p.last_done)):'')+'</div></div>'+
+    '<div class="go">'+(p.open_wo?'<button class="btn" onclick="openWo('+p.open_wo+')">Open</button>':'<button class="btn-2" onclick="editPm('+p.id+')">Edit</button>')+'</div></div>';
+}
+function newPmForm(apt,pm){
+  WORKVIEW='pm'; if(TAB!=='work'){ showTab('work'); } else { syncWorkNav(); }
+  const go=()=>{
+    const box=$('pmNewBox'); if(!box){ setTimeout(go,150); return; }
+    const e=pm||{}; const f=e.freq_days||30;
+    box.innerHTML='<div style="margin-top:14px;border-top:1px solid var(--edge);padding-top:12px;"><div class="eyebrow">'+(pm?'Edit PM task':'New PM task')+'</div>'+
+      '<label class="fl" style="margin-top:0;">Task</label><input id="pmT" maxlength="160" value="'+esc(e.title||'')+'" placeholder="Test low water cutoff">'+
+      (pm?'':'<div class="row"><div><label class="fl">Equipment tag</label><input id="pmA" list="tagList" value="'+esc(apt||'')+'" placeholder="Optional" style="font-family:var(--mono);text-transform:uppercase"></div>'+
+      '<div><label class="fl">Building</label><input id="pmB" list="woBldgList" placeholder="If no tag"></div></div>')+
+      '<div class="row"><div><label class="fl">Repeats</label><select id="pmF">'+FREQS.map(([n,l])=>'<option value="'+n+'"'+(n===f?' selected':'')+'>'+l+'</option>').join('')+
+        (FREQS.some(x=>x[0]===f)?'':'<option value="'+f+'" selected>Every '+f+' days</option>')+'</select></div>'+
+      '<div><label class="fl">Next due</label><input type="date" id="pmD" value="'+esc(e.next_due||today())+'"></div></div>'+
+      '<label class="fl">Checklist <span style="text-transform:none;letter-spacing:0">(one step per line)</span></label><textarea id="pmC" placeholder="Blow down LWCO with burner firing&#10;Confirm burner shuts down">'+esc(e.checklist||'')+'</textarea>'+
+      '<div class="row" style="margin-top:12px;"><button class="btn-2" onclick="$(\'pmNewBox\').innerHTML=\'\'">Cancel</button>'+
+      (pm?'<button class="btn-2" style="color:var(--rose)" onclick="delPm('+pm.id+')">Remove</button>':'')+
+      '<button class="btn" onclick="savePm('+(pm?pm.id:'')+')">Save</button></div><div class="dim" id="pmMsg" style="margin-top:8px;"></div>'+tagList()+bldgList()+'</div>';
+    box.scrollIntoView({behavior:'smooth',block:'center'}); $('pmT').focus();
+  };
+  if(!PMS.length&&!$('pmNewBox')) loadPm().then(go); else go();
+}
+function editPm(id){ const p=PMS.find(x=>x.id===id); if(p) newPmForm(null,p); }
+async function savePm(id){
+  const body={title:$('pmT').value.trim(), freq_days:$('pmF').value, next_due:$('pmD').value, checklist:$('pmC').value};
+  if(!id){ body.apt=$('pmA').value.trim(); body.building=$('pmB').value.trim(); }
+  try{
+    await api(id?'/pm/'+id:'/pm',{method:id?'PUT':'POST',body});
+    toast(id?'PM updated':'PM task added'); loadPm(); refreshUnitIfOpen();
+  }catch(e){ $('pmMsg').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'; }
+}
+async function delPm(id){
+  if(!confirm('Remove this PM task from the schedule?')) return;
+  try{ await api('/pm/'+id,{method:'DELETE'}); toast('Removed'); loadPm(); refreshUnitIfOpen(); }catch(e){ alert(e.message); }
+}
+async function starterPlan(){
+  if(!confirm('Add the standard PM plan for every piece of equipment on file?')) return;
+  try{ const d=await api('/pm/starter',{method:'POST'});
+    toast(d.created?('Added '+d.created+' PM tasks'):'Everything already scheduled'); loadPm(); refreshBadge();
+  }catch(e){ alert(e.message); }
+}
+
+/* =================== DASHBOARD =================== */
+const C_CREATED='#2F64A8', C_DONE='#B8801F';
+async function loadDash(){
+  if(!$('dashBody').innerHTML) $('dashBody').innerHTML='<div class="panel"><span class="spin"></span><span class="dim">Loading</span></div>';
+  try{ const d=await api('/dashboard'); drawDash(d); }
+  catch(e){ $('dashBody').innerHTML='<div class="panel"><div class="note n-safe"><b>Failed</b>'+esc(e.message)+'</div></div>'; }
+}
+function kpi(n,l,s,cls,onclick){
+  return '<div class="kpi'+(cls?' '+cls:'')+(onclick?' click':'')+'"'+(onclick?' onclick="'+onclick+'"':'')+'><div class="n">'+n+'</div><div class="l">'+l+'</div>'+(s?'<div class="s">'+s+'</div>':'')+'</div>';
+}
+function drawDash(d){
+  const w=d.wo, pm=d.pm;
+  let h='<div class="panel"><div class="eyebrow">Right now · '+esc(fmtDate(d.today))+'</div><div class="kpis">'+
+    kpi(w.open,'Open repairs',(w.emergency?w.emergency+' emergency · ':'')+w.high+' high'+(w.open_pm?' · plus '+w.open_pm+' PM':''),w.emergency?'bad':'',"WOFILTER='open';WOUNIT='';showTab('work')")+
+    kpi(w.new_requests,'New requests',w.requests_30+' from staff in 30 days',w.new_requests?'':'',"WOFILTER='new';WOUNIT='';showTab('work')")+
+    kpi(w.overdue,'Overdue',w.in_progress+' in progress · '+w.on_hold+' on hold',w.overdue?'bad':'good')+
+    kpi(pm.on_time_pct==null?'—':pm.on_time_pct+'%','PM on time',pm.completed_90+' PMs closed, 90 days',pm.on_time_pct!=null&&pm.on_time_pct>=90?'good':(pm.on_time_pct!=null&&pm.on_time_pct<75?'bad':''))+
+    '</div></div>';
+
+  // needs attention
+  h+='<div class="panel"><div class="eyebrow">Needs attention</div>';
+  if(!d.attention.length&&!d.overduePms.length) h+='<div class="dim">Nothing urgent, nothing overdue.</div>';
+  d.attention.forEach(a=>{
+    const late=a.due_date&&a.due_date<d.today;
+    h+='<div class="att" onclick="openWo('+a.id+')"><div style="flex:1;min-width:0"><div class="t">'+esc(a.title)+'</div>'+
+       '<div class="m">#'+a.id+(a.building?' · '+esc(a.building):'')+' · '+(late?'<span style="color:var(--rose)">overdue since '+esc(fmtDate(a.due_date))+'</span>':esc(ago(a.created_at)))+'</div></div>'+
+       '<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">'+prTag(a.priority)+(a.status==='new'?stTag('new'):'')+(a.source==='pm'?'<span class="tag tpm">PM</span>':'')+'</div></div>';
+  });
+  h+='</div>';
+
+  // trend
+  h+='<div class="panel"><div class="eyebrow">Repairs and requests, last 8 weeks</div>'+
+     '<div class="legend"><span><i style="background:'+C_CREATED+'"></i>Opened</span><span><i style="background:'+C_DONE+'"></i>Closed</span></div>'+
+     '<div class="chart-wrap" id="trendWrap">'+trendSvg(d.weeks)+'<div class="chart-tip" id="trendTip"></div></div>'+
+     '<details style="margin-top:6px"><summary class="dim" style="cursor:pointer;font-size:12px">Table view</summary><table style="margin-top:6px"><tr><th>Week of</th><th>Opened</th><th>Closed</th></tr>'+
+     d.weeks.map(x=>'<tr><td><b>'+esc(fmtDate(x.week))+'</b></td><td>'+x.created+'</td><td>'+x.completed+'</td></tr>').join('')+'</table></details>'+
+     '<div class="stats" style="margin-top:12px">'+
+       '<div class="stat"><div class="n">'+w.done_30+'</div><div class="l">closed, 30 days</div></div>'+
+       '<div class="stat"><div class="n">'+(w.avg_close_days==null?'—':w.avg_close_days+'d')+'</div><div class="l">avg time to close</div></div>'+
+       '<div class="stat"><div class="n">'+w.created_30+'</div><div class="l">opened, 30 days</div></div></div></div>';
+
+  // aging
+  const ag=d.aging, tot=ag.d0+ag.d1+ag.d3+ag.d7;
+  h+='<div class="panel"><div class="eyebrow">How long open work has been waiting</div>';
+  if(!tot) h+='<div class="dim">No open repairs or requests.</div>';
+  else{
+    const seg=(n,c,l)=>n?'<div style="flex:'+n+';background:'+c+'" title="'+l+': '+n+'">'+n+'</div>':'';
+    h+='<div class="age">'+seg(ag.d0,'#4F6F99','Under a day')+seg(ag.d1,'#2F64A8','1 to 3 days')+seg(ag.d3,'#B8801F','3 to 7 days')+seg(ag.d7,'#B3362D','Over a week')+'</div>'+
+       '<div class="age-l"><span>&lt;1 day '+ag.d0+'</span><span>1-3 days '+ag.d1+'</span><span>3-7 days '+ag.d3+'</span><span>7+ days '+ag.d7+'</span></div>';
+  }
+  h+='<div class="dim" style="margin-top:6px;font-size:12px;">PM work orders are left out of this and the trend. They have their own due dates.</div></div>';
+
+  // PM
+  h+='<div class="panel"><div class="eyebrow">Preventive maintenance</div><div class="stats">'+
+     '<div class="stat"><div class="n">'+pm.active+'</div><div class="l">tasks scheduled</div></div>'+
+     '<div class="stat"><div class="n" style="color:'+(pm.overdue?'var(--rose)':'var(--text)')+'">'+pm.overdue+'</div><div class="l">overdue</div></div>'+
+     '<div class="stat"><div class="n">'+pm.due_7+'</div><div class="l">due this week</div></div></div>';
+  if(d.overduePms.length){
+    h+='<table style="margin-top:12px"><tr><th>Overdue PM</th><th>Equipment</th><th style="text-align:right">Due</th></tr>'+
+       d.overduePms.map(p=>'<tr><td>'+esc(p.title)+'</td><td><b>'+esc(p.apt||p.building||'')+'</b></td><td style="text-align:right;color:var(--rose);font-family:var(--mono)">'+esc(fmtDate(p.next_due))+'</td></tr>').join('')+'</table>';
+  }
+  if(!pm.active) h+='<button class="btn-2 full" style="margin-top:12px" onclick="WORKVIEW=\'pm\';showTab(\'work\')">Set up the PM schedule</button>';
+  h+='</div>';
+
+  // buildings
+  if(d.byBuilding.length){
+    h+='<div class="panel"><div class="eyebrow">Open work by building</div><table><tr><th>Building</th><th>Open</th><th>Urgent</th><th>Overdue</th></tr>'+
+       d.byBuilding.map(b=>'<tr><td><b>'+esc(b.building)+'</b></td><td>'+b.open+'</td><td style="color:'+(b.urgent?'var(--ember)':'var(--dim)')+'">'+b.urgent+'</td><td style="color:'+(b.overdue?'var(--rose)':'var(--dim)')+'">'+b.overdue+'</td></tr>').join('')+'</table></div>';
+  }
+
+  // labor & savings
+  h+='<div class="panel"><div class="eyebrow">Labor and savings</div><div class="stats">'+
+     '<div class="stat"><div class="n" style="color:var(--mint)">$'+d.month.cost_avoided.toLocaleString()+'</div><div class="l">avoided this month</div></div>'+
+     '<div class="stat"><div class="n">'+d.month.hours+'</div><div class="l">hours this month</div></div>'+
+     '<div class="stat"><div class="n" style="color:var(--mint)">$'+d.ytd.cost_avoided.toLocaleString()+'</div><div class="l">avoided this year</div></div></div>'+
+     '<div class="dim" style="margin-top:8px;font-size:12px;">What the same work would have cost from an outside contractor, as logged on each job.</div></div>';
+
+  if(d.byCategory.length){
+    h+='<div class="panel"><div class="eyebrow">What the work is, last 30 days</div>'+
+       d.byCategory.map(c=>{ const max=d.byCategory[0].n; return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:13px">'+
+         '<span style="flex:0 0 120px;color:var(--mid)">'+esc(c.category)+'</span><span style="flex:1;height:10px;background:var(--raised);border-radius:0 3px 3px 0;overflow:hidden">'+
+         '<span style="display:block;height:100%;width:'+(100*c.n/max)+'%;background:'+C_CREATED+';border-radius:0 3px 3px 0"></span></span>'+
+         '<span style="flex:0 0 26px;text-align:right;font-family:var(--mono);color:var(--text)">'+c.n+'</span></div>'; }).join('')+'</div>';
+  }
+
+  if(d.recentDone.length){
+    h+='<div class="panel"><div class="eyebrow">Recently finished</div>'+
+       d.recentDone.map(r=>'<div class="att" onclick="openWo('+r.id+')"><div style="flex:1;min-width:0"><div class="t">'+esc(r.title)+'</div>'+
+         '<div class="m">'+esc(r.apt||r.building||'')+' · '+esc(ago(r.completed_at))+(r.hours?' · '+r.hours+' hr':'')+'</div></div>'+stTag('done')+'</div>').join('')+'</div>';
+  }
+
+  // staff request portal
+  const url=location.origin+'/request';
+  h+='<div class="panel"><div class="eyebrow">Staff request page</div>'+
+     '<div class="mid" style="margin-bottom:10px;">Any employee can report a problem from their phone. No login. Requests land in the New requests queue with a photo if they took one.</div>'+
+     '<div class="linkbox">'+esc(url)+'</div>'+
+     '<div class="row" style="margin-top:10px;"><button class="btn-2" onclick="copyText(\''+esc(url)+'\')">Copy link</button>'+
+     '<button class="btn-2" onclick="window.open(\'/request\',\'_blank\')">Open it</button>'+
+     '<button class="btn" onclick="window.open(\'/signs\',\'_blank\')">Print QR signs</button></div></div>';
+
+  $('dashBody').innerHTML=h;
+  wireTrend(d.weeks);
+}
+function copyText(t){ navigator.clipboard.writeText(t).then(()=>toast('Copied'),()=>prompt('Copy:',t)); }
+function trendSvg(weeks){
+  const W=400,H=190,pl=24,pr=6,pt=10,pb=24, iw=W-pl-pr, ih=H-pt-pb;
+  const max=Math.max(4,...weeks.map(x=>Math.max(x.created,x.completed)));
+  const step=Math.ceil(max/4); const top=step*4;
+  const gw=iw/weeks.length, bw=Math.min(16,(gw-8)/2);
+  let s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Work orders opened and closed per week" style="display:block;overflow:visible">';
+  for(let i=0;i<=4;i++){ const y=pt+ih-ih*(i/4);
+    s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="#DDD5C3" stroke-width="1"'+(i?' stroke-dasharray="2 3"':'')+'/>'+
+       '<text x="'+(pl-6)+'" y="'+(y+3)+'" text-anchor="end" font-size="10" fill="#7C8494" font-family="IBM Plex Mono,monospace">'+(step*i)+'</text>'; }
+  const bar=(x,v,c)=>{ if(!v) return ''; const h=ih*v/top, y=pt+ih-h, r=Math.min(4,h/2,bw/2);
+    return '<path d="M'+x+','+(pt+ih)+' V'+(y+r)+' Q'+x+','+y+' '+(x+r)+','+y+' H'+(x+bw-r)+' Q'+(x+bw)+','+y+' '+(x+bw)+','+(y+r)+' V'+(pt+ih)+' Z" fill="'+c+'"/>'; };
+  weeks.forEach((wk,i)=>{
+    const cx=pl+gw*i+gw/2, x1=cx-bw-1, x2=cx+1;
+    s+=bar(x1,wk.created,C_CREATED)+bar(x2,wk.completed,C_DONE);
+    s+='<text x="'+cx+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="#7C8494" font-family="IBM Plex Mono,monospace">'+esc(fmtDate(wk.week))+'</text>';
+    s+='<rect class="hit" data-i="'+i+'" x="'+(pl+gw*i)+'" y="'+pt+'" width="'+gw+'" height="'+ih+'" fill="transparent"/>';
+  });
+  return s+'</svg>';
+}
+function wireTrend(weeks){
+  const wrap=$('trendWrap'), tip=$('trendTip'); if(!wrap) return;
+  wrap.querySelectorAll('rect.hit').forEach(r=>{
+    const show=()=>{ const wk=weeks[+r.dataset.i]; const b=r.getBoundingClientRect(), wb=wrap.getBoundingClientRect();
+      tip.innerHTML='Week of '+esc(fmtDate(wk.week))+'<br>Opened '+wk.created+' · Closed '+wk.completed;
+      tip.style.left=(b.left-wb.left+b.width/2)+'px'; tip.style.top='10px'; tip.style.display='block';
+      r.setAttribute('fill','rgba(31,58,99,.06)'); };
+    const hide=()=>{ tip.style.display='none'; r.setAttribute('fill','transparent'); };
+    r.addEventListener('mouseenter',show); r.addEventListener('mouseleave',hide);
+    r.addEventListener('touchstart',show,{passive:true});
+  });
 }
 
 /* ---------- boot ---------- */
