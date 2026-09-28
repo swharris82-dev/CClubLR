@@ -7,7 +7,9 @@ const { getProfile, listTypes, requiresErrorCode } = require('./profiles');
 const { listManufacturers, getManufacturer } = require('./manufacturers');
 
 const app = express();
-app.use(express.json({ limit: '1mb' }));
+// Data plate photos arrive as base64 in the request body, so this has to be
+// larger than the 1mb an all-text API would need.
+app.use(express.json({ limit: '12mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
@@ -373,6 +375,87 @@ Rank 3-5 causes, highest odds first. Every cause must be plausible for THIS equi
       return res.status(502).json({ error: 'Could not read diagnostic response', raw: clean.slice(0, 500) });
     }
     res.json({ triage: parsed });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/* ================= DATA PLATE READER ================= */
+
+// Reads a photo of an equipment data plate and returns the fields that belong
+// on an equipment registry line. Everything it returns is a suggestion the tech
+// checks against the plate before saving. It never invents a value it cannot read.
+app.post('/api/plate-read', auth, async (req, res) => {
+  if (!ANTHROPIC_API_KEY) {
+    return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not set on the server' });
+  }
+  const { image, media_type, system_type, manufacturer } = req.body || {};
+  if (!image) return res.status(400).json({ error: 'No photo came through. Try again.' });
+
+  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  const mt = allowed.includes(media_type) ? media_type : 'image/jpeg';
+
+  const context = [
+    system_type ? `The tech says this plate is on a ${system_type}.` : '',
+    manufacturer ? `The equipment record lists the manufacturer as ${manufacturer}.` : ''
+  ].filter(Boolean).join(' ');
+
+  const prompt = `You are reading the data plate on a piece of commercial HVAC, refrigeration, boiler, kitchen, or pool equipment at a country club. ${context}
+
+Read ONLY what is printed on the plate. Never guess a value that is not legible. If a field is missing or you cannot read it with confidence, return an empty string for it and name it in "unreadable".
+
+Return ONLY a JSON object, with no markdown fence:
+{
+  "component": "what this equipment is, in 1 to 3 words, the way a tech would name it on a registry line. Examples: Boiler, Condensing unit, Air handler, Cooling tower, Circulator pump, Compressor, Ice machine",
+  "manufacturer": "brand as printed, or empty",
+  "model": "model number exactly as printed, or empty",
+  "serial": "serial number exactly as printed, or empty",
+  "refrigerant": "refrigerant type such as R-410A or R-448A, or empty if this unit carries no refrigerant",
+  "date": "YYYY-MM-DD if a date is printed or can be decoded from the serial, else YYYY-MM, else YYYY, else empty",
+  "date_kind": "manufactured, installed, or unknown",
+  "date_basis": "short note on where the date came from, such as 'printed MFG date' or 'decoded from serial', or empty",
+  "electrical": "voltage, phase, MCA and MOCP as printed, on one line, or empty",
+  "capacity": "tonnage, MBH, GPM, HP or similar capacity as printed, or empty",
+  "unreadable": ["names of the fields you could not read"],
+  "confidence": "high, medium, or low, for the reading overall"
+}
+
+Transcribe the serial number character by character. Do not normalize it, do not drop leading zeros, and do not correct what looks like a typo. Where a character is ambiguous between 0 and O, or 1 and I, use the most likely character and add "serial" to "unreadable" so the tech re-checks it.`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 900,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mt, data: image } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+    if (!r.ok) {
+      const t = await r.text();
+      return res.status(502).json({ error: 'Plate reader error: ' + t.slice(0, 200) });
+    }
+    const data = await r.json();
+    const text = (data.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n');
+    const clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    let parsed;
+    try {
+      parsed = JSON.parse(clean);
+    } catch (e) {
+      return res.status(502).json({ error: 'Could not read the plate response', raw: clean.slice(0, 300) });
+    }
+    res.json({ plate: parsed });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
