@@ -723,6 +723,9 @@ function drawRecord(){
        (e.install_date?'<br><span class="dim">Installed</span> '+esc(e.install_date):'')+
        (w?'<br>'+w:'')+'</div>';
   });
+  h+='<button class="btn full" style="margin-top:10px;" onclick="scanPlate()">Scan data plate</button>'+
+     '<input type="file" id="ePhoto" accept="image/*" style="display:none" onchange="onPlatePhoto(this)">'+
+     '<div class="dim" id="eScanMsg" style="margin-top:8px;">Photograph the plate and the fields below fill in. Check them against the plate before you save.</div>';
   h+='<div class="row" style="margin-top:10px;"><input id="eC" placeholder="Component"><input id="eM" placeholder="Mfr"></div>'+
      '<div class="row" style="margin-top:7px;"><input id="eMo" placeholder="Model"><input id="eS" placeholder="Serial"></div>'+
      '<div class="row" style="margin-top:7px;"><input id="eD" type="date"><input id="eW" type="number" placeholder="Yrs"><input id="eR" placeholder="Refrig."></div>'+
@@ -804,6 +807,77 @@ async function saveRecord(){
     $('rMsg').innerHTML='<span style="color:var(--mint)">Saved</span>';
   }catch(e){ $('rMsg').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'; }
 }
+/* ---------- data plate reader ---------- */
+function scanPlate(){ const el=$('ePhoto'); if(!el) return; el.value=''; el.click(); }
+
+// Phone photos run 3-8MB. Shrink before upload so this works on club wifi.
+function shrinkImage(file,maxDim,quality){
+  return new Promise((resolve,reject)=>{
+    const img=new Image(), url=URL.createObjectURL(file);
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      let w=img.naturalWidth, ht=img.naturalHeight;
+      if(!w||!ht){ reject(new Error('That photo came through empty. Try again.')); return; }
+      const scale=Math.min(1,maxDim/Math.max(w,ht));
+      w=Math.round(w*scale); ht=Math.round(ht*scale);
+      const c=document.createElement('canvas'); c.width=w; c.height=ht;
+      c.getContext('2d').drawImage(img,0,0,w,ht);
+      const data=c.toDataURL('image/jpeg',quality);
+      resolve(data.slice(data.indexOf(',')+1));
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); reject(new Error('Could not open that photo. Try a JPEG.')); };
+    img.src=url;
+  });
+}
+
+async function onPlatePhoto(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  const msg=$('eScanMsg');
+  msg.innerHTML='<span class="spin"></span>Reading the plate';
+  try{
+    const b64=await shrinkImage(f,1600,.82);
+    const d=await api('/plate-read',{method:'POST',body:{
+      image:b64, media_type:'image/jpeg',
+      system_type:UNIT?UNIT.system_type:'', manufacturer:UNIT?UNIT.manufacturer:''
+    }});
+    fillPlate(d.plate);
+  }catch(e){
+    msg.innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>';
+  }
+}
+
+function fillPlate(p){
+  const msg=$('eScanMsg');
+  if(!p){ msg.innerHTML='<span style="color:var(--rose)">Nothing came back from the plate reader.</span>'; return; }
+  const set=(id,v)=>{ const el=$(id); if(el&&v) el.value=v; };
+  set('eC',p.component); set('eM',p.manufacturer); set('eMo',p.model);
+  set('eS',p.serial); set('eR',p.refrigerant);
+
+  let dateNote='';
+  if(p.date){
+    const d=String(p.date);
+    const full=/^\d{4}-\d{2}-\d{2}$/.test(d)?d
+             :/^\d{4}-\d{2}$/.test(d)?d+'-01'
+             :/^\d{4}$/.test(d)?d+'-01-01':'';
+    if(full){
+      set('eD',full);
+      if(p.date_kind==='manufactured')
+        dateNote='That date is when the unit was built'+(p.date_basis?' ('+p.date_basis+')':'')+'. Change it if you know when it went in.';
+      else if(p.date_kind!=='installed')
+        dateNote='Confirm whether that date is the build date or the install date.';
+    }
+  }
+
+  const extra=[p.capacity,p.electrical].filter(Boolean).join('  ·  ');
+  const miss=(p.unreadable||[]).filter(Boolean);
+  let out='<span style="color:var(--mint)">Plate read. Check each field against the plate before saving.</span>';
+  if(extra) out+='<br>'+esc(extra);
+  if(dateNote) out+='<br>'+esc(dateNote);
+  if(miss.length) out+='<br><span style="color:var(--sulfur)">Could not read: '+esc(miss.join(', '))+'</span>';
+  if(p.confidence==='low') out+='<br><span style="color:var(--sulfur)">Low confidence. Retake it straight on with better light if these look wrong.</span>';
+  msg.innerHTML=out;
+}
+
 async function addEq(){
   if(!$('eC').value.trim()) return alert('Component name is required.');
   try{
