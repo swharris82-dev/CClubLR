@@ -394,6 +394,51 @@ td b{color:var(--text);font-family:var(--mono);}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none !important;transition:none !important;}
 }
+
+/* ---------- roles, alerts, parts, vendors, team ---------- */
+.whobox{display:flex;flex-direction:column;align-items:flex-end;gap:5px;min-width:0;}
+.whobox .nm{cursor:pointer;text-decoration:underline dotted #4F6F99;text-underline-offset:3px;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.whorow{display:flex;align-items:center;gap:8px;}
+.whorow #outBtn{margin-top:0;}
+.hdr-top .brand{flex:1 1 auto;min-width:0;}
+.brand > div{min-width:0;}
+@media(max-width:420px){.mark .logo{font-size:21px;}.brand img{height:40px;}.brand{gap:8px;}}
+.whobox .bell{position:relative;background:none;border:1px solid #4F6F99;border-radius:50%;width:28px;height:28px;padding:0!important;
+  display:flex;align-items:center;justify-content:center;color:#C9D6E6;cursor:pointer;flex-shrink:0;margin:0!important;}
+.whobox .bell svg{width:15px;height:15px;}
+.whobox .bell.hot{border-color:#E8847B;color:#FFD9D4;animation:ring 2.4s ease-in-out infinite;}
+@keyframes ring{0%,88%,100%{transform:none}91%{transform:rotate(12deg)}94%{transform:rotate(-10deg)}97%{transform:rotate(6deg)}}
+.whobox .bell span{position:absolute;top:-5px;right:-6px;background:#B3362D;color:#fff;font-family:var(--mono);font-size:9.5px;font-weight:700;
+  min-width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #1F3A63;}
+.att .lv{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.prow{display:flex;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--edge);border-radius:3px;
+  padding:11px 12px;margin-bottom:7px;cursor:pointer;transition:border-color .15s;}
+.prow:hover{border-color:var(--ice-dim);}
+.prow .t{font-weight:600;font-size:14px;line-height:1.3;}
+.prow .m{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sbar{height:4px;background:var(--raised);border-radius:2px;margin-top:7px;overflow:hidden;}
+.sbar i{display:block;height:100%;border-radius:2px;}
+.sbar i.ok{background:var(--mint);} .sbar i.low{background:var(--sulfur);} .sbar i.out{background:var(--rose);}
+.qty{text-align:right;flex-shrink:0;min-width:64px;}
+.qty b{display:block;font-family:var(--disp);font-size:22px;line-height:1;}
+.qty span{font-family:var(--mono);font-size:9.5px;color:var(--dim);}
+.qty.ok b{color:var(--mint);} .qty.low b{color:var(--sulfur);} .qty.out b{color:var(--rose);}
+.seg3{display:flex;border:1px solid var(--edge);border-radius:3px;overflow:hidden;}
+.seg3 div{flex:1;text-align:center;padding:9px;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--deep);}
+.seg3 div+div{border-left:1px solid var(--edge);}
+.seg3 div.on{background:var(--ice);color:#F3EFE5;}
+.pkr{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:8px 10px;border:1px solid var(--edge);
+  border-radius:3px;margin-top:5px;background:var(--panel);cursor:pointer;font-size:13.5px;}
+.pkr.on{cursor:default;background:var(--deep);}
+.tag.rl-admin{color:#fff;background:var(--ice);border-color:var(--ice);}
+.tag.rl-manager{color:#6B5320;background:#F6EBCB;border-color:#D8BE7C;}
+.tag.rl-tech{color:var(--mint);border-color:var(--mint);}
+.tag.rl-staff{color:var(--ice-dim);}
+.tag.rl-viewer{color:var(--dim);}
+.role-viewer .wr,.role-staff .wr{display:none!important;}
+.demo-as{display:inline-flex;gap:4px;margin-left:8px;flex-wrap:wrap;justify-content:center;}
+.demo-as button{background:#fff;border:1px solid #D8BE7C;color:#6B5320;font-family:var(--mono);font-size:9.5px;padding:3px 7px;border-radius:3px;cursor:pointer;letter-spacing:.5px;}
+.demo-as button.on{background:#6B5320;color:#fff;}
 </style>
 </head>
 <body>
@@ -411,8 +456,9 @@ td b{color:var(--text);font-family:var(--mono);}
       </div>
     </div>
     <div class="whobox hide" id="whobox">
-      <div class="nm" id="who"></div>
-      <button id="outBtn">Sign out</button>
+      <div class="nm" id="who" onclick="accountSheet()" title="My account"></div>
+      <div class="whorow"><button class="bell" id="bellBtn" aria-label="Alerts" onclick="alertsSheet()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="hide" id="bellN"></span></button>
+      <button id="outBtn">Sign out</button></div>
     </div>
   </div>
   <div class="tabs hide" id="tabs">
@@ -420,8 +466,11 @@ td b{color:var(--text);font-family:var(--mono);}
     <div class="tab" data-tab="diagnose">Diagnose</div>
     <div class="tab" data-tab="record">Record</div>
     <div class="tab" data-tab="history">History</div>
+    <div class="tab" data-tab="parts">Parts</div>
+    <div class="tab" data-tab="vendors">Vendors</div>
     <div class="tab" data-tab="dash">Dashboard</div>
     <div class="tab" data-tab="reports">Reports</div>
+    <div class="tab" data-tab="team">Team</div>
   </div>
 </header>
 
@@ -529,8 +578,13 @@ td b{color:var(--text);font-family:var(--mono);}
     <div id="reportsBody"></div>
   </div>
 
+  <div id="tab-parts" class="hide"><div id="partsBody"></div></div>
+  <div id="tab-vendors" class="hide"><div id="vendorsBody"></div></div>
+  <div id="tab-team" class="hide"><div id="teamBody"></div></div>
+
 </div>
 
+<script src="/ops-ui.js"></script>
 <script>
 let TOKEN = null; try{ TOKEN = localStorage.getItem('ciq_token'); }catch(e){}
 const store = { set:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}}, del:k=>{try{localStorage.removeItem(k);}catch(e){}} };
@@ -573,6 +627,7 @@ $('aGo').onclick=async()=>{
   try{
     const d = await api(mode==='signup'?'/signup':'/login',{method:'POST',
       body: mode==='signup'?{email,password,name}:{email,password}});
+    if(d.pending){ aMsg(d.message,'ok'); $('aToggle').click(); return; }
     TOKEN=d.token; store.set('ciq_token',TOKEN); ME=d.user; enterApp();
   }catch(e){ aMsg(e.message,'err'); }
   finally{ $('aGo').disabled=false; }
@@ -581,6 +636,8 @@ $('outBtn').onclick=()=>{
   store.del('ciq_token'); TOKEN=null; ME=null; UNIT=null;
   $('appView').classList.add('hide'); $('authView').classList.remove('hide');
   $('whobox').classList.add('hide'); $('tabs').classList.add('hide');
+  clearInterval(window._badgeT); clearInterval(window._alertT);
+  document.body.className=document.body.className.replace(/\brole-\w+/g,'').trim();
 };
 
 function enterApp(){
@@ -588,10 +645,15 @@ function enterApp(){
   $('appView').classList.remove('hide');
   $('whobox').classList.remove('hide');
   $('tabs').classList.remove('hide');
-  $('who').textContent = ME.name + (ME.role==='manager'?' · MGR':'');
-  loadTypes().then(()=>{ if(UNIT){ drawPlate(); drawRecord(); } }); loadChips();
+  if(!ME.role) ME.role='tech';
+  if(ME.role==='staff') TAB='work';
+  else if(ME.role==='viewer' && !['dash','work','vendors','reports'].includes(TAB)) TAB='dash';
+  applyRole();
+  if(canWork()){ loadTypes().then(()=>{ if(UNIT){ drawPlate(); drawRecord(); } }); loadChips(); }
   loadMeta().then(()=>showTab(TAB));
   clearInterval(window._badgeT); window._badgeT=setInterval(refreshBadge,60000);
+  refreshAlerts(); clearInterval(window._alertT); window._alertT=setInterval(refreshAlerts,90000);
+  syncDemoBar();
 }
 async function loadTypes(){
   try{ const d=await api('/system-types'); TYPES=d.types; TYPEMAP={};
@@ -599,7 +661,7 @@ async function loadTypes(){
 }
 
 /* ---------- tabs ---------- */
-const ALLTABS=['work','diagnose','record','history','dash','reports'];
+const ALLTABS=['work','diagnose','record','history','parts','vendors','dash','reports','team'];
 function showTab(name){
   TAB=name;
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.tab===name));
@@ -610,6 +672,9 @@ function showTab(name){
   $('brief').classList.toggle('hide',!uc||!UNIT);
   if(TAB==='reports') loadReports();
   if(TAB==='dash') loadDash();
+  if(TAB==='parts') loadParts();
+  if(TAB==='vendors') loadVendors();
+  if(TAB==='team') loadTeam();
   if(TAB==='work') (WORKVIEW==='pm'?loadPm():loadWos());
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>showTab(t.dataset.tab));
@@ -1170,6 +1235,7 @@ async function loadReports(){
     h+='</div>';
     h+='<button class="btn-2 full" onclick="exportAll()">Export everything</button>';
     $('reportsBody').innerHTML=h;
+    reportsExtras();
   }catch(e){
     $('reportsBody').innerHTML='<div class="panel"><div class="note n-safe"><b>Failed</b>'+esc(e.message)+'</div></div>';
   }
@@ -1255,7 +1321,7 @@ async function loadWos(){
   }catch(e){ $('woList').innerHTML='<div class="panel"><div class="note n-safe"><b>Failed</b>'+esc(e.message)+'</div></div>'; }
 }
 function drawWoFilters(c){
-  const f=[['open','Open',c.open],['new','New requests',c.new],['mine','Mine',c.mine],['pm','PM due',c.pm],['done','Done',null]];
+  const f=isStaff()?[['open','Open',c.open],['done','Done',null]]:[['open','Open',c.open],['new','New requests',c.new],['mine','Mine',c.mine],['pm','PM due',c.pm],['done','Done',null]];
   let h=f.map(([k,l,n])=>'<div data-f="'+k+'" class="'+(WOFILTER===k?'on':'')+'">'+l+(n?'<b>'+n+'</b>':'')+'</div>').join('');
   if(WOUNIT) h='<div class="on" data-clear="1">'+esc(WOUNIT)+' ✕</div>'+h;
   $('woFilters').innerHTML=h;
@@ -1267,7 +1333,7 @@ function drawWoFilters(c){
 function drawWos(t){
   if(!WOS.length){
     const msg={open:'Nothing open. Nice.',new:'No new requests.',mine:'Nothing assigned to you.',pm:'No PM work due.',done:'Nothing closed yet.'}[WOFILTER];
-    $('woList').innerHTML='<div class="empty"><div class="big">'+esc(msg)+'</div>Staff requests and scheduled PM show up here.</div>'; return;
+    $('woList').innerHTML='<div class="empty"><div class="big">'+esc(msg)+'</div>'+(isStaff()?'Requests you submit show up here with their status.':'Staff requests and scheduled PM show up here.')+'</div>'; return;
   }
   $('woList').innerHTML=WOS.map((w,i)=>{
     const late=w.due_date&&w.due_date<t&&!['done','cancelled'].includes(w.status);
@@ -1280,6 +1346,7 @@ function drawWos(t){
         (w.apt?'<span class="tag eq">'+esc(w.apt)+'</span>':'')+
         (late?'<span class="tag late">overdue '+esc(fmtDate(w.due_date))+'</span>':(w.due_date&&WOFILTER!=='done'?'<span class="tag">due '+esc(fmtDate(w.due_date))+'</span>':''))+
         (w.has_photo?'<span class="tag">photo</span>':'')+
+        (w.vendor_name?'<span class="tag" style="text-transform:none;letter-spacing:.3px">'+esc(w.vendor_name)+'</span>':'')+
         (w.assigned_to?'<span class="tag" style="text-transform:none;letter-spacing:.3px">'+esc(w.assigned_to)+'</span>':'')+
       '</div></div>';
   }).join('');
@@ -1288,6 +1355,7 @@ function drawWos(t){
 /* ----- new work order ----- */
 function newWoForm(apt){
   WORKVIEW='wo'; if(TAB!=='work') showTab('work'); else syncWorkNav();
+  if(isStaff()) return staffRequestForm();
   const u=apt?(META.tags||[]).find(t=>t.apt===apt):null;
   $('woNewBox').innerHTML='<div class="panel" id="woNew"><div class="eyebrow">New work order</div>'+
     '<label class="fl" style="margin-top:0;">Title</label><input id="nwT" maxlength="160" placeholder="Grill Room heat pump tripping">'+
@@ -1305,14 +1373,35 @@ function newWoForm(apt){
   $('nwT').focus();
   $('woNew').scrollIntoView({behavior:'smooth',block:'start'});
 }
+let NW_PHOTO=null;
+function staffRequestForm(){
+  NW_PHOTO=null;
+  $('woNewBox').innerHTML='<div class="panel" id="woNew"><div class="eyebrow">New request</div>'+
+    '<label class="fl" style="margin-top:0;">What is wrong</label><input id="nwT" maxlength="160" placeholder="Dish machine not heating">'+
+    '<div class="row"><div><label class="fl">Building</label><input id="nwB" list="woBldgList" placeholder="Clubhouse"></div>'+
+    '<div><label class="fl">Where exactly</label><input id="nwL" maxlength="120" placeholder="Main kitchen, back wall"></div></div>'+
+    '<label class="fl">Details</label><textarea id="nwD" placeholder="When it started, anything you noticed"></textarea>'+
+    '<label class="fl">How urgent</label><select id="nwP"><option value="emergency">Emergency: water, gas smell, no heat or cooling in use, safety</option><option value="high">Today</option><option value="normal" selected>This week</option><option value="low">Whenever</option></select>'+
+    '<label class="fl">Photo</label><input type="file" accept="image/*" id="nwPh" onchange="nwPhoto(this)"><div class="dim" id="nwPhMsg" style="margin-top:4px"></div>'+
+    '<div class="row" style="margin-top:12px;"><button class="btn-2" onclick="$(\'woNewBox\').innerHTML=\'\'">Cancel</button><button class="btn" onclick="saveNewWo()">Send to maintenance</button></div>'+
+    '<div class="dim" id="nwMsg" style="margin-top:8px;"></div>'+bldgList()+'</div>';
+  $('nwT').focus();
+}
+async function nwPhoto(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  try{ const d=await shrinkImage(f,1280,.72); NW_PHOTO=String(d).split(',').pop(); $('nwPhMsg').textContent='Photo attached.'; }
+  catch(e){ $('nwPhMsg').textContent='Could not read that photo.'; }
+}
 async function saveNewWo(){
   try{
     const d=await api('/workorders',{method:'POST',body:{
-      title:$('nwT').value.trim(), building:$('nwB').value.trim(), apt:$('nwA').value.trim(),
+      title:$('nwT').value.trim(), building:$('nwB').value.trim(),
       location:$('nwL').value.trim(), description:$('nwD').value.trim(), priority:$('nwP').value,
-      category:$('nwC').value, assigned_to:$('nwS').value, due_date:$('nwDue').value
+      category:$('nwC')?$('nwC').value:'General', assigned_to:$('nwS')?$('nwS').value:'', due_date:$('nwDue')?$('nwDue').value:'',
+      apt:$('nwA')?$('nwA').value.trim():'', photo:NW_PHOTO||undefined
     }});
-    $('woNewBox').innerHTML=''; toast('Work order #'+d.workorder.id+' created');
+    NW_PHOTO=null;
+    $('woNewBox').innerHTML=''; toast((isStaff()?'Request #':'Work order #')+d.workorder.id+(isStaff()?' sent':' created')); refreshAlerts();
     WOFILTER='open'; loadWos(); refreshUnitIfOpen();
   }catch(e){ $('nwMsg').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'; }
 }
@@ -1338,7 +1427,7 @@ function drawWoSheet(scrollTo){
         '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">'+stTag(w.status)+prTag(w.priority)+(w.apt?'<span class="tag eq" style="background:#fff">'+esc(w.apt)+'</span>':'')+'</div></div><div class="sheet-bd">';
 
   // actions
-  if(open){
+  if(open && canWork()){
     h+='<div class="panel"><div class="acts">';
     if(w.status==='new') h+='<button class="btn" onclick="woSet({status:\'open\',assigned_to:ME.name})">Accept</button>';
     if(w.status!=='in_progress') h+='<button class="btn" onclick="woStart()">Start work</button>';
@@ -1346,10 +1435,10 @@ function drawWoSheet(scrollTo){
     h+='<button class="btn btn-good" onclick="completeForm()">Complete</button></div>';
     if(w.apt) h+='<div class="acts" style="margin-top:7px;"><button class="btn-2" onclick="woDiagnose()">Diagnose '+esc(w.apt)+'</button><button class="btn-2" onclick="woOpenUnit()">Open equipment</button></div>';
     h+='<div id="cmpBox"></div></div>';
-  }else if(w.resolution){
+  }else if(!open && w.resolution){
     h+='<div class="panel"><div class="eyebrow">Resolution</div><div style="font-size:14px;white-space:pre-wrap;">'+esc(w.resolution)+'</div>'+
        '<div class="dim" style="margin-top:6px;">'+(w.hours?w.hours+' hr':'')+(w.cost_avoided?' · $'+Math.round(w.cost_avoided).toLocaleString()+' avoided':'')+(w.job_id?' · logged to '+esc(w.apt)+' history':'')+'</div>'+
-       '<button class="btn-2 full" style="margin-top:10px;" onclick="woSet({status:\'open\'})">Reopen</button></div>';
+       (canWork()?'<button class="btn-2 full" style="margin-top:10px;" onclick="woSet({status:\'open\'})">Reopen</button>':'')+'</div>';
   }
 
   // details
@@ -1362,7 +1451,7 @@ function drawWoSheet(scrollTo){
   h+='</div>';
   if(w.description) h+='<div style="margin-top:12px;font-size:14px;white-space:pre-wrap;line-height:1.55;">'+esc(w.description)+'</div>';
   if(w.has_photo) h+='<div style="margin-top:12px;"><img class="wo-photo" id="woImg" alt="Photo from the request"></div>';
-  if(open){
+  if(open && canWork()){
     h+='<div class="row" style="margin-top:12px;"><div><label class="fl" style="margin-top:0;">Priority</label><select onchange="woSet({priority:this.value})">'+
        META.priorities.map(p=>'<option'+(p===w.priority?' selected':'')+'>'+p+'</option>').join('')+'</select></div>'+
        '<div><label class="fl" style="margin-top:0;">Assigned</label><select onchange="woSet({assigned_to:this.value})">'+staffOptions(w.assigned_to)+'</select></div></div>'+
@@ -1374,10 +1463,11 @@ function drawWoSheet(scrollTo){
   }
   h+='</div>';
 
+  h+=woVendorBlock(w);
   // timeline
   h+='<div class="panel"><div class="eyebrow">Activity</div><div class="tl">'+
      (w.notes||[]).map(n=>'<div class="it '+esc(n.kind)+'"><div>'+esc(n.body)+'</div><div class="w">'+esc(n.by||'')+' · '+esc(fmtWhen(n.at))+'</div></div>').join('')+
-     '</div><div class="row" style="margin-top:8px;"><input id="woNote" placeholder="Add a note: parts ordered, vendor called, found..."><button class="btn" style="flex:0 0 auto" onclick="woAddNote()">Add</button></div></div>';
+     '</div>'+(ME.role==='viewer'?'':'<div class="row" style="margin-top:8px;"><input id="woNote" placeholder="'+(isStaff()?'Add a note for maintenance':'Add a note: parts ordered, vendor called, found...')+'"><button class="btn" style="flex:0 0 auto" onclick="woAddNote()">Add</button></div>')+'</div>';
   h+='</div></div>';
   bg.innerHTML=h;
   if(w.has_photo) loadWoPhoto(w.id);
@@ -1419,12 +1509,14 @@ function completeForm(){
   h+='<label class="fl">What you found and did</label><textarea id="cmR" placeholder="'+(list.length?'Readings, anything out of spec':'Replaced fill valve and flapper, tested 3 flushes')+'"></textarea>'+
      '<div class="row"><div><label class="fl">Hours</label><input type="number" step=".25" id="cmH" placeholder="0"></div>'+
      '<div><label class="fl">Vendor cost avoided</label><input type="number" id="cmV" placeholder="$0"></div></div>'+
-     '<label class="fl">Parts used</label><input id="cmP" placeholder="Optional">'+
+     '<div id="cmParts"></div>'+
+     '<label class="fl">Other parts used</label><input id="cmP" placeholder="Anything not tracked in stock">'+
      (w.apt?'<div class="dim" style="margin-top:8px;">Saves to '+esc(w.apt)+' service history too.</div>':'')+
      (w.pm?'<div class="dim" style="margin-top:4px;">Next one is scheduled '+esc(freqLabel(w.pm.freq_days))+' from today.</div>':'')+
      '<button class="btn btn-good full" style="margin-top:12px;" onclick="submitComplete()">Mark complete</button>'+
      '<div class="dim" id="cmMsg" style="margin-top:8px;"></div></div>';
   box.innerHTML=h;
+  partsPicker();
   box.scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function submitComplete(){
@@ -1433,9 +1525,10 @@ async function submitComplete(){
   try{
     const d=await api('/workorders/'+WO.id+'/complete',{method:'POST',body:{
       resolution:$('cmR').value.trim(), hours:$('cmH').value||0, cost_avoided:$('cmV').value||0,
-      parts_used:$('cmP').value.trim(), checklist_done:done, checklist_skipped:skip
+      parts_used:$('cmP').value.trim(), checklist_done:done, checklist_skipped:skip,
+      parts_stock:PICKED.filter(x=>x.qty>0).map(x=>({part_id:x.part_id,qty:x.qty}))
     }});
-    WO=d.workorder; toast('Work order #'+WO.id+' closed'); drawWoSheet(); afterWoChange(); refreshUnitIfOpen();
+    WO=d.workorder; PICKED=[]; PARTS=[]; toast('Work order #'+WO.id+' closed'); drawWoSheet(); afterWoChange(); refreshUnitIfOpen(); refreshAlerts();
   }catch(e){ $('cmMsg').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'; }
 }
 
@@ -1515,7 +1608,7 @@ async function starterPlan(){
 const C_CREATED='#2F64A8', C_DONE='#B8801F';
 async function loadDash(){
   if(!$('dashBody').innerHTML) $('dashBody').innerHTML='<div class="panel"><span class="spin"></span><span class="dim">Loading</span></div>';
-  try{ const d=await api('/dashboard'); drawDash(d); }
+  try{ const d=await api('/dashboard'); drawDash(d); dashAlerts(); }
   catch(e){ $('dashBody').innerHTML='<div class="panel"><div class="note n-safe"><b>Failed</b>'+esc(e.message)+'</div></div>'; }
 }
 function kpi(n,l,s,cls,onclick){
@@ -1654,7 +1747,7 @@ function wireTrend(weeks){
   if(cfg.property) $('propLine').textContent = cfg.property + (cfg.city?' · '+cfg.city:'');
 
   if(TOKEN){
-    try{ const d=await api('/me'); ME=d.user; enterApp(); return; }
+    try{ const d=await api('/me'); ME=d.user; enterApp(); if(cfg.demo) showDemoBanner(); return; }
     catch(e){ store.del('ciq_token'); TOKEN=null; }
   }
 
@@ -1668,9 +1761,12 @@ function wireTrend(weeks){
   }
 })();
 
+function syncDemoBar(){ document.querySelectorAll('.demo-as button').forEach(x=>x.classList.toggle('on',ME&&x.dataset.r===ME.role)); }
 function showDemoBanner(){
-  const b=document.createElement('div');
-  b.innerHTML='<b>DEMO MODE</b> · Signed in automatically. Equipment and history here are sample data.';
+  if($('demoBar')) return;
+  const b=document.createElement('div'); b.id='demoBar';
+  b.innerHTML='<b>DEMO</b> · Sample data. View as:<span class="demo-as">'+
+    [['admin','Admin'],['manager','Manager'],['tech','Tech'],['staff','Kitchen staff'],['viewer','GM view']].map(([r,l])=>'<button data-r="'+r+'" onclick="demoAs(\''+r+'\')">'+l+'</button>').join('')+'</span>';
   b.style.cssText='background:#F6EBCB;border-bottom:1px solid #D8BE7C;'+
     'color:#6B5320;font-family:var(--mono);font-size:10px;letter-spacing:.8px;'+
     'padding:7px 16px;text-align:center;';

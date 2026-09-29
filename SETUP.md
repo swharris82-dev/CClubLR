@@ -205,3 +205,52 @@ native app.
 
 - `MAINT_PHONE` = the maintenance phone number. Shown on the request page when someone picks Emergency, as a tap-to-call link.
 - `PUBLIC_URL` = the address staff should use, like `https://clubhouse-iq.onrender.com`. The QR signs use it. If it is not set, the signs use whatever address you opened `/signs` from.
+
+## Accounts and roles
+
+The first account created becomes **Admin**. After that, anyone who signs up
+lands as department staff and waits until a manager turns them on in the
+**Team** tab. The faster way is for a manager to add people directly in Team:
+it makes a temporary password and a ready-to-send invite, and the person picks
+their own password on first sign-in.
+
+| Role | Can do |
+| --- | --- |
+| Admin | Everything, including adding people and changing roles |
+| Manager | Everything; approves vendor invoices; adds techs and staff |
+| Technician | Work orders, PM, equipment, diagnosis, parts, vendors |
+| Department staff | Submit requests and follow their own |
+| View only | Dashboard and reports, no changes (GM, board) |
+
+Roles are checked on the server on every request, and changing a role or
+turning an account off takes effect immediately. Set `ALLOW_SIGNUP=false` to
+turn off self signup entirely.
+
+In demo mode the yellow bar lets you switch between roles to show each view.
+
+## Email and text alerts
+
+Emergencies (logged by a tech, raised to emergency, or sent in from the staff
+request page) go out right away. Also available: new staff requests, work
+assigned to you, a morning brief, and the monthly report on the 1st. Each
+person picks what they get by tapping their name at the top of the app.
+
+Email (Gmail works):
+
+- `SMTP_HOST` = `smtp.gmail.com`
+- `SMTP_PORT` = `465`
+- `SMTP_USER` = the Gmail address
+- `SMTP_PASS` = a Gmail **app password** (Google Account > Security > App passwords)
+- `MAIL_FROM` = optional, like `Clubhouse IQ <maintenance@yourdomain.org>`
+
+Text messages (Twilio):
+
+- `TWILIO_SID`, `TWILIO_TOKEN`, `TWILIO_FROM` (your Twilio number)
+
+Other:
+
+- `DIGEST_HOUR` = hour for the morning brief, Central time (default `6`)
+- `PUBLIC_URL` = app address, so alerts link back into the app
+
+Render's free tier sleeps when idle, so the morning brief can run late. The
+Starter plan keeps it awake.

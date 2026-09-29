@@ -9,6 +9,7 @@ const path = require('path');
 const QRCode = require('qrcode');
 const { db } = require('./db');
 const { getProfile } = require('./profiles');
+const ops = require('./ops');
 
 const STATUSES = ['new', 'open', 'in_progress', 'on_hold', 'done', 'cancelled'];
 const OPEN_STATUSES = ['new', 'open', 'in_progress', 'on_hold'];
@@ -57,9 +58,9 @@ function addNote(woId, body, by, kind = 'note') {
 
 function woRow(id) {
   return db.prepare(`
-    SELECT w.*, u.apt, u.system_type,
+    SELECT w.*, u.apt, u.system_type, v.name vendor_name, v.phone vendor_phone,
            (w.photo IS NOT NULL AND w.photo != '') AS has_photo
-    FROM work_orders w LEFT JOIN units u ON u.id = w.unit_id
+    FROM work_orders w LEFT JOIN units u ON u.id = w.unit_id LEFT JOIN vendors v ON v.id = w.vendor_id
     WHERE w.id=?`).get(id);
 }
 
@@ -69,6 +70,8 @@ function woFull(id) {
   delete w.photo;
   delete w.track_code;
   w.notes = db.prepare('SELECT * FROM wo_notes WHERE wo_id=? ORDER BY id').all(id);
+  w.parts = db.prepare(`SELECT t.qty, t.unit_cost, p.name, p.uom FROM part_txns t JOIN parts p ON p.id=t.part_id WHERE t.wo_id=? AND t.kind='use' ORDER BY t.id`).all(id);
+  w.invoices = db.prepare(`SELECT i.id, i.invoice_no, i.amount, i.status, v.name vendor FROM invoices i JOIN vendors v ON v.id=i.vendor_id WHERE i.wo_id=? AND i.status!='void'`).all(id);
   if (w.pm_id) {
     const pm = db.prepare('SELECT id, title, checklist, freq_days, next_due FROM pm_tasks WHERE id=?').get(w.pm_id);
     w.pm = pm || null;
@@ -194,7 +197,9 @@ function completeWorkOrder(w, body, userName) {
   const resolution = clip(body.resolution, 4000);
   const hours = parseFloat(body.hours || 0) || 0;
   const cost = parseFloat(body.cost_avoided || 0) || 0;
-  const parts = clip(body.parts_used, 500);
+  let parts = clip(body.parts_used, 500);
+  const stock = ops.useParts(w, body.parts_stock, userName);
+  if (stock.text) parts = [stock.text, parts].filter(Boolean).join('; ');
   const checked = Array.isArray(body.checklist_done) ? body.checklist_done.map(s => clip(s, 200)).filter(Boolean) : [];
   const skipped = Array.isArray(body.checklist_skipped) ? body.checklist_skipped.map(s => clip(s, 200)).filter(Boolean) : [];
 
@@ -220,7 +225,7 @@ function completeWorkOrder(w, body, userName) {
               started_at=COALESCE(started_at, datetime('now')),
               assigned_to=CASE WHEN assigned_to='' THEN ? ELSE assigned_to END
               WHERE id=?`).run(work, hours, cost, jobId, userName, w.id);
-  addNote(w.id, 'Completed' + (hours ? ` in ${hours} hr` : '') + (jobId ? '. Logged to equipment history.' : '.'), userName, 'status');
+  addNote(w.id, 'Completed' + (hours ? ` in ${hours} hr` : '') + (stock.cost ? `. Parts from stock: $${stock.cost.toFixed(2)}` : '') + (jobId ? '. Logged to equipment history.' : '.'), userName, 'status');
 
   // Roll the PM forward from the day it was actually done.
   if (w.pm_id) {
@@ -375,10 +380,11 @@ module.exports = function mount(app, auth) {
 
   /* ----- lookups for forms ----- */
   app.get('/api/wo-meta', auth, (req, res) => {
-    const staff = db.prepare('SELECT name FROM users ORDER BY name').all().map(r => r.name);
+    const staff = db.prepare(`SELECT name FROM users WHERE active=1 AND role IN ('admin','manager','tech') ORDER BY name`).all().map(r => r.name);
+    const vendors = req.user.role === 'staff' ? [] : db.prepare('SELECT id, name, trade, phone FROM vendors WHERE active=1 ORDER BY name').all();
     const tags = db.prepare('SELECT apt, building, system_type FROM units ORDER BY building, apt').all();
     res.json({ statuses: STATUSES, statusLabel: STATUS_LABEL, priorities: PRIORITIES, categories: CATEGORIES,
-               buildings: buildingList(), departments: DEPARTMENTS, staff, tags });
+               buildings: buildingList(), departments: DEPARTMENTS, staff, tags: req.user.role === 'staff' ? [] : tags, vendors });
   });
 
   /* ----- work orders ----- */
@@ -392,6 +398,13 @@ module.exports = function mount(app, auth) {
     else if (view === 'mine') { where.push(`w.status IN ${OPEN_SQL}`); where.push(`w.assigned_to=?`); args.push(req.user.name); }
     else if (view === 'pm') { where.push(`w.status IN ${OPEN_SQL}`); where.push(`w.source='pm'`); }
     else if (view === 'done') where.push(`w.status IN ('done','cancelled')`);
+    if (req.user.role === 'staff') {
+      // Department staff only ever see their own requests.
+      where.length = 0; args.length = 0;
+      where.push(view === 'done' ? `w.status IN ('done','cancelled')` : `w.status IN ${OPEN_SQL}`);
+      where.push('(w.created_by_id=? OR w.requested_by=? OR w.created_by=?)'); args.push(req.user.id, req.user.name, req.user.name);
+    }
+    if (req.query.vendor) { where.push('w.vendor_id=?'); args.push(parseInt(req.query.vendor, 10) || 0); }
     if (req.query.unit) { where.push('u.apt=?'); args.push(String(req.query.unit).toUpperCase()); }
     if (req.query.building) { where.push(`COALESCE(NULLIF(w.building,''), u.building)=?`); args.push(req.query.building); }
     const order = view === 'done'
@@ -404,9 +417,9 @@ module.exports = function mount(app, auth) {
              w.location, w.requested_by, w.requester_dept, w.assigned_to, w.due_date,
              w.created_at, w.updated_at, w.completed_at, w.hours,
              COALESCE(NULLIF(w.building,''), u.building, '') building,
-             u.apt, u.system_type,
+             u.apt, u.system_type, v.name vendor_name,
              (w.photo IS NOT NULL AND w.photo != '') has_photo
-      FROM work_orders w LEFT JOIN units u ON u.id=w.unit_id
+      FROM work_orders w LEFT JOIN units u ON u.id=w.unit_id LEFT JOIN vendors v ON v.id=w.vendor_id
       ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
       ${order}`).all(...args);
     const counts = db.prepare(`
@@ -416,6 +429,12 @@ module.exports = function mount(app, auth) {
              SUM(CASE WHEN status IN ${OPEN_SQL} AND source='pm' THEN 1 ELSE 0 END) pm
       FROM work_orders`).get(req.user.name);
     Object.keys(counts).forEach(k => { counts[k] = counts[k] || 0; });
+    if (req.user.role === 'staff') {
+      const c = db.prepare(`SELECT SUM(CASE WHEN status IN ${OPEN_SQL} THEN 1 ELSE 0 END) open FROM work_orders WHERE created_by_id=? OR requested_by=? OR created_by=?`)
+        .get(req.user.id, req.user.name, req.user.name);
+      Object.keys(counts).forEach(k => { counts[k] = 0; });
+      counts.open = c.open || 0;
+    }
     res.json({ workorders: rows, counts, today: today() });
   });
 
@@ -444,15 +463,22 @@ module.exports = function mount(app, auth) {
     }
     const priority = PRIORITIES.includes(b.priority) ? b.priority : 'normal';
     const due = isDate(b.due_date) ? b.due_date : addDays(today(), PRIORITY_DAYS[priority]);
+    const staff = req.user.role === 'staff';
+    const assigned = staff ? '' : clip(b.assigned_to, 80);
+    let photo = null;
+    if (b.photo && typeof b.photo === 'string' && b.photo.length < 2000000 && /^[A-Za-z0-9+/=]+$/.test(b.photo)) photo = b.photo;
     const info = db.prepare(`
       INSERT INTO work_orders (unit_id, building, location, title, description, category, priority, status,
-                               source, assigned_to, due_date, requested_by, created_by)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+                               source, assigned_to, due_date, requested_by, requester_dept, created_by, created_by_id, vendor_id, photo)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
       .run(unit ? unit.id : null, clip(b.building, 80) || (unit && unit.building) || '', clip(b.location, 120),
         title, clip(b.description, 4000), CATEGORIES.includes(b.category) ? b.category : 'General',
-        priority, 'open', 'tech', clip(b.assigned_to, 80), due,
-        clip(b.requested_by, 80), req.user.name);
-    addNote(info.lastInsertRowid, 'Created' + (b.assigned_to ? `, assigned to ${clip(b.assigned_to, 80)}` : '') + '.', req.user.name, 'status');
+        priority, staff ? 'new' : 'open', staff ? 'request' : 'tech', assigned, due,
+        staff ? req.user.name : clip(b.requested_by, 80), staff ? (req.user.dept || '') : '', req.user.name, req.user.id,
+        staff ? null : (parseInt(b.vendor_id, 10) || null), photo);
+    addNote(info.lastInsertRowid, (staff ? 'Submitted by ' + req.user.name : 'Created') + (assigned ? `, assigned to ${assigned}` : '') + '.', req.user.name, 'status');
+    ops.kick();
+    if (assigned && assigned !== req.user.name) ops.announceAssignment(woRow(info.lastInsertRowid), assigned).catch(() => {});
     res.json({ workorder: woFull(info.lastInsertRowid) });
   });
 
@@ -482,6 +508,12 @@ module.exports = function mount(app, auth) {
       field('priority', b.priority, `Priority: ${b.priority}`);
     }
     if (b.assigned_to !== undefined) field('assigned_to', clip(b.assigned_to, 80), b.assigned_to ? `Assigned to ${clip(b.assigned_to, 80)}` : 'Unassigned');
+    if (b.vendor_id !== undefined) {
+      const vid = parseInt(b.vendor_id, 10) || null;
+      const v = vid ? db.prepare('SELECT name FROM vendors WHERE id=?').get(vid) : null;
+      if (vid && !v) return res.status(400).json({ error: 'Vendor not found' });
+      field('vendor_id', vid, v ? `Sent to vendor: ${v.name}` : 'Vendor removed');
+    }
     if (b.due_date !== undefined) field('due_date', isDate(b.due_date) ? b.due_date : null, `Due ${b.due_date || 'cleared'}`);
     if (b.title !== undefined && clip(b.title, 160)) field('title', clip(b.title, 160));
     if (b.description !== undefined) field('description', clip(b.description, 4000));
@@ -505,6 +537,13 @@ module.exports = function mount(app, auth) {
       set.push(`updated_at=datetime('now')`);
       db.prepare(`UPDATE work_orders SET ${set.join(', ')} WHERE id=?`).run(...args, w.id);
       if (changes.length) addNote(w.id, changes.join('. ') + '.', req.user.name, 'status');
+      if (b.assigned_to && clip(b.assigned_to, 80) !== w.assigned_to && clip(b.assigned_to, 80) !== req.user.name) {
+        ops.announceAssignment(woRow(w.id), clip(b.assigned_to, 80)).catch(() => {});
+      }
+      if (b.priority === 'emergency' && w.priority !== 'emergency') {
+        db.prepare('UPDATE work_orders SET alerted_at=NULL WHERE id=?').run(w.id);
+        ops.kick();
+      }
     }
     res.json({ workorder: woFull(w.id) });
   });
@@ -637,6 +676,7 @@ module.exports = function mount(app, auth) {
         name, clip(b.department, 60), clip(b.contact, 120), addDays(today(), PRIORITY_DAYS[urgency]),
         photo, code, name);
     addNote(info.lastInsertRowid, `Submitted through the request page${b.department ? ' (' + clip(b.department, 60) + ')' : ''}.`, name, 'status');
+    ops.kick();
     res.json({ ticket: info.lastInsertRowid, code });
   });
 

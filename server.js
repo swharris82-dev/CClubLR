@@ -5,6 +5,7 @@ const path = require('path');
 const { db, getOrCreateUnit, unitFull } = require('./db');
 const { getProfile, listTypes, requiresErrorCode } = require('./profiles');
 const { listManufacturers, getManufacturer } = require('./manufacturers');
+const ops = require('./ops');
 
 const app = express();
 // Data plate photos arrive as base64 in the request body, so this has to be
@@ -37,20 +38,31 @@ function sign(user) {
   return jwt.sign({ id: user.id, email: user.email, name: user.name, role: user.role }, JWT_SECRET, { expiresIn: '30d' });
 }
 
+// Every signed-in route runs through here. The role comes from the database,
+// not the token, so a role change or a deactivated account takes effect
+// right away instead of when the 30-day token runs out.
 function auth(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : null;
-  if (!token) {
-    if (DEMO_MODE) { req.user = { id: 0, email: 'demo@local', name: 'Demo Tech', role: 'manager' }; return next(); }
-    return res.status(401).json({ error: 'Not signed in' });
+  let payload = null;
+  if (token) { try { payload = jwt.verify(token, JWT_SECRET); } catch (e) { payload = null; } }
+  if (!payload) {
+    if (DEMO_MODE) payload = ops.DEMO_USERS.admin;
+    else return res.status(401).json({ error: token ? 'Session expired, sign in again' : 'Not signed in' });
   }
-  try {
-    req.user = jwt.verify(token, JWT_SECRET);
-    next();
-  } catch (e) {
-    if (DEMO_MODE) { req.user = { id: 0, email: 'demo@local', name: 'Demo Tech', role: 'manager' }; return next(); }
-    res.status(401).json({ error: 'Session expired, sign in again' });
+  if (payload.id <= 0) {
+    if (!DEMO_MODE) return res.status(401).json({ error: 'Sign in again' });
+    const d = Object.values(ops.DEMO_USERS).find(u => u.id === payload.id) || ops.DEMO_USERS.admin;
+    req.user = Object.assign({}, d);
+  } else {
+    const u = db.prepare('SELECT id, email, name, role, active, dept FROM users WHERE id=?').get(payload.id);
+    if (!u) return res.status(401).json({ error: 'Account not found, sign in again' });
+    if (!u.active) return res.status(401).json({ error: 'This account is turned off. Ask a manager.' });
+    req.user = u;
   }
+  const denied = ops.gate(req);
+  if (denied) return res.status(403).json({ error: denied });
+  next();
 }
 
 // Tells the front end whether to show the login screen at all.
@@ -59,12 +71,6 @@ app.get('/api/config', (req, res) => {
   res.json({ demo: DEMO_MODE, allowSignup: ALLOW_SIGNUP, property: prop.name || '', city: prop.city || '' });
 });
 
-// Issues a working session in demo mode so the app can skip the login screen.
-app.post('/api/demo-session', (req, res) => {
-  if (!DEMO_MODE) return res.status(403).json({ error: 'Demo mode is off' });
-  const user = { id: 0, email: 'demo@local', name: 'Demo Tech', role: 'manager' };
-  res.json({ token: sign(user), user });
-});
 
 app.post('/api/signup', (req, res) => {
   if (!ALLOW_SIGNUP) return res.status(403).json({ error: 'Signups are closed. Ask your manager to create your account.' });
@@ -74,12 +80,16 @@ app.post('/api/signup', (req, res) => {
   const existing = db.prepare('SELECT id FROM users WHERE email=?').get(email.toLowerCase());
   if (existing) return res.status(400).json({ error: 'That email already has an account' });
 
+  // The first account runs the place. Everyone after that signs up as
+  // department staff and waits for a manager to turn them on and set a role.
   const isFirst = db.prepare('SELECT COUNT(*) c FROM users').get().c === 0;
   const hash = bcrypt.hashSync(password, 10);
-  const info = db.prepare(`INSERT INTO users (email,name,password_hash,role,property_id) VALUES (?,?,?,?,1)`)
-    .run(email.toLowerCase(), name, hash, isFirst ? 'manager' : 'tech');
+  const info = db.prepare(`INSERT INTO users (email,name,password_hash,role,property_id,active) VALUES (?,?,?,?,1,?)`)
+    .run(email.toLowerCase(), name, hash, isFirst ? 'admin' : 'staff', isFirst ? 1 : 0);
   const user = db.prepare('SELECT * FROM users WHERE id=?').get(info.lastInsertRowid);
-  res.json({ token: sign(user), user: { name: user.name, email: user.email, role: user.role } });
+  if (!isFirst) return res.json({ pending: true, message: 'Account created. A manager needs to approve it before you can sign in.' });
+  db.prepare(`UPDATE users SET last_login=datetime('now') WHERE id=?`).run(user.id);
+  res.json({ token: sign(user), user: ops.publicUser(user) });
 });
 
 app.post('/api/login', (req, res) => {
@@ -88,10 +98,15 @@ app.post('/api/login', (req, res) => {
   if (!user || !bcrypt.compareSync(password || '', user.password_hash)) {
     return res.status(401).json({ error: 'Wrong email or password' });
   }
-  res.json({ token: sign(user), user: { name: user.name, email: user.email, role: user.role } });
+  if (!user.active) {
+    return res.status(403).json({ error: user.last_login ? 'This account is turned off. Ask a manager.' : 'Your account is waiting for a manager to approve it.' });
+  }
+  db.prepare(`UPDATE users SET last_login=datetime('now') WHERE id=?`).run(user.id);
+  res.json({ token: sign(user), user: ops.publicUser(user) });
 });
 
-app.get('/api/me', auth, (req, res) => res.json({ user: req.user }));
+/* ================= ACCOUNTS, PARTS, VENDORS, ALERTS, MONTHLY REPORT ================= */
+ops.mount(app, auth, { sign, origin: req => (process.env.PUBLIC_URL || '').replace(/\/$/, '') || `${req.protocol}://${req.get('host')}` });
 
 /* ================= WORK ORDERS, PM, REQUESTS, DASHBOARD ================= */
 require('./workorders')(app, auth);
