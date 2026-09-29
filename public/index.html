@@ -439,6 +439,32 @@ td b{color:var(--text);font-family:var(--mono);}
 .demo-as{display:inline-flex;gap:4px;margin-left:8px;flex-wrap:wrap;justify-content:center;}
 .demo-as button{background:#fff;border:1px solid #D8BE7C;color:#6B5320;font-family:var(--mono);font-size:9.5px;padding:3px 7px;border-radius:3px;cursor:pointer;letter-spacing:.5px;}
 .demo-as button.on{background:#6B5320;color:#fff;}
+
+/* ---------- round 2 ---------- */
+.tag.evt{color:#fff;background:var(--ice);border-color:var(--ice);text-transform:none;letter-spacing:.2px;}
+.wph{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:3px;border:1px solid var(--edge);margin-bottom:6px;background:var(--raised);cursor:zoom-in;}
+.wph.empty{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--dim);cursor:default;}
+.photo-view{position:fixed;inset:0;background:rgba(10,16,28,.92);z-index:120;display:flex;align-items:center;justify-content:center;padding:16px;}
+.photo-view img{max-width:100%;max-height:88vh;border-radius:4px;}
+.photo-view button{position:absolute;top:14px;right:14px;background:#fff;color:var(--ice);padding:8px 12px;}
+.photo-view button.del{top:auto;bottom:18px;right:auto;color:var(--rose);}
+.sigwrap{position:relative;border:1px dashed var(--edge-lit);border-radius:4px;background:#fff;margin-top:6px;}
+.sigwrap canvas{display:block;width:100%;height:120px;touch-action:none;}
+.sigwrap .rm{position:absolute;top:4px;right:8px;}
+.sigln{position:absolute;left:12px;right:12px;bottom:22px;border-bottom:1px solid var(--edge);font-family:var(--mono);font-size:9px;color:var(--dim);pointer-events:none;letter-spacing:1px;text-transform:uppercase;padding-bottom:2px;}
+.tpt{border:1px solid var(--edge);border-radius:4px;padding:11px 12px;margin-bottom:8px;background:var(--deep);position:relative;}
+.tpt.due{border-color:var(--sulfur);box-shadow:inset 3px 0 0 var(--sulfur);}
+.tpt .t{font-weight:600;font-size:14.5px;}
+.tpt .m{font-family:var(--mono);font-size:10px;color:var(--dim);}
+.tpt .rm{display:block;text-align:right;margin-top:6px;}
+.wk{display:flex;gap:4px;margin-top:8px;}
+.wk span{flex:1;height:22px;border-radius:3px;font-family:var(--mono);font-size:9.5px;display:flex;align-items:center;justify-content:center;}
+.wk .ok{background:#E2F1EA;color:var(--mint);} .wk .part{background:#F6EBCB;color:#6B5320;} .wk .bad{background:#FBE3E0;color:var(--rose);font-weight:700;} .wk .none{background:var(--raised);}
+.netbar{background:#E3ECF6;color:var(--ice);font-family:var(--mono);font-size:11px;padding:7px 14px;text-align:center;border-bottom:1px solid #C9D6E6;}
+.netbar.off{background:#3A3F4A;color:#F3EFE5;border-color:#3A3F4A;}
+.netbar button{background:var(--ice);color:#fff;padding:3px 9px;font-size:11px;margin-left:6px;}
+.bchk{display:grid;grid-template-columns:1fr 1fr;gap:0 10px;}
+.bchk .ck-row{font-size:13px;}
 </style>
 </head>
 <body>
@@ -466,8 +492,11 @@ td b{color:var(--text);font-family:var(--mono);}
     <div class="tab" data-tab="diagnose">Diagnose</div>
     <div class="tab" data-tab="record">Record</div>
     <div class="tab" data-tab="history">History</div>
+    <div class="tab" data-tab="map">Map</div>
+    <div class="tab" data-tab="kitchen">Kitchen</div>
     <div class="tab" data-tab="parts">Parts</div>
     <div class="tab" data-tab="vendors">Vendors</div>
+    <div class="tab" data-tab="capital">Capital</div>
     <div class="tab" data-tab="dash">Dashboard</div>
     <div class="tab" data-tab="reports">Reports</div>
     <div class="tab" data-tab="team">Team</div>
@@ -535,6 +564,7 @@ td b{color:var(--text);font-family:var(--mono);}
     <div class="subnav" id="workNav">
       <div class="on" data-w="wo">Work orders</div>
       <div data-w="pm">PM schedule</div>
+      <div data-w="events">Events</div>
     </div>
     <div id="woPane">
       <div class="filters" id="woFilters"></div>
@@ -543,6 +573,7 @@ td b{color:var(--text);font-family:var(--mono);}
       <div id="woList"></div>
     </div>
     <div id="pmPane" class="hide"></div>
+    <div id="evPane" class="hide"></div>
   </div>
 
   <div id="tab-dash" class="hide">
@@ -581,10 +612,14 @@ td b{color:var(--text);font-family:var(--mono);}
   <div id="tab-parts" class="hide"><div id="partsBody"></div></div>
   <div id="tab-vendors" class="hide"><div id="vendorsBody"></div></div>
   <div id="tab-team" class="hide"><div id="teamBody"></div></div>
+  <div id="tab-map" class="hide"><div id="mapBody"></div></div>
+  <div id="tab-kitchen" class="hide"><div id="kitchenBody"></div></div>
+  <div id="tab-capital" class="hide"><div id="capitalBody"></div></div>
 
 </div>
 
 <script src="/ops-ui.js"></script>
+<script src="/round2-ui.js"></script>
 <script>
 let TOKEN = null; try{ TOKEN = localStorage.getItem('ciq_token'); }catch(e){}
 const store = { set:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}}, del:k=>{try{localStorage.removeItem(k);}catch(e){}} };
@@ -596,11 +631,20 @@ const today = () => new Date().toISOString().slice(0,10);
 const profileFor = n => TYPEMAP[n] || {fields:[],manufacturers:[],requiresErrorCode:false,firstMove:'',safetyLabel:'Safety device',waterLabel:'Water / drain notes'};
 
 async function api(p,o={}){
-  const r = await fetch('/api'+p,{
-    method:o.method||'GET',
-    headers:Object.assign({'Content-Type':'application/json'},TOKEN?{Authorization:'Bearer '+TOKEN}:{}),
-    body:o.body?JSON.stringify(o.body):undefined
-  });
+  const write=o.method&&o.method!=='GET', canQ=write&&QUEUEABLE.some(x=>x.test(p.split('?')[0]));
+  const offMsg='No signal. Saved on this phone and it will send when you are back online.';
+  if(canQ&&!navigator.onLine){ queueWrite(p,o); throw new Error(offMsg); }
+  let r;
+  try{
+    r = await fetch('/api'+p,{
+      method:o.method||'GET',
+      headers:Object.assign({'Content-Type':'application/json'},TOKEN?{Authorization:'Bearer '+TOKEN}:{}),
+      body:o.body?JSON.stringify(o.body):undefined
+    });
+  }catch(e){
+    if(canQ){ queueWrite(p,o); throw new Error(offMsg); }
+    throw new Error(navigator.onLine?'Could not reach the server. Try again.':'You are offline, and this has not been opened on this phone before.');
+  }
   const d = await r.json().catch(()=>({error:'Bad response'}));
   if(!r.ok) throw new Error(d.error||'Request failed');
   return d;
@@ -634,6 +678,7 @@ $('aGo').onclick=async()=>{
 };
 $('outBtn').onclick=()=>{
   store.del('ciq_token'); TOKEN=null; ME=null; UNIT=null;
+  try{ caches.delete('ciq-data-v1'); localStorage.removeItem('ciq_outbox'); }catch(e){}
   $('appView').classList.add('hide'); $('authView').classList.remove('hide');
   $('whobox').classList.add('hide'); $('tabs').classList.add('hide');
   clearInterval(window._badgeT); clearInterval(window._alertT);
@@ -647,12 +692,14 @@ function enterApp(){
   $('tabs').classList.remove('hide');
   if(!ME.role) ME.role='tech';
   if(ME.role==='staff') TAB='work';
-  else if(ME.role==='viewer' && !['dash','work','vendors','reports'].includes(TAB)) TAB='dash';
+  else if(ME.role==='viewer' && !ROLE_TABS.viewer.includes(TAB)) TAB='dash';
   applyRole();
   if(canWork()){ loadTypes().then(()=>{ if(UNIT){ drawPlate(); drawRecord(); } }); loadChips(); }
   loadMeta().then(()=>showTab(TAB));
   clearInterval(window._badgeT); window._badgeT=setInterval(refreshBadge,60000);
   refreshAlerts(); clearInterval(window._alertT); window._alertT=setInterval(refreshAlerts,90000);
+  if(!isStaff()) loadBlackouts();
+  if(!window._offInit){ window._offInit=1; initOffline(); }
   syncDemoBar();
 }
 async function loadTypes(){
@@ -661,7 +708,8 @@ async function loadTypes(){
 }
 
 /* ---------- tabs ---------- */
-const ALLTABS=['work','diagnose','record','history','parts','vendors','dash','reports','team'];
+const ALLTABS=['work','diagnose','record','history','map','kitchen','parts','vendors','capital','dash','reports','team'];
+function workLoad(){ if(isStaff()) WORKVIEW='wo'; WORKVIEW==='pm'?loadPm():WORKVIEW==='events'?loadEvents():loadWos(); }
 function showTab(name){
   TAB=name;
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.tab===name));
@@ -675,7 +723,10 @@ function showTab(name){
   if(TAB==='parts') loadParts();
   if(TAB==='vendors') loadVendors();
   if(TAB==='team') loadTeam();
-  if(TAB==='work') (WORKVIEW==='pm'?loadPm():loadWos());
+  if(TAB==='work') workLoad();
+  if(TAB==='map') loadMap();
+  if(TAB==='kitchen') loadKitchen();
+  if(TAB==='capital') loadCapital();
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>showTab(t.dataset.tab));
 
@@ -1304,12 +1355,12 @@ function bldgList(){ return '<datalist id="woBldgList">'+(META.buildings||[]).ma
 $('workNav').querySelectorAll('div').forEach(d=>d.onclick=()=>{
   WORKVIEW=d.dataset.w;
   $('workNav').querySelectorAll('div').forEach(x=>x.classList.toggle('on',x===d));
-  $('woPane').classList.toggle('hide',WORKVIEW!=='wo'); $('pmPane').classList.toggle('hide',WORKVIEW!=='pm');
-  WORKVIEW==='pm'?loadPm():loadWos();
+  $('woPane').classList.toggle('hide',WORKVIEW!=='wo'); $('pmPane').classList.toggle('hide',WORKVIEW!=='pm'); $('evPane').classList.toggle('hide',WORKVIEW!=='events');
+  workLoad();
 });
 function syncWorkNav(){
   $('workNav').querySelectorAll('div').forEach(x=>x.classList.toggle('on',x.dataset.w===WORKVIEW));
-  $('woPane').classList.toggle('hide',WORKVIEW!=='wo'); $('pmPane').classList.toggle('hide',WORKVIEW!=='pm');
+  $('woPane').classList.toggle('hide',WORKVIEW!=='wo'); $('pmPane').classList.toggle('hide',WORKVIEW!=='pm'); $('evPane').classList.toggle('hide',WORKVIEW!=='events');
 }
 
 async function loadWos(){
@@ -1347,6 +1398,7 @@ function drawWos(t){
         (late?'<span class="tag late">overdue '+esc(fmtDate(w.due_date))+'</span>':(w.due_date&&WOFILTER!=='done'?'<span class="tag">due '+esc(fmtDate(w.due_date))+'</span>':''))+
         (w.has_photo?'<span class="tag">photo</span>':'')+
         (w.vendor_name?'<span class="tag" style="text-transform:none;letter-spacing:.3px">'+esc(w.vendor_name)+'</span>':'')+
+        (!['done','cancelled'].includes(w.status)?evTag(w.due_date,w.building):'')+
         (w.assigned_to?'<span class="tag" style="text-transform:none;letter-spacing:.3px">'+esc(w.assigned_to)+'</span>':'')+
       '</div></div>';
   }).join('');
@@ -1437,7 +1489,7 @@ function drawWoSheet(scrollTo){
     h+='<div id="cmpBox"></div></div>';
   }else if(!open && w.resolution){
     h+='<div class="panel"><div class="eyebrow">Resolution</div><div style="font-size:14px;white-space:pre-wrap;">'+esc(w.resolution)+'</div>'+
-       '<div class="dim" style="margin-top:6px;">'+(w.hours?w.hours+' hr':'')+(w.cost_avoided?' · $'+Math.round(w.cost_avoided).toLocaleString()+' avoided':'')+(w.job_id?' · logged to '+esc(w.apt)+' history':'')+'</div>'+
+       '<div class="dim" style="margin-top:6px;">'+(w.hours?w.hours+' hr':'')+(w.cost_avoided?' · $'+Math.round(w.cost_avoided).toLocaleString()+' avoided':'')+(w.job_id?' · logged to '+esc(w.apt)+' history':'')+'</div>'+sigBlock(w)+
        (canWork()?'<button class="btn-2 full" style="margin-top:10px;" onclick="woSet({status:\'open\'})">Reopen</button>':'')+'</div>';
   }
 
@@ -1463,6 +1515,9 @@ function drawWoSheet(scrollTo){
   }
   h+='</div>';
 
+  const evw=open?eventOn(w.due_date,w.building):null;
+  if(evw) h+='<div class="note n-warr" style="margin:0 0 12px"><b>Due during '+esc(evw.title)+'</b>'+esc(fmtDate(evw.start_date))+(evw.end_date!==evw.start_date?' to '+esc(fmtDate(evw.end_date)):'')+' in '+esc(evw.buildings||'the whole club')+'. Do it before or move the due date.</div>';
+  h+='<div id="woPhotos"></div>';
   h+=woVendorBlock(w);
   // timeline
   h+='<div class="panel"><div class="eyebrow">Activity</div><div class="tl">'+
@@ -1471,6 +1526,7 @@ function drawWoSheet(scrollTo){
   h+='</div></div>';
   bg.innerHTML=h;
   if(w.has_photo) loadWoPhoto(w.id);
+  woPhotosBlock(); loadSig();
   if(scrollTo==='cmp') completeForm();
 }
 async function loadWoPhoto(id){
@@ -1513,10 +1569,12 @@ function completeForm(){
      '<label class="fl">Other parts used</label><input id="cmP" placeholder="Anything not tracked in stock">'+
      (w.apt?'<div class="dim" style="margin-top:8px;">Saves to '+esc(w.apt)+' service history too.</div>':'')+
      (w.pm?'<div class="dim" style="margin-top:4px;">Next one is scheduled '+esc(freqLabel(w.pm.freq_days))+' from today.</div>':'')+
+     '<div class="dim" style="margin-top:10px">Add an after photo from the Photos section above before you close it.</div>'+
+     '<div id="cmSig"></div>'+
      '<button class="btn btn-good full" style="margin-top:12px;" onclick="submitComplete()">Mark complete</button>'+
      '<div class="dim" id="cmMsg" style="margin-top:8px;"></div></div>';
   box.innerHTML=h;
-  partsPicker();
+  partsPicker(); signaturePad();
   box.scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function submitComplete(){
@@ -1526,7 +1584,7 @@ async function submitComplete(){
     const d=await api('/workorders/'+WO.id+'/complete',{method:'POST',body:{
       resolution:$('cmR').value.trim(), hours:$('cmH').value||0, cost_avoided:$('cmV').value||0,
       parts_used:$('cmP').value.trim(), checklist_done:done, checklist_skipped:skip,
-      parts_stock:PICKED.filter(x=>x.qty>0).map(x=>({part_id:x.part_id,qty:x.qty}))
+      parts_stock:PICKED.filter(x=>x.qty>0).map(x=>({part_id:x.part_id,qty:x.qty})), ...sigPayload()
     }});
     WO=d.workorder; PICKED=[]; PARTS=[]; toast('Work order #'+WO.id+' closed'); drawWoSheet(); afterWoChange(); refreshUnitIfOpen(); refreshAlerts();
   }catch(e){ $('cmMsg').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'; }
@@ -1561,7 +1619,7 @@ function pmRow(p,t){
   const d=p.next_due.split('-');
   return '<div class="pm'+(p.next_due<t?' late':'')+'"><div class="dd"><div class="d">'+(+d[2])+'</div><div class="mo">'+MON[+d[1]-1]+'</div></div>'+
     '<div class="bd"><div class="t">'+esc(p.title)+'</div><div class="m">'+(p.apt?esc(p.apt)+' · ':'')+esc(p.bldg||'')+' · every '+esc(freqLabel(p.freq_days))+
-    (p.last_done?' · last '+esc(fmtDate(p.last_done)):'')+'</div></div>'+
+    (p.last_done?' · last '+esc(fmtDate(p.last_done)):'')+'</div>'+(evTag(p.next_due,p.bldg)?'<div style="margin-top:4px">'+evTag(p.next_due,p.bldg)+'</div>':'')+'</div>'+
     '<div class="go">'+(p.open_wo?'<button class="btn" onclick="openWo('+p.open_wo+')">Open</button>':'<button class="btn-2" onclick="editPm('+p.id+')">Edit</button>')+'</div></div>';
 }
 function newPmForm(apt,pm){

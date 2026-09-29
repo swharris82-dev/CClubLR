@@ -251,6 +251,9 @@ function gate(req) {
       return mine ? null : 'You can only see requests you submitted';
     };
     if (p === '/api/wo-meta' && isRead) return null;
+    if ((p === '/api/kitchen' && isRead) || (p === '/api/kitchen/temps' && method === 'POST')) return null;
+    let ph = p.match(/^\/api\/workorders\/(\d+)\/photos$/);
+    if (ph && isRead) return own(ph[1]);
     if (p === '/api/workorders' && (isRead || method === 'POST')) return null;
     let m = p.match(/^\/api\/workorders\/(\d+)(\/photo|\/note)?$/);
     if (m && (isRead || (m[2] === '/note' && method === 'POST'))) return own(m[1]);
@@ -428,6 +431,7 @@ function computeAlerts(user) {
   const one = (sql, ...a) => db.prepare(sql).get(...a);
 
   if (role === 'staff') {
+    try { out.push(...require('./round2').alerts(user)); } catch (e) { /* optional module */ }
     const mine = all(`SELECT id, title, status, updated_at FROM work_orders
       WHERE (created_by_id=? OR requested_by=?) AND status IN ('done','cancelled') AND date(updated_at) >= date('now','-3 days')
       ORDER BY updated_at DESC LIMIT 5`, user.id, user.name);
@@ -491,6 +495,7 @@ function computeAlerts(user) {
   const safety = one(`SELECT COUNT(*) n FROM units WHERE switch_present='no' OR switch_functioning='no'`).n;
   if (safety) push('warn', 'safety', `${safety} safety device${safety > 1 ? 's' : ''} out of service`, '', { tab: 'reports' });
 
+  try { out.push(...require('./round2').alerts(user)); } catch (e) { /* optional module */ }
   const rank = { critical: 0, warn: 1, info: 2 };
   return out.sort((a, b) => rank[a.level] - rank[b.level]);
 }

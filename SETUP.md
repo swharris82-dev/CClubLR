@@ -254,3 +254,29 @@ Other:
 
 Render's free tier sleeps when idle, so the morning brief can run late. The
 Starter plan keeps it awake.
+
+## Map, kitchen logs, events, capital plan, photos, offline
+
+- **Map tab:** the club's buildings colored by status (emergency, needs
+  attention, open work, all clear). Tap one for its equipment, open work, PM,
+  and events. A manager can tap **Arrange buildings** to drag them to match
+  the real grounds; the layout saves for everyone.
+- **Kitchen tab:** cooler, freezer, and dish machine temperature log (AM and PM),
+  with an out-of-range reading opening a maintenance work order on its own.
+  Scheduled kitchen service (hood cleaning, grease trap, ice machine, fire
+  suppression, backflow, pest control) with due dates, and a printable
+  inspector binder. Kitchen staff accounts see this tab and can log temps.
+- **Events (Work tab):** tournaments, weddings, and member events. Any PM,
+  repair, vendor visit, or kitchen service due during an event in the same
+  building gets flagged. A manager can link the club's calendar feed (.ics
+  link from Google Calendar, Outlook, or club software) so events import on
+  their own.
+- **Capital tab:** every piece of equipment's age against its expected life,
+  the replacement year and cost, and a 10-year budget by year with inflation.
+  Enter real install years, quotes, and condition to firm it up. Prints as a
+  budget report.
+- **Photos and sign-off:** before and after photos on any work order, and a
+  signature with the name of whoever accepted the work when it is closed.
+- **Offline:** add the app to the home screen. It opens and shows the last
+  loaded data with no signal, and notes, completions, temps, stock use, and
+  new work orders made offline send automatically when the phone reconnects.

@@ -67,8 +67,11 @@ function woRow(id) {
 function woFull(id) {
   const w = woRow(id);
   if (!w) return null;
+  w.has_signature = !!w.signature;
   delete w.photo;
+  delete w.signature;
   delete w.track_code;
+  w.photo_count = db.prepare('SELECT COUNT(*) c FROM wo_photos WHERE wo_id=?').get(id).c;
   w.notes = db.prepare('SELECT * FROM wo_notes WHERE wo_id=? ORDER BY id').all(id);
   w.parts = db.prepare(`SELECT t.qty, t.unit_cost, p.name, p.uom FROM part_txns t JOIN parts p ON p.id=t.part_id WHERE t.wo_id=? AND t.kind='use' ORDER BY t.id`).all(id);
   w.invoices = db.prepare(`SELECT i.id, i.invoice_no, i.amount, i.status, v.name vendor FROM invoices i JOIN vendors v ON v.id=i.vendor_id WHERE i.wo_id=? AND i.status!='void'`).all(id);
@@ -220,11 +223,16 @@ function completeWorkOrder(w, body, userName) {
     jobId = info.lastInsertRowid;
   }
 
+  const sig = typeof body.signature === 'string' && body.signature.length < 400000 && /^[A-Za-z0-9+/=]+$/.test(body.signature) ? body.signature : null;
+  if (sig || body.signed_by) {
+    db.prepare('UPDATE work_orders SET signature=COALESCE(?, signature), signed_by=? WHERE id=?').run(sig, clip(body.signed_by, 80), w.id);
+  }
   db.prepare(`UPDATE work_orders SET status='done', resolution=?, hours=?, cost_avoided=?, job_id=?,
               completed_at=datetime('now'), updated_at=datetime('now'),
               started_at=COALESCE(started_at, datetime('now')),
               assigned_to=CASE WHEN assigned_to='' THEN ? ELSE assigned_to END
               WHERE id=?`).run(work, hours, cost, jobId, userName, w.id);
+  if (clip(body.signed_by, 80)) addNote(w.id, `Signed off by ${clip(body.signed_by, 80)}.`, userName, 'status');
   addNote(w.id, 'Completed' + (hours ? ` in ${hours} hr` : '') + (stock.cost ? `. Parts from stock: $${stock.cost.toFixed(2)}` : '') + (jobId ? '. Logged to equipment history.' : '.'), userName, 'status');
 
   // Roll the PM forward from the day it was actually done.
