@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'org.cclr.clubhouseiq'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "org.cclr.clubhouseiq"
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName "1.0"
+        // Change this to point the app at a different server.
+        buildConfigField "String", "APP_URL", "\"https://clubhouse-iq.onrender.com/\""
+    }
+
+    buildFeatures { buildConfig true }
+
+    signingConfigs {
+        release {
+            def ks = System.getenv("CIQ_KEYSTORE")
+            if (ks) {
+                storeFile file(ks)
+                storePassword System.getenv("CIQ_KEYSTORE_PASS")
+                keyAlias System.getenv("CIQ_KEY_ALIAS") ?: "clubhouseiq"
+                keyPassword System.getenv("CIQ_KEYSTORE_PASS")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (System.getenv("CIQ_KEYSTORE")) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
