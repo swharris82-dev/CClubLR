@@ -157,6 +157,11 @@ const STARTER = {
     ['Filter change', 90, 'HVAC', 'Replace filter'],
     ['Seasonal PM', 180, 'HVAC', 'Clean coils\nFlush condensate and test float switch\nCheck amps and refrigerant temps']
   ],
+  ahu: [
+    ['AHU filter change', 90, 'HVAC', 'Replace filters\nWrite filter size and count on the unit record\nDate the filter rack'],
+    ['AHU belt and bearing check', 90, 'HVAC', 'Check belt tension and wear, note belt size\nGrease blower and motor bearings\nCheck sheave alignment\nMotor amps against nameplate'],
+    ['AHU semiannual PM', 180, 'HVAC', 'Inspect and clean coil\nFlush condensate pan and drain, test float switch\nCheck dampers and actuators\nCheck freeze stat and controls\nLook for water or air leaks at the cabinet']
+  ],
   ductless: [['Ductless clean and inspect', 180, 'HVAC', 'Wash filters\nClean coil and blower wheel\nFlush drain\nCheck for fault history']],
   vrf: [['VRF seasonal PM', 180, 'HVAC', 'Clean indoor filters\nCheck outdoor unit fault history\nClean condenser coil\nCheck drains']],
   walkin: [['Walk-in cooler / freezer PM', 90, 'Refrigeration', 'Clean condenser coil\nCheck door gasket and heater\nVerify box temp and defrost\nCheck drain line heater (freezer)']],
@@ -170,8 +175,9 @@ const STARTER = {
   bas: [['BAS alarm and trend review', 30, 'HVAC', 'Clear or resolve standing alarms\nCheck loop temp trends\nConfirm schedules match club calendar']]
 };
 
-function createStarterPlan(byName) {
-  const units = db.prepare(`SELECT id, apt, building, system_type FROM units ORDER BY building, apt`).all();
+function createStarterPlan(byName, onlyIds) {
+  let units = db.prepare(`SELECT id, apt, building, system_type FROM units ORDER BY building, apt`).all();
+  if (Array.isArray(onlyIds)) units = units.filter(u => onlyIds.includes(u.id));
   const exists = db.prepare('SELECT 1 FROM pm_tasks WHERE unit_id=? AND title=? AND active=1');
   const ins = db.prepare(`INSERT INTO pm_tasks (unit_id, building, title, checklist, category, freq_days, lead_days, next_due)
                           VALUES (?,?,?,?,?,?,?,?)`);
@@ -719,4 +725,5 @@ module.exports = function mount(app, auth) {
 
 module.exports.ensurePmWorkOrders = ensurePmWorkOrders;
 module.exports.createStarterPlan = createStarterPlan;
+module.exports.addStarterPMs = ids => createStarterPlan('AHU sheet', ids);
 module.exports.addDays = addDays;

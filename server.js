@@ -112,6 +112,13 @@ ops.mount(app, auth, { sign, origin: req => (process.env.PUBLIC_URL || '').repla
 /* ================= WORK ORDERS, PM, REQUESTS, DASHBOARD ================= */
 require('./workorders')(app, auth);
 
+// Air handling units from the club's AHU sheet. Adds any that are missing,
+// never overwrites ones already edited in the app.
+try {
+  const n = require('./ahus').loadAhus();
+  if (n) console.log(`  Added ${n} air handling unit(s) from the AHU sheet.`);
+} catch (e) { console.log('  Could not load AHU list: ' + e.message); }
+
 /* ================= UNITS ================= */
 
 // Equipment type catalog. Drives the Record form and the diagnose tab.

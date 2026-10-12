@@ -754,6 +754,8 @@ function drawPlate(){
   b.push(UNIT.building||'No building set');
   const serves=(UNIT.system_meta||{}).serves;
   if(serves) b.push(serves);
+  const findIt=(UNIT.system_meta||{}).location;
+  if(findIt) b.push('Find it: '+findIt);
   $('pLoc').textContent=b.join('  ·  ');
   $('pSys').textContent=[UNIT.manufacturer,UNIT.system_type].filter(Boolean).join(' · ');
   $('pSwLb').textContent=profileFor(UNIT.system_type).safetyLabel||'Safety device';

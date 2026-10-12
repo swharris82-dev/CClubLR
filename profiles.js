@@ -184,6 +184,30 @@ const PROFILES = {
 - Access and safety: note ladder, roof access, and fall protection in the truck list.`
   },
 
+  'Air handling unit (AHU)': {
+    key: 'ahu',
+    safetyLabel: 'Condensate float / freeze stat',
+    waterLabel: 'Coil piping and condensate',
+    fields: [
+      { id: 'serves', label: 'Areas served' },
+      { id: 'location', label: 'Where to find it' },
+      { id: 'coil', label: 'Coil type (hot water, chilled water, loop, DX) and valve' },
+      { id: 'filter_size', label: 'Filter size and count' },
+      { id: 'belt', label: 'Belt size' },
+      { id: 'motor', label: 'Blower motor HP / VFD' },
+      { id: 'mau', label: 'Make-up air unit tied to it' },
+      { id: 'controls', label: 'Controls / thermostat' }
+    ],
+    firstMove: 'Confirm the blower is running and moving air: belt, filter, motor, then check coil water or refrigerant temps and the control valve.',
+    guidance: `SYSTEM: Central air handling unit serving several rooms in an older clubhouse. Units sit in attics, the boiler room, and back rooms, so access takes time; note the location from the record in the truck list.
+- One AHU serves several rooms. If several rooms on the same AHU complain at once, the problem is at the AHU, not the rooms. If only one room complains, look at that room's damper, diffuser, or thermostat first.
+- Airflow first: broken or slipping belt, plugged filter, failed blower motor or bearings, closed or failed dampers, VFD fault.
+- Then heat transfer: coil fouled, control valve stuck or actuator failed, no water flow or wrong water temperature to the coil, or low refrigerant if it is a DX coil. Verify which coil type this unit has before ranking.
+- A tripped freeze stat or condensate float shuts the unit down and looks like a dead unit. Check those before condemning a motor.
+- Attic units: condensate overflow means water through a ceiling. Treat any water call under an attic AHU as urgent.
+- If the unit is tied to a make-up air unit, a MAU problem can push hot or humid outside air into the space and look like an AHU failure.`
+  },
+
   'Split system / air handler': {
     key: 'split',
     safetyLabel: 'Float switch',
