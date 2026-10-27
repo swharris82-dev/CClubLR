@@ -1,9 +1,9 @@
 /* Clubhouse IQ service worker: keeps the app and the last-loaded data on the
    phone so it opens and reads in mechanical rooms with no signal. Writes are
    queued by the page itself (see round2-ui.js) and sent when back online. */
-const SHELL = 'ciq-shell-v3';
+const SHELL = 'ciq-shell-v4';
 const DATA = 'ciq-data-v1';
-const SHELL_FILES = ['/', '/index.html', '/ops-ui.js', '/round2-ui.js', '/crest.png', '/request.html'];
+const SHELL_FILES = ['/', '/index.html', '/ops-ui.js', '/round2-ui.js', '/pm-ui.js', '/vendor/jsQR.js', '/crest.png', '/request.html'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_FILES)).then(() => self.skipWaiting()));

@@ -10,6 +10,7 @@ const QRCode = require('qrcode');
 const { db } = require('./db');
 const { getProfile } = require('./profiles');
 const ops = require('./ops');
+const hooks = require('./pm2');
 
 const STATUSES = ['new', 'open', 'in_progress', 'on_hold', 'done', 'cancelled'];
 const OPEN_STATUSES = ['new', 'open', 'in_progress', 'on_hold'];
@@ -76,8 +77,8 @@ function woFull(id) {
   w.parts = db.prepare(`SELECT t.qty, t.unit_cost, p.name, p.uom FROM part_txns t JOIN parts p ON p.id=t.part_id WHERE t.wo_id=? AND t.kind='use' ORDER BY t.id`).all(id);
   w.invoices = db.prepare(`SELECT i.id, i.invoice_no, i.amount, i.status, v.name vendor FROM invoices i JOIN vendors v ON v.id=i.vendor_id WHERE i.wo_id=? AND i.status!='void'`).all(id);
   if (w.pm_id) {
-    const pm = db.prepare('SELECT id, title, checklist, freq_days, next_due FROM pm_tasks WHERE id=?').get(w.pm_id);
-    w.pm = pm || null;
+    const pm = db.prepare('SELECT * FROM pm_tasks WHERE id=?').get(w.pm_id);
+    w.pm = pm ? hooks.decoratePm(pm) : null;
   }
   return w;
 }
@@ -104,6 +105,7 @@ function buildingList() {
 // Open a work order for every PM task coming due inside its lead window,
 // unless one is already open for it. Cheap enough to run on every list call.
 function ensurePmWorkOrders() {
+  hooks.beforeEnsure();
   const due = db.prepare(`
     SELECT p.*, u.apt FROM pm_tasks p LEFT JOIN units u ON u.id = p.unit_id
     WHERE p.active=1 AND date(p.next_due) <= date('now', '+' || p.lead_days || ' days')
@@ -116,74 +118,83 @@ function ensurePmWorkOrders() {
     const title = p.apt ? `PM: ${p.title} (${p.apt})` : `PM: ${p.title}`;
     const info = ins.run(p.unit_id, p.building || '', title, p.checklist || '', p.category || 'PM',
       'normal', 'open', 'pm', p.id, p.next_due, 'PM schedule');
-    addNote(info.lastInsertRowid, `Opened automatically. Due ${p.next_due}, repeats every ${p.freq_days} days.`, 'PM schedule', 'status');
+    addNote(info.lastInsertRowid, `Opened automatically. Due ${p.next_due}, ` + hooks.repeatText(p) + '.', 'PM schedule', 'status');
+    hooks.opened(info.lastInsertRowid, p, addNote);
     made++;
   }
   return made;
 }
 
 // Standard preventive maintenance by equipment type, tuned for the club's
-// central plant (chiller, tower, boilers) and air handlers. [title, every N days, category, checklist lines]
+// central plant (chiller, tower, boilers) and air handlers.
+// [title, every N days, category, checklist lines, options]
+// A checklist line ending in [unit range] is a reading: the tech enters a
+// number, and a value outside the range opens a repair work order.
+//   "CHW leaving temp [°F 42-48]"   reading with a range
+//   "Motor amps [A]"                reading, no range
+//   "CO in flue [ppm max 100]"      upper limit only ("min 12" for a lower limit)
+// options: shutdown (unit has to be off), season ('MM-DD' yearly date),
+//          runtime (run hours between services; days is then the backstop)
 const STARTER = {
   boiler: [
     ['Test low water cutoff', 30, 'Boiler', 'Blow down or test LWCO with burner firing\nConfirm burner shuts down\nLog result on boiler tag'],
     ['Condensate trap and neutralizer', 90, 'Boiler', 'Clean condensate trap\nCheck neutralizer media, replace if spent\nCheck flue for leaks'],
-    ['Annual boiler service and combustion test', 365, 'Boiler', 'Combustion analysis, log CO and O2\nClean flame sensor, check igniter\nInspect heat exchanger\nCheck state certificate date']
+    ['Annual boiler service and combustion test', 365, 'Boiler', 'CO in flue [ppm max 100]\nO2 in flue [% 3-9]\nStack temperature [°F]\nClean flame sensor, check igniter\nInspect heat exchanger\nCheck state certificate date', { shutdown: true, season: '09-15' }]
+  ],
+  chiller: [
+    ['Chiller daily log', 1, 'Chiller', 'CHW leaving temp [°F 42-50]\nCHW entering temp [°F 45-60]\nCondenser water entering temp [°F 60-87]\nCondenser water leaving temp [°F 65-97]\nEvaporator pressure [psi]\nCondenser pressure [psi]\nOil pressure [psi]\nCompressor amps [A]\nNote any alarms and unusual noise'],
+    ['Chiller monthly check', 30, 'Chiller', 'Review alarm history on the chiller panel\nCheck flow switches and couplings for leaks\nEvaporator approach [°F max 5]\nCondenser approach [°F max 5]\nConfirm BAS reads the chiller interface (no NR)'],
+    ['Annual chiller service', 365, 'Chiller', 'Clean condenser tubes, inspect evaporator tubes\nOil and refrigerant analysis\nLeak check\nCalibrate sensors and test safeties', { shutdown: true, season: '01-15' }]
   ],
   tower: [
-    ['Cooling tower inspection', 30, 'Cooling tower', 'Basin level and makeup float\nStrainer and basin debris\nFan, belt, and vibration switch\nDrift eliminators and fill\nBleed and chemical feed working'],
-    ['Tower fan drive service', 90, 'Cooling tower', 'Gearbox oil level or belt tension\nGrease fan bearings\nMotor amps'],
-    ['Tower spring startup', 365, 'Cooling tower', 'Clean and refill basin\nInspect fill and nozzles\nTest basin heater and vibration switch\nStart chemical program']
+    ['Cooling tower inspection', 30, 'Cooling tower', 'Basin level and makeup float\nStrainer and basin debris\nFan, belt, and vibration switch\nDrift eliminators and fill\nBleed and chemical feed working\nTower leaving water temp [°F 55-90]\nFan speed [% 0-100]'],
+    ['Tower fan drive service', 90, 'Cooling tower', 'Gearbox oil level or belt tension\nGrease fan bearings\nFan motor amps [A]', { shutdown: true }],
+    ['Tower spring startup', 365, 'Cooling tower', 'Clean and refill basin\nInspect fill and nozzles\nTest basin heater and vibration switch\nStart chemical program', { shutdown: true, season: '03-15' }]
   ],
   pump: [
-    ['Pump inspection', 90, 'HVAC', 'Seal leaks\nBearing noise and vibration\nMotor amps against nameplate\nSuction and discharge pressure\nClean strainer if DP is high'],
+    ['Pump inspection', 90, 'HVAC', 'Seal leaks\nBearing noise and vibration\nMotor amps [A]\nSuction pressure [psi]\nDischarge pressure [psi]\nClean strainer if DP is high'],
     ['Rotate lead and lag pumps', 30, 'HVAC', 'Swap lead pump\nConfirm flow proven on new lead']
   ],
   hx: [
-    ['Plate heat exchanger approach check', 90, 'HVAC', 'Log entering and leaving temps both sides\nCompare approach to baseline\nCheck for leaks at frame'],
-    ['Free cooling changeover test', 365, 'HVAC', 'Before cold weather: stroke both changeover valves and confirm linkages\nConfirm BAS wet bulb enable setpoint\nRun PHX-1 and confirm chilled water holds setpoint']
-  ],
-  chiller: [
-    ['Chiller daily log', 1, 'Chiller', 'Log CHW entering and leaving temps\nLog condenser water entering and leaving temps\nLog evaporator and condenser pressures, oil pressure, amps\nNote any alarms and unusual noise'],
-    ['Chiller monthly check', 30, 'Chiller', 'Review alarm history on the chiller panel\nCheck flow switches and couplings for leaks\nCompare approach temps to the last log\nConfirm BAS reads the chiller interface (no NR)'],
-    ['Annual chiller service', 365, 'Chiller', 'Clean condenser tubes, inspect evaporator tubes\nOil and refrigerant analysis\nLeak check\nCalibrate sensors and test safeties']
+    ['Plate heat exchanger approach check', 90, 'HVAC', 'Approach temperature [°F max 5]\nPressure drop, tower side [psi]\nCheck for leaks at frame'],
+    ['Free cooling changeover test', 365, 'HVAC', 'Stroke both changeover valves and confirm linkages\nConfirm BAS wet bulb enable setpoint\nRun PHX-1 and confirm chilled water holds setpoint', { season: '10-01' }]
   ],
   fcu: [
     ['Fan coil filter change', 90, 'HVAC', 'Replace filter\nNote filter size on record'],
-    ['Fan coil semiannual PM', 180, 'HVAC', 'Clean coil\nFlush condensate pan and test switch\nStroke coil valves\nConfirm BAS reads space temp and humidity']
+    ['Fan coil semiannual PM', 180, 'HVAC', 'Clean coil\nFlush condensate pan and test switch\nStroke coil valves\nSupply air temp [°F]\nConfirm BAS reads space temp and humidity', { shutdown: true }]
   ],
-  accessory: [['Expansion tank and air separator check', 180, 'HVAC', 'Check tank precharge\nBleed air separator\nCheck makeup PRV setting and backflow']],
+  accessory: [['Expansion tank and air separator check', 180, 'HVAC', 'Expansion tank precharge [psi]\nSystem fill pressure [psi]\nBleed air separator\nCheck makeup PRV setting and backflow']],
   chem: [
-    ['Tower and closed loop water test', 7, 'Water treatment', 'Test chilled and hot water loop inhibitor levels\nTest tower conductivity and pH\nLog results'],
+    ['Tower and closed loop water test', 7, 'Water treatment', 'Tower conductivity [µS/cm]\nTower pH [pH 7-9]\nChilled water loop inhibitor [ppm]\nHot water loop inhibitor [ppm]\nLog results'],
     ['Chemical feed and inventory', 30, 'Water treatment', 'Check feed pumps and tubing\nCheck drum levels, reorder if low\nVerify bleed valve operation']
   ],
   wshp: [
     ['Heat pump filter change', 90, 'HVAC', 'Replace filter\nNote filter size on record'],
-    ['Heat pump semiannual PM', 180, 'HVAC', 'Clean hose kit strainer\nCheck water temp rise or drop\nFlush condensate and test switch\nCheck compressor and fan amps']
+    ['Heat pump semiannual PM', 180, 'HVAC', 'Clean hose kit strainer\nWater temp rise or drop [°F]\nFlush condensate and test switch\nCompressor amps [A]']
   ],
   package: [
     ['Filter change', 90, 'HVAC', 'Replace filters\nCheck belts'],
-    ['Seasonal PM', 180, 'HVAC', 'Clean coils\nFlush condensate\nCheck amps and refrigerant temps\nInspect economizer']
+    ['Seasonal PM', 180, 'HVAC', 'Clean coils\nFlush condensate\nSupply air temp [°F]\nCompressor amps [A]\nInspect economizer', { shutdown: true }]
   ],
   split: [
     ['Filter change', 90, 'HVAC', 'Replace filter'],
-    ['Seasonal PM', 180, 'HVAC', 'Clean coils\nFlush condensate and test float switch\nCheck amps and refrigerant temps']
+    ['Seasonal PM', 180, 'HVAC', 'Clean coils\nFlush condensate and test float switch\nSupply air temp [°F]\nCompressor amps [A]', { shutdown: true }]
   ],
   ahu: [
-    ['AHU filter change', 90, 'HVAC', 'Replace filters\nWrite filter size and count on the unit record\nDate the filter rack'],
-    ['AHU belt and bearing check', 90, 'HVAC', 'Check belt tension and wear, note belt size\nGrease blower and motor bearings\nCheck sheave alignment\nMotor amps against nameplate'],
-    ['AHU semiannual PM', 180, 'HVAC', 'Inspect and clean coil\nFlush condensate pan and drain, test float switch\nCheck dampers and actuators\nCheck freeze stat and controls\nLook for water or air leaks at the cabinet']
+    ['AHU filter change', 90, 'HVAC', 'Filter pressure drop before change [in. w.c. max 1.0]\nReplace filters\nWrite filter size and count on the unit record\nDate the filter rack'],
+    ['AHU belt and bearing check', 90, 'HVAC', 'Check belt tension and wear, note belt size\nGrease blower and motor bearings\nCheck sheave alignment\nBlower motor amps [A]', { shutdown: true }],
+    ['AHU semiannual PM', 180, 'HVAC', 'Inspect and clean coils\nFlush condensate pan and drain, test float switch\nCheck zone dampers and actuators\nCold deck temp [°F 50-60]\nHot deck temp [°F]\nCheck freeze stat and controls\nLook for water or air leaks at the cabinet', { shutdown: true }]
   ],
   ductless: [['Ductless clean and inspect', 180, 'HVAC', 'Wash filters\nClean coil and blower wheel\nFlush drain\nCheck for fault history']],
   vrf: [['VRF seasonal PM', 180, 'HVAC', 'Clean indoor filters\nCheck outdoor unit fault history\nClean condenser coil\nCheck drains']],
-  walkin: [['Walk-in cooler / freezer PM', 90, 'Refrigeration', 'Clean condenser coil\nCheck door gasket and heater\nVerify box temp and defrost\nCheck drain line heater (freezer)']],
+  walkin: [['Walk-in cooler / freezer PM', 90, 'Refrigeration', 'Box temp [°F]\nClean condenser coil\nCheck door gasket and heater\nVerify defrost\nCheck drain line heater (freezer)']],
   ice: [
-    ['Ice machine clean and sanitize', 180, 'Kitchen', 'Descale and sanitize per manufacturer\nClean bin\nCheck water filter'],
+    ['Ice machine clean and sanitize', 180, 'Kitchen', 'Descale and sanitize per manufacturer\nClean bin\nCheck water filter', { shutdown: true }],
     ['Ice machine water filter change', 180, 'Kitchen', 'Replace filter cartridge\nDate the housing']
   ],
   kitchen: [['Kitchen equipment inspection', 90, 'Kitchen', 'Gas connections and shutoffs\nPilot and burner operation\nHood filters and fan']],
-  pool: [['Pool equipment check', 30, 'Pool', 'Pump and seal\nFilter pressure, backwash if high\nHeater operation\nChemical feeder and controller calibration']],
-  dhw: [['Water heater flush and T&P test', 365, 'Plumbing', 'Flush tank\nTest T&P valve\nCheck anode (tank type)\nCheck venting']],
+  pool: [['Pool equipment check', 30, 'Pool', 'Free chlorine [ppm 1-5]\npH [pH 7.2-7.8]\nFilter pressure [psi]\nPump and seal\nBackwash if filter pressure is high\nHeater operation\nChemical controller calibration']],
+  dhw: [['Water heater flush and T&P test', 365, 'Plumbing', 'Outlet water temp [°F]\nFlush tank\nTest T&P valve\nCheck anode (tank type)\nCheck venting', { shutdown: true }]],
   bas: [['BAS alarm and trend review', 30, 'HVAC', 'Clear or resolve standing alarms\nCheck chilled water and hot water temp trends\nList points in manual override and NR points\nConfirm schedules match club calendar']]
 };
 
@@ -191,19 +202,22 @@ function createStarterPlan(byName, onlyIds) {
   let units = db.prepare(`SELECT id, apt, building, system_type FROM units ORDER BY building, apt`).all();
   if (Array.isArray(onlyIds)) units = units.filter(u => onlyIds.includes(u.id));
   const exists = db.prepare('SELECT 1 FROM pm_tasks WHERE unit_id=? AND title=? AND active=1');
-  const ins = db.prepare(`INSERT INTO pm_tasks (unit_id, building, title, checklist, category, freq_days, lead_days, next_due)
-                          VALUES (?,?,?,?,?,?,?,?)`);
+  const ins = db.prepare(`INSERT INTO pm_tasks (unit_id, building, title, checklist, category, freq_days, lead_days, next_due,
+                            needs_shutdown, season, trigger_type, run_hours)
+                          VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`);
   let made = 0, i = 0;
   const tx = db.transaction(() => {
     for (const u of units) {
       const key = getProfile(u.system_type).key;
-      for (const [title, days, cat, list] of (STARTER[key] || [])) {
+      for (const [title, days, cat, list, opt = {}] of (STARTER[key] || [])) {
         if (exists.get(u.id, title)) continue;
         // Stagger first due dates so everything doesn't land on one day.
         const window = Math.min(days, 28);
-        const offset = (i * 3) % window;
-        const lead = days <= 7 ? 1 : days <= 30 ? 5 : 10;
-        ins.run(u.id, u.building || '', title, list, cat, days, lead, addDays(today(), offset));
+        const offset = days <= 1 ? 0 : (i * 3) % window;
+        const lead = days <= 7 ? 0 : days <= 30 ? 5 : 10;
+        const first = opt.season ? hooks.nextSeason(opt.season, today()) : addDays(today(), offset);
+        ins.run(u.id, u.building || '', title, list, cat, days, lead, first,
+          opt.shutdown ? 1 : 0, opt.season || '', opt.runtime ? 'runtime' : (opt.season ? 'seasonal' : 'calendar'), opt.runtime || 0);
         made++; i++;
       }
     }
@@ -225,6 +239,8 @@ function completeWorkOrder(w, body, userName) {
   const skipped = Array.isArray(body.checklist_skipped) ? body.checklist_skipped.map(s => clip(s, 200)).filter(Boolean) : [];
 
   let work = resolution;
+  const readText = hooks.readingsText(w, body);
+  if (readText) work += (work ? '\n' : '') + 'Readings: ' + readText;
   if (checked.length) work += (work ? '\n' : '') + 'Checklist done: ' + checked.join('; ');
   if (skipped.length) work += (work ? '\n' : '') + 'Not done: ' + skipped.join('; ');
 
@@ -253,13 +269,11 @@ function completeWorkOrder(w, body, userName) {
   if (clip(body.signed_by, 80)) addNote(w.id, `Signed off by ${clip(body.signed_by, 80)}.`, userName, 'status');
   addNote(w.id, 'Completed' + (hours ? ` in ${hours} hr` : '') + (stock.cost ? `. Parts from stock: $${stock.cost.toFixed(2)}` : '') + (jobId ? '. Logged to equipment history.' : '.'), userName, 'status');
 
-  // Roll the PM forward from the day it was actually done.
+  // Readings, out-of-range repairs, and rolling the PM forward (calendar,
+  // seasonal, or run-hours). See pm2.js.
   if (w.pm_id) {
     const pm = db.prepare('SELECT * FROM pm_tasks WHERE id=?').get(w.pm_id);
-    if (pm) {
-      db.prepare('UPDATE pm_tasks SET last_done=?, next_due=? WHERE id=?')
-        .run(today(), addDays(today(), pm.freq_days), pm.id);
-    }
+    if (pm) hooks.completed(w, pm, body, userName, addNote);
   }
 }
 
@@ -589,7 +603,8 @@ module.exports = function mount(app, auth) {
     if (!w) return res.status(404).json({ error: 'Work order not found' });
     if (w.status === 'done') return res.status(400).json({ error: 'Already completed' });
     const b = req.body || {};
-    if (!clip(b.resolution, 10) && !(Array.isArray(b.checklist_done) && b.checklist_done.length)) {
+    const hasReadings = Array.isArray(b.readings) && b.readings.some(r => r && r.value !== '' && r.value != null && !isNaN(parseFloat(r.value)));
+    if (!clip(b.resolution, 10) && !(Array.isArray(b.checklist_done) && b.checklist_done.length) && !hasReadings) {
       return res.status(400).json({ error: 'Say what you did before closing it out' });
     }
     db.transaction(() => completeWorkOrder(w, b, req.user.name))();
@@ -604,7 +619,7 @@ module.exports = function mount(app, auth) {
              (SELECT w.id FROM work_orders w WHERE w.pm_id=p.id AND w.status IN ${OPEN_SQL} LIMIT 1) open_wo
       FROM pm_tasks p LEFT JOIN units u ON u.id=p.unit_id
       WHERE p.active=1
-      ORDER BY date(p.next_due), p.id`).all();
+      ORDER BY date(p.next_due), p.id`).all().map(hooks.decoratePm);
     res.json({ pms: rows, today: today() });
   });
 
@@ -625,6 +640,8 @@ module.exports = function mount(app, auth) {
       .run(unit ? unit.id : null, clip(b.building, 80) || (unit && unit.building) || '', title,
         clip(b.checklist, 3000), CATEGORIES.includes(b.category) ? b.category : 'PM', freq, lead,
         isDate(b.next_due) ? b.next_due : today());
+    const err = hooks.saveExtras(info.lastInsertRowid, b);
+    if (err) return res.status(400).json({ error: err });
     ensurePmWorkOrders();
     res.json({ id: info.lastInsertRowid });
   });
@@ -640,6 +657,8 @@ module.exports = function mount(app, auth) {
         CATEGORIES.includes(b.category) ? b.category : p.category, freq,
         b.lead_days !== undefined ? Math.max(0, Math.min(60, parseInt(b.lead_days, 10) || 0)) : p.lead_days,
         isDate(b.next_due) ? b.next_due : p.next_due, p.id);
+    const err = hooks.saveExtras(p.id, b);
+    if (err) return res.status(400).json({ error: err });
     // Keep an open PM work order's due date in step.
     if (isDate(b.next_due)) {
       db.prepare(`UPDATE work_orders SET due_date=? WHERE pm_id=? AND status IN ${OPEN_SQL}`).run(b.next_due, p.id);
@@ -739,3 +758,6 @@ module.exports.ensurePmWorkOrders = ensurePmWorkOrders;
 module.exports.createStarterPlan = createStarterPlan;
 module.exports.addStarterPMs = ids => createStarterPlan('AHU sheet', ids);
 module.exports.addDays = addDays;
+module.exports.STARTER = STARTER;
+module.exports.OPEN_SQL = OPEN_SQL;
+module.exports.addNote = addNote;

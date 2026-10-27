@@ -112,6 +112,9 @@ ops.mount(app, auth, { sign, origin: req => (process.env.PUBLIC_URL || '').repla
 /* ================= WORK ORDERS, PM, REQUESTS, DASHBOARD ================= */
 require('./workorders')(app, auth);
 
+/* ================= PM: READINGS, ROUNDS, KITS, TRIGGERS, SHUTDOWNS, SCORECARD ================= */
+require('./pm2').mount(app, auth);
+
 // Air handling units from the club's AHU sheet. Adds any that are missing,
 // never overwrites ones already edited in the app.
 try {

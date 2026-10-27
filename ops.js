@@ -731,6 +731,7 @@ function monthlyData(monthIn) {
            parts: { used: Math.round(partsUsed.c), received: Math.round(partsRecv.c), top: topParts, low: lowStock, value: Math.round(stockValue) },
            vendors: { total: Math.round(vend.total), invoices: vend.n, byVendor, contractAnnual: Math.round(contractAnnual), expiring: contracts },
            byBuilding, byCategory, repeat, completed, openNow, pmOverdue, safety,
+           pmScore: (() => { try { return require('./pm2').scorecard(start, end); } catch (e) { return null; } })(),
            summary: getSetting('summary:' + month) };
 }
 
@@ -762,6 +763,15 @@ ${table(['Building', 'Opened', 'Done'], d.byBuilding.map(r => `<tr><td>${escH(r.
 <div><div class="eb">Work by trade</div>
 ${table(['Category', 'Count'], d.byCategory.map(r => `<tr><td>${escH(r.category)}</td><td class="r">${r.n}</td></tr>`))}</div>
 </div>
+
+${d.pmScore ? `<div class="eb">Preventive maintenance</div>
+<div class="kp">
+  ${K(d.pmScore.on_time_pct == null ? '—' : d.pmScore.on_time_pct + '%', 'PM on time', d.pmScore.pm_done + ' completed' + (d.pmScore.avg_days_late ? ', late ones avg ' + d.pmScore.avg_days_late + ' days' : ''))}
+  ${K(d.pmScore.planned_pct == null ? '—' : d.pmScore.planned_pct + '%', 'Planned work', d.pmScore.planned + ' planned, ' + d.pmScore.reactive + ' repairs')}
+  ${K(d.pmScore.planned_hours_pct == null ? '—' : d.pmScore.planned_hours_pct + '%', 'Planned hours', d.pmScore.planned_hours + ' of ' + Math.round((d.pmScore.planned_hours + d.pmScore.reactive_hours) * 10) / 10 + ' hrs')}
+  ${K(d.pmScore.out_of_range, 'Readings out of range', d.pmScore.readings + ' readings, ' + d.pmScore.repairs_from_readings + (d.pmScore.repairs_from_readings === 1 ? ' repair' : ' repairs') + ' opened')}
+</div>
+<p class="dim">Planned work is PM. The higher the planned share, the fewer surprises. Readings out of range are problems caught during PM, before they turned into breakdowns.</p>` : ''}
 
 <div class="eb">Needs a decision or follow-up</div>
 <ul class="flags">
