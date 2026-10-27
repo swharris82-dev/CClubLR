@@ -204,7 +204,7 @@ Known weak points: inverter PCB failures and EEV coil faults. Parts availability
   'Burnham / Smith': {
     families: ['boiler'],
     codes: 'Ignition control status LEDs.',
-    guidance: `BURNHAM / SMITH: Cast iron sectional boilers. Same cautions as other cast iron: thermal shock and cold return water crack and rot sections. Check for a mixing or bypass arrangement on a heat pump loop.`
+    guidance: `BURNHAM / SMITH: Cast iron sectional boilers. Same cautions as other cast iron: thermal shock and cold return water crack and rot sections. Check for a mixing or bypass arrangement and the hot water reset schedule.`
   },
   'Patterson-Kelley': {
     families: ['boiler', 'dhw'],

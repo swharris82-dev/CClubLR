@@ -835,7 +835,7 @@ async function aiSummary(d) {
     by_building: d.byBuilding, repeat_equipment: d.repeat, open_issues: d.openNow.map(w => w.title), pm_overdue: d.pmOverdue, safety_devices_out: d.safety,
     completed_sample: d.completed.slice(0, 15).map(w => w.title)
   });
-  const prompt = `You write the monthly facilities report summary for the general manager of ${d.club}, a private country club founded in 1902 with a central plant (boilers, cooling tower, water-source heat pump loop), clubhouse, tennis center, pool, and golf facilities.
+  const prompt = `You write the monthly facilities report summary for the general manager of ${d.club}, a private country club founded in 1902 with a central plant (chiller, cooling tower, boilers) feeding the air handlers and fan coils, clubhouse, tennis center, pool, and golf facilities.
 
 Here is the month's data as JSON:
 ${facts}

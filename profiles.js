@@ -5,19 +5,21 @@
  *   fields      - details captured for this equipment type
  *   safetyLabel - the safety device tracked on the nameplate (LWCO, float, flow switch...)
  *   waterLabel  - what the "water side / piping" notes box is called for this type
- *   loop        - true if this equipment is part of the building water loop
+ *   loop        - true if this equipment is part of the central plant system
  *   guidance    - diagnostic rules injected into the AI diagnosis
  *   firstMove   - what a competent tech checks before anything else
  *
- * The water loop is one system. A heat pump lockout in the dining room and a
- * dead tower fan in the plant are often the same problem, and the AI is told so.
+ * The central plant is one system. Warm rooms on three air handlers and a tower
+ * fan stuck at full speed are often the same problem, and the AI is told so.
  */
 
-const LOOP_NOTE = `
-- This equipment is part of the club's water-source heat pump loop: boilers add heat in winter, the cooling tower rejects heat in summer, loop pumps move water to every heat pump in every building.
-- Normal loop supply is roughly 60 to 90 F. A loop running hot in summer (tower side) or cold in winter (boiler side) will lock out heat pumps across multiple buildings at once.
-- Low loop flow (pump failure, air in the loop, closed valve, clogged strainer) causes heat pump lockouts that look like individual unit failures.
-- If several heat pumps have faulted recently, or any central plant equipment has open problems, say so plainly and put the loop first.`;
+const PLANT_NOTE = `
+- This equipment is part of the club's central plant system. One water-cooled chiller makes chilled water. A cooling tower (VFD fan, bypass valve) and a condenser water pump reject the chiller's heat. A building chilled water pump sends chilled water out. PHX-1, a plate heat exchanger, gives free cooling off the tower when outdoor wet bulb is below about 52 F. Boilers make heating hot water. Chilled and hot water feed multizone air handlers (hot deck and cold deck) and fan coil units across the clubhouse. An Alerton BAS (Ascent Compass) runs the plant.
+- Normal chilled water supply is about 44 to 48 F with roughly a 10 F rise across the building. Most of the air handlers date to 1968 and use 3-way coil valves, so the chilled water delta T runs low (3 to 5 F). Low delta T alone is a flow and valve issue, not a chiller failure.
+- Plant-wide problems (chiller tripped, chilled water warm, chilled water pump down, tower not making setpoint, boilers down) show up as many rooms on several air handlers and fan coils complaining at once. When complaints span units, put the plant first.
+- Condenser water too warm (tower fan, fill, nozzles, approach setpoint, bypass valve) raises chiller head pressure and can trip it on high pressure.
+- Check the BAS before trusting it: points in manual override, <NR> (no response) values, and lost communication look like equipment failures. Verify with a thermometer or gauge.
+- If other plant equipment has logged problems recently, say so plainly and weigh a plant cause heavily.`;
 
 const PROFILES = {
   'Boiler (loop heat)': {
@@ -34,14 +36,15 @@ const PROFILES = {
       { id: 'state_cert', label: 'State boiler inspection certificate expires' },
       { id: 'last_combustion', label: 'Last combustion analysis' }
     ],
-    firstMove: 'Read the lockout or fault on the boiler control, confirm gas pressure and loop flow, then check the LWCO before resetting anything.',
-    guidance: `SYSTEM: Hot water boiler providing heat to a water-source heat pump loop at a country club central plant.
+    firstMove: 'Read the lockout or fault on the boiler control, confirm gas pressure and hot water flow, then check the LWCO before resetting anything.',
+    guidance: `SYSTEM: Hot water boiler making heating hot water for the air handler hot decks and fan coil heating coils at a country club central plant.
 - Always get the lockout or fault message off the burner control or flame safeguard first. Do not guess around a flame failure lockout.
 - Common failures: flame rectification (dirty flame rod or scanner), failed igniter, gas valve or low gas pressure, air proving switch or blower, flow switch not made because loop pump is off or air-bound, LWCO tripped, high limit tripped from low flow, condensate trap plugged on condensing boilers, scaled heat exchanger from poor water treatment.
-- A high limit trip is almost always a flow problem, not a bad limit. Check the loop pump, isolation valves, and air in the system before condemning the control.
-- Non-condensing boilers (cast iron, copper fin) rot from flue gas condensation if return water runs cold, below about 130 F, for long periods. On a heat pump loop running 60 to 90 F this is a real risk; check for a bypass or mixing arrangement.
+- A high limit trip is almost always a flow problem, not a bad limit. Check the hot water pump, isolation valves, and air in the system before condemning the control.
+- Non-condensing boilers (cast iron, copper fin) rot from flue gas condensation if return water runs cold, below about 130 F, for long periods. Check for a bypass or mixing arrangement and the hot water reset schedule.
+- Hot water reset matters on this plant: the multizone air handlers mix hot deck and cold deck air, so a hot deck left hot in warm weather wastes boiler and chiller energy at the same time and can overheat zones.
 - Never recommend jumping out a safety (LWCO, flow switch, high limit, flame safeguard). Arkansas requires boiler inspection certificates; note if one is expired.
-- Carbon monoxide and gas leaks are the safety items. Flag any report of smell, soot, or rollout.${LOOP_NOTE}`
+- Carbon monoxide and gas leaks are the safety items. Flag any report of smell, soot, or rollout.${PLANT_NOTE}`
   },
 
   'Cooling tower / fluid cooler': {
@@ -58,13 +61,16 @@ const PROFILES = {
       { id: 'last_clean', label: 'Last basin cleaning / inspection' }
     ],
     firstMove: 'Confirm the fan is actually turning and the water is actually flowing over the fill or coil, then check the VFD and basin level.',
-    guidance: `SYSTEM: Cooling tower or closed-circuit fluid cooler rejecting heat from the heat pump loop.
-- Summer complaint pattern: the loop runs hot, heat pumps across the club trip on high head pressure. The tower is the first suspect when multiple buildings complain at once.
+    guidance: `SYSTEM: Open cooling tower rejecting the chiller's condenser heat, with a VFD fan and a tower bypass valve, controlled by the BAS.
+- The BAS sets condenser water to outdoor wet bulb plus an approach setpoint (5 F is realistic; 2 F is tighter than most towers can reach and pins the fan at 100%). Check the approach setpoint before blaming the tower.
+- Summer complaint pattern: condenser water runs warm, chiller head pressure climbs, chiller trips on high pressure or loses capacity, and rooms on every air handler warm up.
+- Check which way the bypass valve is actually going (to tower or bypass) at the actuator, not just on the screen.
+- In cool weather the tower also feeds PHX-1 for free cooling. Tower trouble then shows up as free cooling not holding chilled water temperature.
 - Common failures: broken or slipping fan belt, failed fan motor or bearings, gearbox oil low or failed, VFD fault, spray pump failure (closed-circuit), clogged spray nozzles, fouled fill or coil from scale and biological growth, makeup float valve stuck, basin low, strainer plugged.
-- Open towers with a plate heat exchanger: a fouled heat exchanger looks like a bad tower. Compare approach temperatures across the HX.
+- A fouled PHX-1 looks like a bad tower during free cooling. Compare approach temperatures across the HX.
 - Winter: freeze damage, basin heater failure, frozen makeup line.
 - Water treatment matters here more than anywhere. Scale and biological fouling kill capacity. Legionella is a real risk on open towers; flag any report of slime, odor, or neglected treatment.
-- Fall protection and lockout/tagout on fan work. Never reach into a fan deck without the disconnect locked.${LOOP_NOTE}`
+- Fall protection and lockout/tagout on fan work. Never reach into a fan deck without the disconnect locked.${PLANT_NOTE}`
   },
 
   'Loop / condenser pump': {
@@ -80,12 +86,13 @@ const PROFILES = {
       { id: 'seal', label: 'Seal type / last replaced' }
     ],
     firstMove: 'Check whether the pump is running, then look at the gauges across it and the coupler before anything else.',
-    guidance: `SYSTEM: Circulating pump on the heat pump loop or the tower condenser water side.
-- A dead loop pump takes down every heat pump on the loop. If the standby pump did not pick up, say so and check the lead/lag control.
+    guidance: `SYSTEM: Chilled water, condenser water, or heating hot water pump at the central plant.
+- A dead building chilled water pump means no cooling anywhere. A dead condenser water pump trips the chiller. A dead hot water pump means no heat. If a standby pump did not pick up, say so and check the lead/lag control.
+- Pumps on VFDs: check the drive keypad for Hand/Off/Auto, output Hz, and faults. A drive the BAS cannot talk to may be stuck in Hand or at a fixed speed. Do not switch drive modes without knowing what it runs.
 - Common failures: failed coupler on base-mounted pumps (motor spins, pump does not), mechanical seal leak, bearing noise, motor overload trip, VFD fault, clogged suction strainer, air binding, closed or partially closed valve.
 - Differential pressure across the pump is the fastest health check. Low differential with the motor running points to a coupler, impeller, or air problem.
 - Seal leaks get worse fast and can flood a mechanical room. Treat active leaks as same-day.
-- Lock out the motor before touching a coupler guard.${LOOP_NOTE}`
+- Lock out the motor before touching a coupler guard.${PLANT_NOTE}`
   },
 
   'Plate heat exchanger': {
@@ -99,11 +106,13 @@ const PROFILES = {
       { id: 'last_opened', label: 'Last opened and cleaned' }
     ],
     firstMove: 'Log entering and leaving temperatures on both sides and compare the approach to design.',
-    guidance: `SYSTEM: Plate and frame heat exchanger separating an open cooling tower from the closed heat pump loop.
+    guidance: `SYSTEM: PHX-1, plate and frame heat exchanger for waterside economizer (free cooling) between the condenser water loop and the chilled water loop.
+- The BAS starts free cooling when outdoor wet bulb is below about 52 F and stops it if chilled water supply rises above about 58 F. Changeover valves on both sides send water through the HX instead of the chiller; a missing linkage or stuck actuator on those valves means free cooling never works.
+- If free cooling will not hold chilled water temperature, check wet bulb, tower water temperature, changeover valve positions, and HX approach in that order.
 - A rising approach temperature means fouling on the tower side, which is dirty water. Scale, mud, and biological growth.
 - High pressure drop across a side means plugged plates or strainer.
 - External leaks usually mean gaskets. Do not over-tighten the frame to stop a leak; it crushes gaskets.
-- Cross-contamination (loop water going dirty) means a plate or gasket failure between sides.${LOOP_NOTE}`
+- Cross-contamination (chilled water going dirty) means a plate or gasket failure between sides.${PLANT_NOTE}`
   },
 
   'Loop accessory (expansion tank, air separator, makeup)': {
@@ -117,10 +126,10 @@ const PROFILES = {
       { id: 'prv', label: 'Makeup PRV setting' }
     ],
     firstMove: 'Check loop static pressure and the expansion tank charge before blaming anything else for pressure swings.',
-    guidance: `SYSTEM: Hydronic loop accessories (expansion tank, air separator, pressure reducing valve, backflow, relief valves).
+    guidance: `SYSTEM: Hydronic accessories on the chilled water and hot water loops (expansion tank, air separator, pressure reducing valve, backflow, relief valves).
 - Relief valve weeping or pressure spiking on heat-up points to a waterlogged expansion tank or failed bladder.
-- Air noise and heat pump flow faults across the club point to a failed air separator or vent, or low fill pressure pulling air in at high points.
-- A makeup meter that runs constantly means a leak somewhere on the loop. Say so; that is also diluting water treatment.${LOOP_NOTE}`
+- Air noise and low coil flow at attic air handlers point to a failed air separator or vent, or low fill pressure pulling air in at the high points (the attic is the high point here).
+- A makeup meter that runs constantly means a leak somewhere on the loop. Say so; that is also diluting water treatment.${PLANT_NOTE}`
   },
 
   'Water treatment system': {
@@ -135,16 +144,15 @@ const PROFILES = {
       { id: 'biocide', label: 'Biocide program' }
     ],
     firstMove: 'Check the controller for alarms, confirm chemical drums are not empty, and verify the bleed valve actually opens.',
-    guidance: `SYSTEM: Chemical treatment for the cooling tower and closed loop (conductivity controller, bleed valve, chemical pumps, biocide feed, closed-loop inhibitor).
+    guidance: `SYSTEM: Chemical treatment for the cooling tower and the closed chilled water and hot water loops (conductivity controller, bleed valve, chemical pumps, biocide feed, closed-loop inhibitor).
 - High conductivity usually means the bleed valve failed closed or the controller probe is fouled.
 - Empty drums, lost prime, or a failed feed pump are the common real failures.
-- Poor treatment causes the expensive failures elsewhere: scaled boiler heat exchangers, fouled tower fill, plugged plate heat exchanger, corroded heat pump coils. Link them when the history supports it.
+- Poor treatment causes the expensive failures elsewhere: scaled chiller condenser tubes (high head pressure), scaled boiler heat exchangers, fouled tower fill, plugged PHX-1, and corroded air handler coils. Link them when the history supports it.
 - Chemicals are hazardous. Note PPE and SDS in the truck list.`
   },
 
   'Water-source heat pump': {
     key: 'wshp',
-    loop: true,
     safetyLabel: 'Condensate switch',
     waterLabel: 'Condensate, hoses, and loop valves',
     fields: [
@@ -156,14 +164,59 @@ const PROFILES = {
       { id: 'last_fault', label: 'Last lockout / LED code' }
     ],
     firstMove: 'Read the lockout code on the control board, then check loop water temperature and flow at the unit before touching the refrigerant side.',
-    guidance: `SYSTEM: Water-to-air heat pump on the club's building water loop.
+    guidance: `SYSTEM: Water-to-air heat pump. Confirm what water source it is on before ranking; the clubhouse runs a chiller and boiler plant, not a heat pump loop.
 - Get the lockout or LED code off the control board first. High pressure, low pressure, freeze protection, and condensate overflow each point somewhere different.
 - High pressure lockout in cooling: loop water too hot or too little loop flow is far more likely than a refrigerant problem. Check entering water temperature and the temperature rise across the water coil.
 - Low pressure or freeze protection lockout: low airflow (filter, blower, belt), low loop flow, or loop too cold in heating.
 - Low flow at one unit only: closed isolation valve, clogged hose kit strainer, failed motorized valve.
 - Condensate overflow: plugged drain, failed switch, or no trap. In ceiling units this means water on the ceiling.
 - Common mechanical failures: blower motor, reversing valve, compressor contactor or capacitor, and scaled water coils from poor loop treatment.
-- Never recommend topping off charge without confirming water side is normal first.${LOOP_NOTE}`
+- Never recommend topping off charge without confirming water side is normal first.`
+  },
+
+  'Chiller': {
+    key: 'chiller',
+    loop: true,
+    safetyLabel: 'Flow switches / high pressure cutout',
+    waterLabel: 'Evaporator and condenser water connections',
+    fields: [
+      { id: 'tons', label: 'Tonnage / refrigerant' },
+      { id: 'chiller_type', label: 'Compressor type (screw, centrifugal, scroll)' },
+      { id: 'design_temps', label: 'Design CHW and condenser water temps' },
+      { id: 'panel', label: 'Control panel / BAS interface' },
+      { id: 'last_tube', label: 'Last condenser tube cleaning' },
+      { id: 'last_oil', label: 'Last oil and refrigerant analysis' }
+    ],
+    firstMove: 'Read the active fault and alarm history on the chiller panel, then log evaporator and condenser pressures, leaving water temps, and amps before resetting anything.',
+    guidance: `SYSTEM: Water-cooled chiller with shell-and-tube evaporator and condenser, the only source of mechanical cooling for the clubhouse.
+- Get the fault and alarm history off the chiller's own panel first. The BAS may not be able to read the chiller interface; a BAS run status is not the chiller's own data.
+- High pressure or high condenser pressure trips: condenser water too warm (tower), low condenser flow (pump, strainer, valves), or scaled condenser tubes. Check condenser water entering and leaving temps and the tower before the chiller.
+- Low pressure or freeze protection trips: low chilled water flow, chilled water setpoint too low, or low refrigerant charge.
+- Low chilled water delta T at high flow is a building-side problem (3-way coil valves, valves stuck open, overpumping), not a chiller problem, but it can short cycle the chiller at light load.
+- Unusual noise: check amps steady or swinging, oil pressure and temperature, discharge temperature, and surge at light load on centrifugal machines. Do not run a machine that is knocking.
+- Water or staining under the shells: check the grooved couplings, flow switch fittings, and drain valves, and rule out condensation on the evaporator before calling it a leak.
+- Never bypass flow switches or safeties. Refrigerant work needs EPA certification and a recovery plan.${PLANT_NOTE}`
+  },
+
+  'Fan coil unit (hot / chilled water)': {
+    key: 'fcu',
+    loop: true,
+    safetyLabel: 'Condensate switch',
+    waterLabel: 'Coil valves, piping, and condensate',
+    fields: [
+      { id: 'serves', label: 'Area served' },
+      { id: 'location', label: 'Where to find it' },
+      { id: 'valve', label: 'Coil valves (2-pipe / 4-pipe, 2-way / 3-way)' },
+      { id: 'filter_size', label: 'Filter size and count' },
+      { id: 'controls', label: 'Controller / BAS point' }
+    ],
+    firstMove: 'Check the BAS point for the unit (temperature, humidity, NR), then confirm the fan runs and the coil valve opens.',
+    guidance: `SYSTEM: Fan coil unit on the club's chilled water and hot water plant (Greenheck LFC and similar), mostly in kitchens, the pool cafe, and the youth center.
+- No cooling at one fan coil while others are fine: coil valve or actuator, closed isolation valve, plugged strainer, fan motor, or filter.
+- No cooling at every fan coil: the plant. Check chilled water supply temperature first.
+- <NR> on the BAS means the controller is offline; the unit may still be running on its last command. A space reading like -148 F is a failed or unplugged sensor, not a frozen room.
+- High room humidity (above about 60%) with the fan running means the coil is not getting cold enough water or the valve is not opening. Kitchens add moisture fast.
+- Condensate overflow in a ceiling unit means water through the ceiling. Treat it as urgent.${PLANT_NOTE}`
   },
 
   'Rooftop / package unit': {
@@ -186,6 +239,7 @@ const PROFILES = {
 
   'Air handling unit (AHU)': {
     key: 'ahu',
+    loop: true,
     safetyLabel: 'Condensate float / freeze stat',
     waterLabel: 'Coil piping and condensate',
     fields: [
@@ -199,13 +253,19 @@ const PROFILES = {
       { id: 'controls', label: 'Controls / thermostat' }
     ],
     firstMove: 'Confirm the blower is running and moving air: belt, filter, motor, then check coil water or refrigerant temps and the control valve.',
-    guidance: `SYSTEM: Central air handling unit serving several rooms in an older clubhouse. Units sit in attics, the boiler room, and back rooms, so access takes time; note the location from the record in the truck list.
+    guidance: `SYSTEM: Central air handling unit on the club's chilled water and hot water plant, serving several rooms in an older clubhouse. Units sit in attics, the boiler room, and back rooms, so access takes time; note the location from the record in the truck list.
+- Most clubhouse units (AHU-2, 3, 4, 5, 10) are multizone: one fan blows through a hot deck (hot water coil) and a cold deck (chilled water coil), and a damper for each zone mixes the two. On the BAS, zone 2-5 means AHU-2, zone 5.
+- Zone too warm or too cold while other zones on the same unit are fine: that zone's damper. Check the actuator moves, the linkage and shaft are tight, and the blade position matches the command. Confirm which way 0% and 100% go.
+- All zones on one unit off: deck temperatures. Cold deck should run near 55 F in cooling; a 63 F cold deck will not cool or dehumidify. A hot deck near 95 F on a warm day means the hot deck reset is not working and the unit is heating and cooling at once.
+- A zone in vent mode with a fixed damper position can still be fed mostly hot deck air. Check the vent position against the deck temperatures.
+- Many units are 1968 Porter / Marlo builds with no OEM parts. Replace belts, sheaves, bearings, and motors by measured size. Treat old pipe and fitting insulation, duct flex connectors, and mastic as possible asbestos; do not disturb it.
+- Pneumatic gauges on some panels are leftovers from the old Honeywell controls; the Alerton BAS now runs these units.
 - One AHU serves several rooms. If several rooms on the same AHU complain at once, the problem is at the AHU, not the rooms. If only one room complains, look at that room's damper, diffuser, or thermostat first.
 - Airflow first: broken or slipping belt, plugged filter, failed blower motor or bearings, closed or failed dampers, VFD fault.
 - Then heat transfer: coil fouled, control valve stuck or actuator failed, no water flow or wrong water temperature to the coil, or low refrigerant if it is a DX coil. Verify which coil type this unit has before ranking.
 - A tripped freeze stat or condensate float shuts the unit down and looks like a dead unit. Check those before condemning a motor.
 - Attic units: condensate overflow means water through a ceiling. Treat any water call under an attic AHU as urgent.
-- If the unit is tied to a make-up air unit, a MAU problem can push hot or humid outside air into the space and look like an AHU failure.`
+- If the unit is tied to a make-up air unit, a MAU problem can push hot or humid outside air into the space and look like an AHU failure.${PLANT_NOTE}`
   },
 
   'Split system / air handler': {
@@ -352,7 +412,10 @@ const PROFILES = {
       { id: 'vendor', label: 'Controls vendor' }
     ],
     firstMove: 'Check the alarm log and whether the point is in override or hand before trusting what the screen says.',
-    guidance: `SYSTEM: Building automation / controls for the central plant and heat pumps.
+    guidance: `SYSTEM: Alerton BAS (Ascent Compass front end) for the central plant, air handlers, fan coils, exhaust fans, and walk-in temperature monitoring.
+- <NR> on a point means no response: the controller or drive is offline or lost communication. Several <NR> points at once (for example the chiller interface and a VFD) point to a network trunk problem, not separate failures.
+- Readings like -148 F mean a failed, open, or unplugged sensor.
+- Points in manual override (chiller forced on, a zone forced occupied) hide the real control problem. Find out who set it and why before releasing it.
 - Many "equipment failures" are points left in override, failed sensors, or lost communication.
 - Verify with a meter or thermometer before acting on a sensor value.
 - A comm loss to many devices at once is a network or power problem, not many failures.`
@@ -381,7 +444,7 @@ function listTypes() {
 // Types where a fault or lockout code should be demanded before mechanical checks.
 function requiresErrorCode(systemType) {
   const k = getProfile(systemType).key;
-  return ['vrf', 'ductless', 'boiler', 'wshp', 'ice'].includes(k);
+  return ['vrf', 'ductless', 'boiler', 'wshp', 'ice', 'chiller'].includes(k);
 }
 
 module.exports = { PROFILES, getProfile, listTypes, requiresErrorCode, DEFAULT_TYPE };

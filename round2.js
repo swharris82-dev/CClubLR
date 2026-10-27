@@ -205,6 +205,7 @@ function buildingDetail(b) {
 const LIFE = {
   'Boiler (loop heat)': [25, 45000], 'Cooling tower / fluid cooler': [20, 120000], 'Loop / condenser pump': [20, 9000],
   'Plate heat exchanger': [25, 25000], 'Loop accessory (expansion tank, air separator, makeup)': [20, 6000],
+  'Chiller': [25, 350000], 'Fan coil unit (hot / chilled water)': [20, 6000], 'Air handling unit (AHU)': [30, 120000],
   'Water treatment system': [15, 8000], 'Water-source heat pump': [18, 9000], 'Rooftop / package unit': [15, 25000],
   'Split system / air handler': [15, 12000], 'Ductless mini-split': [15, 7000], 'VRF / VRV': [20, 60000],
   'Walk-in cooler / freezer': [15, 18000], 'Ice machine': [10, 8000], 'Kitchen equipment': [12, 10000],

@@ -280,8 +280,9 @@ function buildHistoryContext(unit) {
   return ctx;
 }
 
-// The water loop is one system. Anything recent on other loop equipment
-// (plant or heat pumps) goes into the diagnosis so the AI can call a loop problem.
+// The central plant is one system. Anything recent on other plant equipment
+// (chiller, tower, pumps, boilers, air handlers, fan coils) goes into the
+// diagnosis so the AI can call a plant-wide problem.
 function loopContext(unit) {
   if (!unit || !getProfile(unit.system_type).loop) return '';
   const loopTypes = listTypes().filter(t => getProfile(t).loop);
@@ -294,8 +295,8 @@ function loopContext(unit) {
   const badSafety = db.prepare(`
     SELECT apt, building, system_type, switch_notes FROM units
     WHERE id != ? AND system_type IN (${ph}) AND (switch_present='no' OR switch_functioning='no')`).all(unit.id, ...loopTypes);
-  if (!recent.length && !badSafety.length) return '\nWATER LOOP: No other loop equipment has logged problems in the last 45 days.\n';
-  let out = '\nWATER LOOP STATUS (other equipment on the same loop, last 45 days):\n';
+  if (!recent.length && !badSafety.length) return '\nCENTRAL PLANT: No other plant equipment has logged problems in the last 45 days.\n';
+  let out = '\nCENTRAL PLANT STATUS (other equipment on the same chilled water / hot water system, last 45 days):\n';
   recent.forEach(r => {
     out += `- ${r.job_date} ${r.apt} (${r.system_type}${r.building ? ', ' + r.building : ''}): ` +
       (r.error_code ? `[code ${r.error_code}] ` : '') + (r.reported || '') + (r.diagnosis ? `. Dx: ${r.diagnosis}` : '') + '\n';
@@ -343,7 +344,7 @@ app.post('/api/triage', auth, async (req, res) => {
     ? `\n=== MANUFACTURER-SPECIFIC RULES (${unit.manufacturer}) ===\nWhere codes are read: ${mfr.codes}\n${mfr.guidance}\n=== END MANUFACTURER RULES ===\n`
     : '';
 
-  const prompt = `You are an expert facilities and HVAC diagnostic assistant supporting the on-site maintenance technician at the Country Club of Little Rock, a private club founded in 1902 with older buildings, a central plant (boilers, cooling tower, loop pumps) serving water-source heat pumps across the property, commercial kitchens, a pool, and indoor tennis. You have this asset's documented history, equipment type, manufacturer, and the status of the water loop. Use all of it. Repeat failures, brand-specific weak points, loop-wide problems, and known defects should heavily influence your ranking. Write in plain language and never use em dashes.
+  const prompt = `You are an expert facilities and HVAC diagnostic assistant supporting the on-site maintenance technician at the Country Club of Little Rock, a private club founded in 1902 with older buildings, a central plant (water-cooled chiller, cooling tower, PHX-1 free cooling heat exchanger, boilers, and pumps) feeding chilled water and hot water to multizone air handlers and fan coil units, commercial kitchens with walk-ins, a pool, and indoor tennis. Most clubhouse air handlers date to 1968. An Alerton BAS runs the plant. You have this asset's documented history, equipment type, manufacturer, and the status of the rest of the plant. Use all of it. Repeat failures, brand-specific weak points, plant-wide problems, and known defects should heavily influence your ranking. Write in plain language and never use em dashes.
 
 === EQUIPMENT-SPECIFIC DIAGNOSTIC RULES ===
 ${profile.guidance}
@@ -365,13 +366,13 @@ Respond with ONLY a JSON object, no preamble and no markdown fences, in this exa
   ],
   "truck_list": ["part or tool", "..."],
   "history_flags": ["short note about a pattern in this unit's history, or omit if none"],
-  "systemic_flag": "note if this looks like a water loop, central plant, or building-level problem rather than this one piece of equipment, or omit",
+  "systemic_flag": "note if this looks like a central plant, BAS, or building-level problem rather than this one piece of equipment, or omit",
   "warranty_note": "note if a likely-failed component may still be under warranty based on the equipment list, or omit",
   "safety": ["any safety or code concern, or omit if none"],
   "tenant_reply": "2-3 sentence plain message the tech can send the department head or staff member who reported it (kitchen, tennis, pool, front desk), saying what is happening and when it will be handled"
 }
 
-Rank 3-5 causes, highest odds first. Every cause must be plausible for THIS equipment type and THIS manufacturer. Do not offer diagnostics that do not apply to this equipment. If the history shows this is a repeat of a prior failure, say so plainly in history_flags. If the water loop status shows other loop equipment failing, weigh a loop-wide cause heavily and say so in systemic_flag.`;
+Rank 3-5 causes, highest odds first. Every cause must be plausible for THIS equipment type and THIS manufacturer. Do not offer diagnostics that do not apply to this equipment. If the history shows this is a repeat of a prior failure, say so plainly in history_flags. If the central plant status shows other plant equipment failing, weigh a plant-wide cause heavily and say so in systemic_flag.`;
 
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -530,7 +531,7 @@ app.get('/api/unit/:apt/brief', auth, async (req, res) => {
 ${ctx}
 ${mfr ? '\nBrand context: ' + mfr.guidance.slice(0, 700) : ''}
 
-Write 2-4 short sentences, plain spoken, no preamble, no bullet points, no headings, no em dashes. Lead with the single most important thing about this equipment. Call out repeat failures, open safety device problems, in-warranty components, inspection or certificate dates, anything happening on the water loop that affects it, and anything that has bitten someone here before. If it is clean and unremarkable, say so briefly rather than padding. Do not restate the asset tag.`;
+Write 2-4 short sentences, plain spoken, no preamble, no bullet points, no headings, no em dashes. Lead with the single most important thing about this equipment. Call out repeat failures, open safety device problems, in-warranty components, inspection or certificate dates, anything happening on the central plant that affects it, and anything that has bitten someone here before. If it is clean and unremarkable, say so briefly rather than padding. Do not restate the asset tag.`;
 
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -599,7 +600,7 @@ app.get('/api/reports/risk', auth, (req, res) => {
     GROUP BY u.id HAVING c >= 2
     ORDER BY c DESC`).all();
 
-  // Water loop and central plant activity, last 45 days.
+  // Central plant activity, last 45 days.
   const loopTypes = listTypes().filter(t => getProfile(t).loop);
   const loopEvents = db.prepare(`
     SELECT u.apt, u.building, u.system_type, j.job_date, j.reported, j.error_code

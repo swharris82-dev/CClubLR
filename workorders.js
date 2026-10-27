@@ -123,7 +123,7 @@ function ensurePmWorkOrders() {
 }
 
 // Standard preventive maintenance by equipment type, tuned for the club's
-// central plant and loop. [title, every N days, category, checklist lines]
+// central plant (chiller, tower, boilers) and air handlers. [title, every N days, category, checklist lines]
 const STARTER = {
   boiler: [
     ['Test low water cutoff', 30, 'Boiler', 'Blow down or test LWCO with burner firing\nConfirm burner shuts down\nLog result on boiler tag'],
@@ -136,13 +136,25 @@ const STARTER = {
     ['Tower spring startup', 365, 'Cooling tower', 'Clean and refill basin\nInspect fill and nozzles\nTest basin heater and vibration switch\nStart chemical program']
   ],
   pump: [
-    ['Loop pump inspection', 90, 'HVAC', 'Seal leaks\nBearing noise and vibration\nMotor amps against nameplate\nSuction and discharge pressure\nClean strainer if DP is high'],
+    ['Pump inspection', 90, 'HVAC', 'Seal leaks\nBearing noise and vibration\nMotor amps against nameplate\nSuction and discharge pressure\nClean strainer if DP is high'],
     ['Rotate lead and lag pumps', 30, 'HVAC', 'Swap lead pump\nConfirm flow proven on new lead']
   ],
-  hx: [['Plate heat exchanger approach check', 90, 'HVAC', 'Log entering and leaving temps both sides\nCompare approach to baseline\nCheck for leaks at frame']],
+  hx: [
+    ['Plate heat exchanger approach check', 90, 'HVAC', 'Log entering and leaving temps both sides\nCompare approach to baseline\nCheck for leaks at frame'],
+    ['Free cooling changeover test', 365, 'HVAC', 'Before cold weather: stroke both changeover valves and confirm linkages\nConfirm BAS wet bulb enable setpoint\nRun PHX-1 and confirm chilled water holds setpoint']
+  ],
+  chiller: [
+    ['Chiller daily log', 1, 'Chiller', 'Log CHW entering and leaving temps\nLog condenser water entering and leaving temps\nLog evaporator and condenser pressures, oil pressure, amps\nNote any alarms and unusual noise'],
+    ['Chiller monthly check', 30, 'Chiller', 'Review alarm history on the chiller panel\nCheck flow switches and couplings for leaks\nCompare approach temps to the last log\nConfirm BAS reads the chiller interface (no NR)'],
+    ['Annual chiller service', 365, 'Chiller', 'Clean condenser tubes, inspect evaporator tubes\nOil and refrigerant analysis\nLeak check\nCalibrate sensors and test safeties']
+  ],
+  fcu: [
+    ['Fan coil filter change', 90, 'HVAC', 'Replace filter\nNote filter size on record'],
+    ['Fan coil semiannual PM', 180, 'HVAC', 'Clean coil\nFlush condensate pan and test switch\nStroke coil valves\nConfirm BAS reads space temp and humidity']
+  ],
   accessory: [['Expansion tank and air separator check', 180, 'HVAC', 'Check tank precharge\nBleed air separator\nCheck makeup PRV setting and backflow']],
   chem: [
-    ['Loop and tower water test', 7, 'Water treatment', 'Test loop inhibitor level\nTest tower conductivity and pH\nLog results'],
+    ['Tower and closed loop water test', 7, 'Water treatment', 'Test chilled and hot water loop inhibitor levels\nTest tower conductivity and pH\nLog results'],
     ['Chemical feed and inventory', 30, 'Water treatment', 'Check feed pumps and tubing\nCheck drum levels, reorder if low\nVerify bleed valve operation']
   ],
   wshp: [
@@ -172,7 +184,7 @@ const STARTER = {
   kitchen: [['Kitchen equipment inspection', 90, 'Kitchen', 'Gas connections and shutoffs\nPilot and burner operation\nHood filters and fan']],
   pool: [['Pool equipment check', 30, 'Pool', 'Pump and seal\nFilter pressure, backwash if high\nHeater operation\nChemical feeder and controller calibration']],
   dhw: [['Water heater flush and T&P test', 365, 'Plumbing', 'Flush tank\nTest T&P valve\nCheck anode (tank type)\nCheck venting']],
-  bas: [['BAS alarm and trend review', 30, 'HVAC', 'Clear or resolve standing alarms\nCheck loop temp trends\nConfirm schedules match club calendar']]
+  bas: [['BAS alarm and trend review', 30, 'HVAC', 'Clear or resolve standing alarms\nCheck chilled water and hot water temp trends\nList points in manual override and NR points\nConfirm schedules match club calendar']]
 };
 
 function createStarterPlan(byName, onlyIds) {
