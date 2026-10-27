@@ -17,6 +17,9 @@ Repository: github.com/swharris82-dev/CClubLR
 | Issues get reported by phone, text, or in passing and get lost | Department staff submit requests from their phone; nothing falls through |
 | Troubleshooting a plant problem means checking one unit at a time | AI diagnosis understands the central plant, so it looks across connected equipment, not just the unit that's complaining |
 | Health inspections mean scrambling for temperature logs and service records | Kitchen temps, hood, grease trap, and fire suppression records are logged and printable as an inspector binder |
+| PM is a checkbox, so nobody sees a chiller or air handler drifting until it fails | PM takes readings with normal ranges. A bad number opens a repair on the spot, and every reading is charted over time |
+| Units are spread across attics, the boiler room, and back rooms | PM is grouped into walks by location, and a QR tag on each unit opens the PM due on it |
+| A filter change stalls because the filters aren't on the shelf | Each PM carries its parts kit, and the app builds the shopping list before the work comes due |
 | Replacement costs surprise the budget | A 10-year capital plan projects replacements from equipment age, condition, and inflation |
 | Vendor insurance and contracts expire without anyone noticing | Insurance, W-9s, and contract renewals are tracked with alerts |
 | No easy way to show leadership what maintenance accomplished | A printable monthly facilities report, with an optional AI-written summary |
@@ -51,8 +54,17 @@ Repository: github.com/swharris82-dev/CClubLR
 - Parts used are deducted from inventory automatically
 
 ### Preventive maintenance
-- Scheduled PM tasks by equipment
-- PM shows up on the events calendar so it doesn't collide with club events
+The PM schedule has five views: **Schedule**, **Rounds**, **Parts**, **Scorecard**, and **Club hours**.
+
+- **Standard plan:** one tap builds PM for every piece of equipment on file, by type: chiller daily log, monthly check, and annual service; tower inspection and spring startup; boiler LWCO tests and fall combustion test; pump inspection and lead/lag rotation; PHX-1 free cooling test; air handler filters, belts, and semiannual PM; fan coils, walk-ins, ice machines, pool, water treatment, and BAS review
+- **Readings, not just checkboxes:** a checklist step can take a number with a normal range (cold deck 50 to 60°F, filter pressure drop under 1.0 in. w.c., chilled water leaving 42 to 50°F). A reading outside the range opens a high-priority repair work order by itself
+- **Trends:** every reading is saved and charted on the equipment record against its normal band, with a flag when a value is drifting
+- **Rounds:** open PM grouped into walks by location (Clubhouse attic right side, attic left side, boiler room), in stop order, with the parts to pull before you go
+- **QR tags:** print a tag for every unit. Scan it with the in-app scanner or the phone camera and the PM due on that unit opens
+- **Parts kits:** each PM can carry the parts it uses. The kit pre-fills the close-out form, and the Parts view adds up everything due in the next 14 to 90 days against what's on the shelf, grouped by vendor, ready to copy as an order. Filter and belt kits can be set up in one tap from the sizes typed on each record
+- **Three ways to come due:** every so many days, the same date every year (tower startup in March, boiler service in September, free cooling test in October), or by run hours on the meter with a day limit as a backstop
+- **Shutdown windows:** PM that needs a unit off is moved off no-work event days and tells you the hours it can come down, based on each building's club hours
+- **Scorecard:** PM on-time rate, planned work vs. repairs (by count and hours), readings out of range and the repairs they caught, overdue PM, and a six-month trend. The same numbers go on the dashboard and in the monthly report
 
 ### Parts and inventory
 - Stock levels for filters, belts, chemicals, and common parts
@@ -99,10 +111,10 @@ Repository: github.com/swharris82-dev/CClubLR
 | Role | Can do |
 |---|---|
 | **Admin** | Everything, including adding users and setting roles |
-| **Manager** | Approve invoices, arrange the map, view reports and capital plan, assign work |
-| **Technician** | Work orders, PM, equipment records, diagnosis, inventory |
+| **Manager** | Approve invoices, arrange the map, view reports and capital plan, assign work, set club hours |
+| **Technician** | Work orders, PM, readings, hour meters, kits, equipment records, diagnosis, inventory |
 | **Department staff** | Submit requests and log kitchen temperatures (kitchen, tennis, golf, pool staff) |
-| **View-only** | See status and reports, change nothing |
+| **View-only** | See status, PM scorecard, and reports, change nothing |
 
 Permissions are enforced on the server, not just hidden in the screen.
 
@@ -148,6 +160,43 @@ Permissions are enforced on the server, not just hidden in the screen.
 4. Add an **after** photo, notes, and get a signature.
 5. Tap **Complete**.
 
+### Close out a PM with readings
+1. Open the PM work order and tap **Complete**.
+2. Enter each reading. A value outside the normal range turns red before you save.
+3. Check off the other steps. Parts from the kit are already filled in; change them if you used something different.
+4. Tap **Mark complete**. Any out-of-range reading opens its own repair work order, and the next PM is scheduled.
+
+### Add a reading to a PM checklist
+End the checklist line with the unit and range in brackets:
+- `Cold deck temp [°F 50-60]` takes a reading with a normal range
+- `Filter pressure drop [in. w.c. max 1.0]` has an upper limit only (use `min` for a lower limit)
+- `Blower motor amps [A]` takes a reading with no range
+
+### Walk a PM round
+1. Open **Work**, then **PM schedule**, then **Rounds**.
+2. Pick the window (due now, 7, 14, or 30 days).
+3. Pull the parts listed for the walk, then work the stops in order.
+4. At each unit, tap **Scan a tag** and photograph its QR tag, or tap the task in the list.
+
+### Print QR tags
+1. Open **Rounds** and tap **Print QR tags** for every unit, or **Tags** on one walk.
+2. Tap **Print or Save PDF**. Laminate them and mount each one where the unit is serviced.
+
+### Order parts for upcoming PM
+1. Open **PM schedule**, then **Parts**.
+2. The first time, tap **Set up kits from records**. It reads the filter size and count and the belt size on each record and lists any units still missing them.
+3. Pick the window and tap **Copy order list** to paste into an email or text to the vendor.
+
+### Log an hour meter
+1. Open the equipment record and scroll to **Readings and run hours**.
+2. Enter the meter reading and tap **Log**. If the meter was replaced, check **Meter was reset or replaced** first.
+3. Run-hour PM on that unit comes due when its hours run out.
+
+### Set club hours (manager)
+1. Open **PM schedule**, then **Club hours**.
+2. Add or edit each building's open days and hours. Shutdown PM is planned outside them.
+3. Use **When can it come down?** to see the next clear days for a building.
+
 ### Log kitchen temperatures
 1. Open **Kitchen**, then **Temp log**.
 2. Enter the AM or PM reading for each unit.
@@ -170,6 +219,18 @@ Keep working as normal. A banner shows you're offline. Your changes save on the 
 ## Setup (for developers)
 
 **Stack:** Node.js server, single-page web front end, hosted on Render with a persistent disk. Android app is a WebView wrapper (`org.cclr.clubhouseiq`).
+
+### Main files
+| File | What it does |
+|---|---|
+| `server.js` | Server, login, equipment records, AI diagnosis |
+| `profiles.js` | Equipment types and the AI diagnosis rules for each |
+| `workorders.js` | Work orders, PM schedule, standard PM plan, staff requests, dashboard |
+| `pm2.js` | PM readings, rounds and QR tags, parts kits, triggers, shutdown windows, scorecard |
+| `ops.js` | Users, parts, vendors, alerts, monthly report |
+| `round2.js` | Map, kitchen compliance, events, capital plan, photos, signatures |
+| `ahus.js` | The club's 12 air handlers from the AHU sheet |
+| `public/` | The app screens (`index.html`, `ops-ui.js`, `round2-ui.js`, `pm-ui.js`) |
 
 ### Run locally
 ```bash
@@ -206,6 +267,7 @@ Keep the signing keystore (`.jks`) and its password somewhere safe. Every future
 
 ## Roadmap
 - Google Play release
+- Pull hour meters and readings straight from the Alerton BAS instead of typing them
 - Live video and voice diagnosis through Gemini
 - Club-owned domain
 
