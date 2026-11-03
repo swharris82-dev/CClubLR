@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Clubhouse IQ">
 <title>Clubhouse IQ</title>
+<script src="/es.js"></script>
+<script src="/i18n.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -484,6 +486,7 @@ td b{color:var(--text);font-family:var(--mono);}
     <div class="whobox hide" id="whobox">
       <div class="nm" id="who" onclick="accountSheet()" title="My account"></div>
       <div class="whorow"><button class="bell" id="bellBtn" aria-label="Alerts" onclick="alertsSheet()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="hide" id="bellN"></span></button>
+      <button class="langBtn" data-noi18n title="Language / Idioma"></button>
       <button id="outBtn">Sign out</button></div>
     </div>
   </div>
@@ -518,6 +521,7 @@ td b{color:var(--text);font-family:var(--mono);}
     <button class="btn full" style="margin-top:17px;" id="aGo">Sign in</button>
     <div class="msg" id="aMsg"></div>
     <span class="tog" id="aToggle">Need an account? Create one</span>
+    <div style="text-align:center;margin-top:14px;"><button class="langBtn btn-2" data-noi18n style="background:none;border:1px solid var(--edge);border-radius:4px;padding:6px 14px;font-family:var(--mono);font-size:12px;color:var(--ice);cursor:pointer;"></button></div>
   </div>
 </div>
 
@@ -528,7 +532,7 @@ td b{color:var(--text);font-family:var(--mono);}
     <div class="row">
       <input type="text" id="aptIn" placeholder="BLR-1" autocomplete="off"
              style="font-family:var(--mono);font-weight:600;font-size:19px;letter-spacing:1.5px;">
-      <button class="btn" style="flex:0 0 auto;" id="openBtn">Open</button>
+      <button class="btn" style="flex:0 0 auto;" id="openBtn" data-es="Abrir">Open</button>
     </div>
     <div class="dim" style="margin-top:8px;font-size:12px;">Type a new tag and press Open to add equipment.</div>
     <details id="dir" open>
@@ -1375,7 +1379,7 @@ async function loadWos(){
 }
 function drawWoFilters(c){
   const f=isStaff()?[['open','Open',c.open],['done','Done',null]]:[['open','Open',c.open],['new','New requests',c.new],['mine','Mine',c.mine],['pm','PM due',c.pm],['done','Done',null]];
-  let h=f.map(([k,l,n])=>'<div data-f="'+k+'" class="'+(WOFILTER===k?'on':'')+'">'+l+(n?'<b>'+n+'</b>':'')+'</div>').join('');
+  let h=f.map(([k,l,n])=>'<div data-f="'+k+'"'+(k==='open'?' data-es="Abiertas"':'')+' class="'+(WOFILTER===k?'on':'')+'">'+l+(n?'<b>'+n+'</b>':'')+'</div>').join('');
   if(WOUNIT) h='<div class="on" data-clear="1">'+esc(WOUNIT)+' ✕</div>'+h;
   $('woFilters').innerHTML=h;
   $('woFilters').querySelectorAll('div').forEach(el=>el.onclick=()=>{
@@ -1622,7 +1626,7 @@ function pmRow(p,t){
   return '<div class="pm'+(p.next_due<t?' late':'')+'"><div class="dd"><div class="d">'+(+d[2])+'</div><div class="mo">'+MON[+d[1]-1]+'</div></div>'+
     '<div class="bd"><div class="t">'+esc(p.title)+'</div><div class="m">'+(p.apt?esc(p.apt)+' · ':'')+esc(p.bldg||'')+' · every '+esc(freqLabel(p.freq_days))+
     (p.last_done?' · last '+esc(fmtDate(p.last_done)):'')+'</div>'+(evTag(p.next_due,p.bldg)?'<div style="margin-top:4px">'+evTag(p.next_due,p.bldg)+'</div>':'')+'</div>'+
-    '<div class="go">'+(p.open_wo?'<button class="btn" onclick="openWo('+p.open_wo+')">Open</button>':'<button class="btn-2" onclick="editPm('+p.id+')">Edit</button>')+'</div></div>';
+    '<div class="go">'+(p.open_wo?'<button class="btn" data-es="Abrir" onclick="openWo('+p.open_wo+')">Open</button>':'<button class="btn-2" onclick="editPm('+p.id+')">Edit</button>')+'</div></div>';
 }
 function newPmForm(apt,pm){
   WORKVIEW='pm'; if(TAB!=='work'){ showTab('work'); } else { syncWorkNav(); }
@@ -1730,7 +1734,7 @@ function drawDash(d){
 
   // buildings
   if(d.byBuilding.length){
-    h+='<div class="panel"><div class="eyebrow">Open work by building</div><table><tr><th>Building</th><th>Open</th><th>Urgent</th><th>Overdue</th></tr>'+
+    h+='<div class="panel"><div class="eyebrow">Open work by building</div><table><tr><th>Building</th><th data-es="Abiertas">Open</th><th>Urgent</th><th>Overdue</th></tr>'+
        d.byBuilding.map(b=>'<tr><td><b>'+esc(b.building)+'</b></td><td>'+b.open+'</td><td style="color:'+(b.urgent?'var(--ember)':'var(--dim)')+'">'+b.urgent+'</td><td style="color:'+(b.overdue?'var(--rose)':'var(--dim)')+'">'+b.overdue+'</td></tr>').join('')+'</table></div>';
   }
 
@@ -1834,5 +1838,6 @@ function showDemoBanner(){
 }
 </script>
 <script src="/pm-ui.js"></script>
+<script>document.querySelectorAll('.langBtn').forEach(function(b){b.textContent=window.LANG==='es'?'English':'Español';b.onclick=function(){toggleLang();};});</script>
 </body>
 </html>

@@ -7,6 +7,8 @@
 <link rel="icon" type="image/png" href="/crest.png">
 <link rel="apple-touch-icon" href="/crest.png">
 <title>Maintenance Request</title>
+<script src="/es.js"></script>
+<script src="/i18n.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -79,6 +81,7 @@ textarea{min-height:110px;resize:vertical;}
   <img src="/crest.png" alt="Country Club of Little Rock crest">
   <div class="club" id="clubName">Country Club of Little Rock</div>
   <div class="sub">Maintenance Request</div>
+  <button class="langBtn" data-noi18n style="margin-top:10px;background:none;border:1px solid #4F6F99;color:#C9D6E6;border-radius:3px;padding:4px 12px;font-family:var(--mono);font-size:11px;letter-spacing:1px;cursor:pointer;"></button>
 </header>
 
 <div class="wrap">
@@ -256,5 +259,6 @@ async function showStatus(){
   $('statusList').innerHTML=out.join('')||'<div class="st-s">No requests found.</div>';
 }
 </script>
+<script>document.querySelectorAll('.langBtn').forEach(function(b){b.textContent=window.LANG==='es'?'English':'Español';b.onclick=function(){toggleLang();};});</script>
 </body>
 </html>

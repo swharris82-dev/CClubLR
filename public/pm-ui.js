@@ -71,7 +71,7 @@ window.pmRow = function (p, t) {
   return '<div class="pm' + (p.next_due < t ? ' late' : '') + '"><div class="dd"><div class="d">' + (+d[2]) + '</div><div class="mo">' + MON[+d[1] - 1] + '</div></div>' +
     '<div class="bd"><div class="t">' + esc(p.title) + '</div><div class="m">' + (p.apt ? esc(p.apt) + ' · ' : '') + esc(p.bldg || '') + ' · ' + esc(how) +
     (p.last_done ? ' · last ' + esc(fmtDate(p.last_done)) : '') + '</div>' + pmTags(p) + '</div>' +
-    '<div class="go">' + (p.open_wo ? '<button class="btn" onclick="openWo(' + p.open_wo + ')">Open</button>' : (canWork() ? '<button class="btn-2" onclick="editPm(' + p.id + ')">Edit</button>' : '')) + '</div></div>';
+    '<div class="go">' + (p.open_wo ? '<button class="btn" data-es="Abrir" onclick="openWo(' + p.open_wo + ')">Open</button>' : (canWork() ? '<button class="btn-2" onclick="editPm(' + p.id + ')">Edit</button>' : '')) + '</div></div>';
 };
 
 /* ----- PM edit form: trigger, shutdown, kit ----- */

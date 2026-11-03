@@ -11,6 +11,10 @@ const app = express();
 // Data plate photos arrive as base64 in the request body, so this has to be
 // larger than the 1mb an all-text API would need.
 app.use(express.json({ limit: '12mb' }));
+
+// Language: the app sends X-Lang: es when a user picks Spanish.
+const wantsSpanish = req => String(req.get('x-lang') || '').toLowerCase().startsWith('es');
+const SPANISH_NOTE = `\n\nLANGUAGE: The technician reading this has the app set to Spanish. Write every piece of human-readable text in clear, plain Latin American Spanish that a maintenance crew would use. Keep JSON keys, enum values (like priority), asset tags, model and serial numbers, fault codes, part numbers, and units exactly as they are. Common trade terms the crew says in English on the job (breaker, contactor, capacitor, chiller) may stay in English in parentheses after the Spanish word.`;
 app.use(express.static(path.join(__dirname, 'public')));
 
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
@@ -375,7 +379,7 @@ Respond with ONLY a JSON object, no preamble and no markdown fences, in this exa
   "tenant_reply": "2-3 sentence plain message the tech can send the department head or staff member who reported it (kitchen, tennis, pool, front desk), saying what is happening and when it will be handled"
 }
 
-Rank 3-5 causes, highest odds first. Every cause must be plausible for THIS equipment type and THIS manufacturer. Do not offer diagnostics that do not apply to this equipment. If the history shows this is a repeat of a prior failure, say so plainly in history_flags. If the central plant status shows other plant equipment failing, weigh a plant-wide cause heavily and say so in systemic_flag.`;
+Rank 3-5 causes, highest odds first. Every cause must be plausible for THIS equipment type and THIS manufacturer. Do not offer diagnostics that do not apply to this equipment. If the history shows this is a repeat of a prior failure, say so plainly in history_flags. If the central plant status shows other plant equipment failing, weigh a plant-wide cause heavily and say so in systemic_flag.` + (wantsSpanish(req) ? SPANISH_NOTE : '');
 
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -509,7 +513,7 @@ function briefStamp(unit) {
 
 app.get('/api/unit/:apt/brief', auth, async (req, res) => {
   const unit = unitFull(getOrCreateUnit(req.params.apt).id);
-  const stamp = briefStamp(unit);
+  const stamp = briefStamp(unit) + (wantsSpanish(req) ? ':es' : '');
   const force = req.query.force === '1';
 
   if (!force && unit.ai_brief && unit.ai_brief_stamp === stamp) {
@@ -534,7 +538,7 @@ app.get('/api/unit/:apt/brief', auth, async (req, res) => {
 ${ctx}
 ${mfr ? '\nBrand context: ' + mfr.guidance.slice(0, 700) : ''}
 
-Write 2-4 short sentences, plain spoken, no preamble, no bullet points, no headings, no em dashes. Lead with the single most important thing about this equipment. Call out repeat failures, open safety device problems, in-warranty components, inspection or certificate dates, anything happening on the central plant that affects it, and anything that has bitten someone here before. If it is clean and unremarkable, say so briefly rather than padding. Do not restate the asset tag.`;
+Write 2-4 short sentences, plain spoken, no preamble, no bullet points, no headings, no em dashes. Lead with the single most important thing about this equipment. Call out repeat failures, open safety device problems, in-warranty components, inspection or certificate dates, anything happening on the central plant that affects it, and anything that has bitten someone here before. If it is clean and unremarkable, say so briefly rather than padding. Do not restate the asset tag.` + (wantsSpanish(req) ? SPANISH_NOTE : '');
 
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {

@@ -98,6 +98,14 @@ The PM schedule has five views: **Schedule**, **Rounds**, **Parts**, **Scorecard
 - Keeps working in a mechanical room or basement with no signal
 - Changes are queued on the phone and sync when the connection returns
 
+### English and Spanish
+- Every screen works in English or Spanish. Tap **Español** in the header (or under the sign-in box) to switch; tap **English** to switch back. The choice is saved on that phone.
+- Phones set to Spanish open in Spanish automatically.
+- The staff request page has the same button, so kitchen, housekeeping, and grounds staff can report problems in Spanish.
+- AI diagnosis and the equipment brief come back in Spanish when the app is in Spanish. Tags, model and serial numbers, fault codes, and part numbers stay as printed.
+- What people type (work order titles, notes, equipment names, building names) is shown as typed. Emails, texts, and the monthly report stay in English.
+- The Spanish words live in `public/es.js`. To fix or add a translation, add a line there: English on the left, Spanish on the right.
+
 ### Android app
 - Installs like any other app
 - Camera and gallery access for photos and data plate scans
