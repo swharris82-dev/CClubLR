@@ -1381,6 +1381,7 @@ Object.assign(window.ES_DICT, {
 "+ PM task": "+ Tarea de MP",
 "From data plate": "De la placa de datos",
 "Contracts per year": "Contratos por año",
+"Water side, piping, and venting": "Lado del agua, tuberías y ventilación",
 "events, 120 days": "eventos, 120 días",
 "Open it": "Abrirla",
 "Opening count": "Cantidad inicial",
