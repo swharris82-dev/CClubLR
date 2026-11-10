@@ -18,7 +18,8 @@ const SPANISH_NOTE = `\n\nLANGUAGE: The technician reading this has the app set 
 app.use(express.static(path.join(__dirname, 'public')));
 
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+// Read fresh on every call: a key saved in the app replaces the environment one.
+const aiKey = () => ops.aiKey();
 const ALLOW_SIGNUP = process.env.ALLOW_SIGNUP !== 'false';
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
@@ -318,8 +319,8 @@ function loopContext(unit) {
 }
 
 app.post('/api/triage', auth, async (req, res) => {
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not set on the server' });
+  if (!aiKey()) {
+    return res.status(500).json({ error: 'No Anthropic key. A manager can add one on the Team tab.' });
   }
   const { apt, report, error_code } = req.body || {};
   if (!report || !report.trim()) return res.status(400).json({ error: 'Describe the problem first' });
@@ -389,7 +390,7 @@ Rank 3-5 causes, highest odds first. Every cause must be plausible for THIS equi
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
+        'x-api-key': aiKey(),
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
@@ -423,8 +424,8 @@ Rank 3-5 causes, highest odds first. Every cause must be plausible for THIS equi
 // on an equipment registry line. Everything it returns is a suggestion the tech
 // checks against the plate before saving. It never invents a value it cannot read.
 app.post('/api/plate-read', auth, async (req, res) => {
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not set on the server' });
+  if (!aiKey()) {
+    return res.status(500).json({ error: 'No Anthropic key. A manager can add one on the Team tab.' });
   }
   const { image, media_type, system_type, manufacturer } = req.body || {};
   if (!image) return res.status(400).json({ error: 'No photo came through. Try again.' });
@@ -464,7 +465,7 @@ Transcribe the serial number character by character. Do not normalize it, do not
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
+        'x-api-key': aiKey(),
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
@@ -522,7 +523,7 @@ app.get('/api/unit/:apt/brief', auth, async (req, res) => {
   if (!force && unit.ai_brief && unit.ai_brief_stamp === stamp) {
     return res.json({ brief: unit.ai_brief, cached: true, at: unit.ai_brief_at });
   }
-  if (!ANTHROPIC_API_KEY) {
+  if (!aiKey()) {
     return res.json({ brief: '', unavailable: true });
   }
 
@@ -548,7 +549,7 @@ Write 2-4 short sentences, plain spoken, no preamble, no bullet points, no headi
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
+        'x-api-key': aiKey(),
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({

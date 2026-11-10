@@ -467,8 +467,29 @@ function drawTeam(){
       '<button class="btn" style="padding:7px 12px;font-size:12px" onclick="userSheet('+u.id+')">Review</button></div>').join('')+'</div>';
   h+='<div class="eyebrow">Active · '+act.length+'</div>'+act.map(card).join('');
   if(off.length) h+='<div class="eyebrow" style="margin-top:14px">Turned off</div>'+off.map(card).join('');
+  if(isMgr()) h+='<div class="panel" style="margin-top:14px" id="aiKeyPanel"><div class="eyebrow">AI key (diagnosis, data plate scan, report summary)</div><div class="dim">Checking</div></div>';
   h+='<div class="panel" style="margin-top:14px"><div class="eyebrow">What each role can do</div>'+TEAM.roles.map(r=>'<div style="margin-bottom:8px"><span class="tag rl-'+r.key+'">'+esc(r.label)+'</span> <span class="mid" style="font-size:13px">'+esc(r.help)+'</span></div>').join('')+'</div>';
   $('teamBody').innerHTML=h;
+  if(isMgr()) drawAiKey();
+}
+async function drawAiKey(check){
+  const box=$('aiKeyPanel'); if(!box) return;
+  let k; try{ k=await api('/settings/ai-key'+(check?'?check=1':'')); }catch(e){ box.innerHTML='<div class="eyebrow">AI key</div><div class="dim">'+esc(e.message)+'</div>'; return; }
+  const src={app:'Saved in the app',server:'Set on the server (Render)',none:'No key yet'}[k.source];
+  const st=k.check?(k.check.ok?'<span class="tag s-done">Working</span>':'<span class="tag late">Not working</span> <span class="dim" style="font-size:12px">'+esc(k.check.error||'')+'</span>'):'';
+  box.innerHTML='<div class="eyebrow">AI key (diagnosis, data plate scan, report summary)</div>'+
+    '<div class="mid" style="font-size:13px">'+esc(src)+(k.masked?' · <span style="font-family:var(--mono)">'+esc(k.masked)+'</span>':'')+(k.updated_by?' · by '+esc(k.updated_by)+' '+esc(ago(k.updated_at)):'')+'</div>'+
+    (st?'<div style="margin-top:6px">'+st+'</div>':'')+
+    '<label class="fl">New key from console.anthropic.com</label><input id="aiKeyIn" type="password" autocomplete="off" placeholder="sk-ant-..." style="font-family:var(--mono)">'+
+    '<div class="row" style="margin-top:10px">'+(k.masked?'<button class="btn-2" id="aiKeyTest">Test current key</button>':'')+'<button class="btn" id="aiKeySave">Check and save</button></div>'+
+    '<div class="dim" style="margin-top:8px;font-size:12px">The key is checked with Anthropic before it is saved, stays on the server, and is never shown in full again. A key saved here replaces the one on Render.</div>'+errBox('aiKeyMsg');
+  const t=$('aiKeyTest'); if(t) t.onclick=()=>{ t.disabled=true; t.textContent='Testing'; drawAiKey(true); };
+  $('aiKeySave').onclick=async()=>{
+    const key=$('aiKeyIn').value.trim(); if(!key) return showErr('aiKeyMsg',new Error('Paste the key first'));
+    const b=$('aiKeySave'); b.disabled=true; b.textContent='Checking';
+    try{ await api('/settings/ai-key',{method:'PUT',body:{key}}); toast('AI key saved and working'); drawAiKey(true); }
+    catch(e){ showErr('aiKeyMsg',e); b.disabled=false; b.textContent='Check and save'; }
+  };
 }
 function roleOpts(){ return TEAM.roles.filter(r=>ME.role==='admin'||r.key!=='admin').map(r=>[r.key,r.label]); }
 function userForm(){

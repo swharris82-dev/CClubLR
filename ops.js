@@ -285,6 +285,19 @@ function addDays(dateStr, n) {
 function daysBetween(a, b) { return Math.round((new Date(b + 'T12:00:00Z') - new Date(a + 'T12:00:00Z')) / 86400000); }
 function getSetting(k, d = null) { const r = db.prepare('SELECT value FROM settings WHERE key=?').get(k); return r ? r.value : d; }
 function setSetting(k, v) { db.prepare('INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(k, v == null ? null : String(v)); }
+
+// The Anthropic key. One saved in the app (Team tab, admins and managers)
+// wins over the ANTHROPIC_API_KEY environment variable, so a key can be
+// replaced without access to the hosting dashboard.
+function aiKey() { return getSetting('anthropic_api_key') || process.env.ANTHROPIC_API_KEY || ''; }
+const maskKey = k => k ? k.slice(0, 10) + '…' + k.slice(-4) : '';
+async function checkAiKey(key) {
+  const r = await fetch('https://api.anthropic.com/v1/models?limit=1', { headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' } });
+  if (r.ok) return { ok: true };
+  const d = await r.json().catch(() => ({}));
+  const msg = (d.error && d.error.message) || ('HTTP ' + r.status);
+  return { ok: false, status: r.status, error: r.status === 401 ? 'Anthropic rejected that key. Copy it again from the Console.' : msg };
+}
 function tempPassword() {
   const a = 'abcdefghjkmnpqrstuvwxyz23456789';
   const b = crypto.randomBytes(8);
@@ -837,8 +850,8 @@ async function emailMonthly(month) {
 }
 
 async function aiSummary(d) {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) throw new Error('The AI summary needs ANTHROPIC_API_KEY set on the server');
+  const key = aiKey();
+  if (!key) throw new Error('The AI summary needs an Anthropic key. Add one on the Team tab.');
   const facts = JSON.stringify({
     month: d.label, work_orders: d.wo, labor: d.labor, parts: { used: d.parts.used, low_stock: d.parts.low.map(p => p.name) },
     vendors: { spend: d.vendors.total, top: d.vendors.byVendor.slice(0, 4), expiring_contracts: d.vendors.expiring.map(c => ({ title: c.title, vendor: c.vendor, ends: c.end_date })) },
@@ -908,6 +921,31 @@ function seedDemo() {
 function mount(app, auth, hooks = {}) {
   const sign = hooks.sign;
   const mgr = u => u.role === 'admin' || u.role === 'manager';
+
+  /* ----- AI key ----- */
+  app.get('/api/settings/ai-key', auth, async (req, res) => {
+    if (!mgr(req.user)) return res.status(403).json({ error: 'Only a manager can see the AI key' });
+    const inApp = getSetting('anthropic_api_key'), env = process.env.ANTHROPIC_API_KEY || '';
+    const key = inApp || env;
+    const out = { source: inApp ? 'app' : env ? 'server' : 'none', masked: maskKey(key),
+      updated_at: getSetting('anthropic_api_key_at'), updated_by: getSetting('anthropic_api_key_by') };
+    if (key && req.query.check === '1') { try { Object.assign(out, { check: await checkAiKey(key) }); } catch (e) { out.check = { ok: false, error: 'Could not reach Anthropic: ' + e.message }; } }
+    res.json(out);
+  });
+  app.put('/api/settings/ai-key', auth, async (req, res) => {
+    if (!mgr(req.user)) return res.status(403).json({ error: 'Only a manager can change the AI key' });
+    const key = clip((req.body || {}).key, 300).replace(/\s+/g, '');
+    if (!/^sk-ant-/.test(key)) return res.status(400).json({ error: 'That does not look like an Anthropic key. It starts with sk-ant-' });
+    let c; try { c = await checkAiKey(key); } catch (e) { return res.status(502).json({ error: 'Could not reach Anthropic to check the key: ' + e.message }); }
+    if (!c.ok) return res.status(400).json({ error: c.error });
+    setSetting('anthropic_api_key', key); setSetting('anthropic_api_key_at', new Date().toISOString()); setSetting('anthropic_api_key_by', req.user.name);
+    res.json({ ok: true, source: 'app', masked: maskKey(key) });
+  });
+  app.delete('/api/settings/ai-key', auth, (req, res) => {
+    if (!mgr(req.user)) return res.status(403).json({ error: 'Only a manager can change the AI key' });
+    db.prepare("DELETE FROM settings WHERE key IN ('anthropic_api_key','anthropic_api_key_at','anthropic_api_key_by')").run();
+    res.json({ ok: true });
+  });
 
   /* ----- account ----- */
   app.get('/api/me', auth, (req, res) => {
@@ -1248,4 +1286,4 @@ function mount(app, auth, hooks = {}) {
 // go out without waiting for the next tick.
 function kick() { setTimeout(tick, 500); }
 
-module.exports = { mount, gate, useParts, announceAssignment, kick, ROLES, ROLE_LABEL, DEMO_USERS, publicUser, notifyPrefs };
+module.exports = { aiKey, mount, gate, useParts, announceAssignment, kick, ROLES, ROLE_LABEL, DEMO_USERS, publicUser, notifyPrefs };
