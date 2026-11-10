@@ -126,6 +126,9 @@ try {
   if (n) console.log(`  Added ${n} air handling unit(s) from the AHU sheet.`);
 } catch (e) { console.log('  Could not load AHU list: ' + e.message); }
 
+/* ================= LIFE SAFETY WALK: EXTINGUISHERS, EMERGENCY LIGHTS, EXITS, DOORS ================= */
+require('./lifesafety').mount(app, auth);
+
 /* ================= UNITS ================= */
 
 // Equipment type catalog. Drives the Record form and the diagnose tab.
