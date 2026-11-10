@@ -36,6 +36,9 @@ const clip = (s, n) => String(s == null ? '' : s).trim().slice(0, n);
 const isDate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ''));
 const escH = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const OPEN_SQL = `('new','open','in_progress','on_hold')`;
+// The club crest, inlined so the printed sheet works offline and in a new tab.
+let CREST = '';
+try { CREST = 'data:image/png;base64,' + require('fs').readFileSync(require('path').join(__dirname, 'public', 'crest.png')).toString('base64'); } catch (e) {}
 const canWork = u => u && ['admin', 'manager', 'tech'].includes(u.role);
 const isMgr = u => u && ['admin', 'manager'].includes(u.role);
 
@@ -355,46 +358,61 @@ ${areaRows.map(a => `<tr${a ? '' : ' class="bl"'}><td class="loc">${escH(a)}</td
 ${st.gaps.map(g => `<tr><td class="loc">${escH([g.building, g.area, g.location].filter(Boolean).join(' · '))}</td><td class="nt">${escH(g.recommend || (KIND[g.kind] || {}).label || '')}</td><td class="nt">${escH(g.note)}</td></tr>`).join('')}
 ${Array(4).fill('<tr class="bl"><td class="loc"></td><td class="nt"></td><td class="nt"></td></tr>').join('')}
 </tbody></table></section>`;
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Life safety walk, ${escH(monthName)}</title><style>
+  const crest = CREST ? `<img class="crest" src="${CREST}" alt="CCLR crest">` : '';
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Life safety walk, ${escH(monthName)}</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
 *{box-sizing:border-box}
-body{margin:0;background:#F3EFE5;font-family:-apple-system,"Segoe UI",Arial,sans-serif;color:#1A2436;font-size:10.5px}
-.page{max-width:1100px;margin:0 auto;background:#fff;padding:22px 24px 30px}
-.hd{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:3px solid #B79B5B;padding-bottom:8px;margin-bottom:6px}
-.club{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#4F6F99}
-h1{font-family:Georgia,serif;color:#1F3A63;margin:2px 0 0;font-size:22px}
-.meta{display:grid;grid-template-columns:auto 150px;gap:4px 8px;font-size:10px;align-items:end}
-.meta span{border-bottom:1px solid #1A2436;height:14px}
-.how{font-size:9.5px;color:#4A5468;margin:6px 0 2px}
-h2{font-family:Georgia,serif;color:#1F3A63;font-size:13.5px;margin:14px 0 4px;break-after:avoid}
-h2 .ct{font-family:-apple-system,"Segoe UI",Arial,sans-serif;font-size:9px;color:#7C8494;font-weight:normal;letter-spacing:.5px;margin-left:6px}
+:root{--navy:#1F3A63;--navy2:#2B4A78;--gold:#B79B5B;--gold2:#D8BE7C;--cream:#F3EFE5;--paper:#FBF9F4;--ink:#1A2436;--sky:#8DB8E0;--line:#C9C0AC;
+  --disp:'Libre Caslon Text',Georgia,'Times New Roman',serif;--body:Inter,-apple-system,'Segoe UI',Arial,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace}
+body{margin:0;background:var(--cream);font-family:var(--body);color:var(--ink);font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{max-width:1100px;margin:0 auto;background:#fff;padding:0 0 30px}
+.mast{background:var(--navy);color:var(--cream);display:flex;align-items:center;gap:16px;padding:12px 20px 12px 16px;border-bottom:4px solid var(--gold)}
+.mast .crest{height:74px;width:auto;flex-shrink:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.mast .ttl{flex:1;min-width:0}
+.club{font-family:var(--mono);font-size:8.5px;letter-spacing:2.4px;text-transform:uppercase;color:var(--gold2);font-weight:600}
+h1{font-family:var(--disp);font-weight:700;color:#fff;margin:4px 0 2px;font-size:25px;letter-spacing:.2px;line-height:1.05}
+.sub{font-size:9.5px;color:#C9D6E6;letter-spacing:.3px}
+.meta{display:grid;grid-template-columns:auto 165px;gap:7px 8px;font-size:9px;align-items:end;background:rgba(255,255,255,.06);border:1px solid rgba(216,190,124,.45);border-radius:3px;padding:8px 10px}
+.meta b{font-family:var(--mono);letter-spacing:1.4px;text-transform:uppercase;color:var(--gold2);font-weight:600;font-size:8px}
+.meta span{border-bottom:1px solid #C9D6E6;height:14px;color:#fff;font-size:10.5px;padding-left:2px}
+.body{padding:0 20px}
+.how{font-size:9.5px;color:#4A5468;margin:9px 0 2px;padding:6px 10px;background:var(--paper);border-left:3px solid var(--gold)}
+h2{font-family:var(--disp);font-weight:700;color:var(--navy);font-size:14px;margin:15px 0 5px;padding-bottom:3px;border-bottom:1.5px solid var(--gold);break-after:avoid;display:flex;align-items:baseline;gap:8px}
+h2 .ct{font-family:var(--mono);font-size:8px;color:#7C8494;font-weight:500;letter-spacing:1.2px;text-transform:uppercase}
 table.grid{border-collapse:collapse;width:100%;table-layout:fixed}
-.grid th,.grid td{border:1px solid #BDB5A3;padding:3px 4px;vertical-align:middle}
-.grid th{background:#F4F0E6;font-size:8.5px;text-align:center;line-height:1.15;font-weight:600}
+.grid th,.grid td{border:1px solid var(--line);padding:3px 4px;vertical-align:middle}
+.grid th{background:#E9EEF5;color:var(--navy);font-size:8.3px;text-align:center;line-height:1.15;font-weight:600;letter-spacing:.2px}
 .grid tr{height:24px;break-inside:avoid}
-.grid .tg{width:58px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px}
+.grid tbody tr:nth-child(even):not(.ar) td{background:#FCFBF8}
+.grid .tg{width:58px;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--navy)}
 .grid .loc{width:23%;text-align:left}
 .grid .ck{width:50px;text-align:center}
 section.keep{break-inside:avoid}
 .grid .ini{width:36px}
 .grid .nt{text-align:left}
-.grid tr.ar td{background:#1F3A63;color:#fff;font-size:8.5px;letter-spacing:1.4px;text-transform:uppercase;height:auto;padding:2px 5px}
-.grid tr.bl .tg{color:#9AA0AB}
-.sm{font-size:8.5px;color:#6A7282}
-.bx{display:inline-block;width:12px;height:12px;border:1.3px solid #1A2436;border-radius:2px;vertical-align:middle}
-.key{font-size:8.5px;color:#4A5468;margin:3px 0 0;line-height:1.45}
-.foot{margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;font-size:10px}
-.foot div{border-top:1px solid #1A2436;padding-top:3px}
-.bar{position:sticky;top:0;background:#1F3A63;padding:10px;text-align:center}
-.bar button{background:#D8BE7C;border:0;color:#1F3A63;font-weight:bold;padding:9px 18px;border-radius:3px;font-size:14px;cursor:pointer}
-@media print{body{background:#fff}.bar{display:none}.page{padding:0;max-width:none}@page{size:letter landscape;margin:.4in}}
+.grid tr.ar td{background:var(--navy);color:var(--gold2);font-family:var(--mono);font-size:8px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;height:auto;padding:2.5px 6px}
+.grid tr.bl .tg{color:#A8AEB8;font-weight:500}
+.sm{font-size:8.3px;color:#6A7282}
+.bx{display:inline-block;width:12px;height:12px;border:1.3px solid var(--navy);border-radius:2px;vertical-align:middle;background:#fff}
+.key{font-size:8.3px;color:#4A5468;margin:3px 0 0;line-height:1.5}
+.key b{color:var(--navy)}
+.foot{margin-top:18px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;font-size:9.5px;color:#4A5468}
+.foot div{border-top:1px solid var(--navy);padding-top:4px}
+.bar{position:sticky;top:0;background:var(--navy);padding:10px;text-align:center;z-index:2}
+.bar button{background:var(--gold2);border:0;color:var(--navy);font-weight:bold;padding:9px 18px;border-radius:3px;font-size:14px;cursor:pointer}
+@media print{body{background:#fff}.bar{display:none}.page{padding:0;max-width:none}
+  @page{size:letter landscape;margin:.35in}
+}
 </style></head><body>
 ${opts.noBar ? '' : '<div class="bar"><button onclick="window.print()">Print or save PDF</button></div>'}<div class="page">
-<div class="hd"><div><div class="club">The Country Club of Little Rock · Facilities</div><h1>Monthly Life Safety Walk</h1></div>
+<div class="mast">${crest}<div class="ttl"><div class="club">The Country Club of Little Rock · Est. 1902</div><h1>Monthly Life Safety Walk</h1><div class="sub">Facilities Department · Fire extinguishers, emergency lighting, exits, doors, alarm and sprinkler</div></div>
 <div class="meta"><b>Month</b><span>${opts.blankMonth ? '' : escH(monthName)}</span><b>Inspector</b><span></span><b>Date(s)</b><span></span></div></div>
+<div class="body">
 <div class="how">Check the box when the item passes. Write <b>X</b> in the box when it fails and note what you did. Every X gets a work order. Enter the sheet in Clubhouse IQ, Life safety tab, when the walk is done. ⚠ = failed last month.</div>
 ${h}
 <div class="foot keep"><div>Inspector signature</div><div>Reviewed by (Director of Facilities)</div><div>Date entered in Clubhouse IQ</div></div>
-</div></body></html>`;
+</div></div></body></html>`;
 }
 
 /* ================= routes ================= */
