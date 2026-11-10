@@ -1,0 +1,35 @@
+# Render blueprint for Clubhouse IQ.
+# One-click setup: https://render.com/deploy?repo=https://github.com/swharris82-dev/cclublr
+# Render asks for the values marked sync: false when you create it.
+services:
+  - type: web
+    name: clubhouse-iq
+    runtime: node
+    plan: starter            # the free tier sleeps and wipes the disk; real data needs Starter
+    region: ohio
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    healthCheckPath: /api/config
+    disk:
+      name: clubhouse-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATA_DIR
+        value: /var/data
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ANTHROPIC_API_KEY
+        sync: false          # paste the key from console.anthropic.com
+      - key: PROPERTY_NAME
+        value: Country Club of Little Rock
+      - key: PROPERTY_CITY
+        value: Little Rock, AR
+      - key: TZ_NAME
+        value: America/Chicago
+      - key: PUBLIC_URL
+        sync: false          # the app's address once Render shows it, for QR signs and alert links
