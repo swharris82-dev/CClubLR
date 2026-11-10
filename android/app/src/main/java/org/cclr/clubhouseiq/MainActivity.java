@@ -54,6 +54,8 @@ public class MainActivity extends Activity {
 
     private static final int REQ_FILE = 41;
     private static final int REQ_CAMERA_PERM = 42;
+    private static final int REQ_LIVE_PERM = 43;
+    private PermissionRequest pendingWebPerm;
     private static final String HOST = Uri.parse(BuildConfig.APP_URL).getHost();
     private static final int NAVY = Color.parseColor("#1F3A63");
 
@@ -161,12 +163,18 @@ public class MainActivity extends Activity {
 
             @Override
             public void onPermissionRequest(PermissionRequest request) {
-                // Camera or microphone for live diagnosis, only for our own site.
-                if (request.getOrigin() != null && HOST.equals(request.getOrigin().getHost())) {
-                    request.grant(request.getResources());
-                } else {
-                    request.deny();
+                // Camera and microphone for live video diagnosis, only for our
+                // own site. Android has to grant them to the app first.
+                if (request.getOrigin() == null || !HOST.equals(request.getOrigin().getHost())) { request.deny(); return; }
+                List<String> need = new ArrayList<>();
+                for (String r : request.getResources()) {
+                    if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(r) && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.CAMERA);
+                    if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(r) && checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.RECORD_AUDIO);
                 }
+                if (need.isEmpty()) { request.grant(request.getResources()); return; }
+                if (pendingWebPerm != null) pendingWebPerm.deny();
+                pendingWebPerm = request;
+                requestPermissions(need.toArray(new String[0]), REQ_LIVE_PERM);
             }
 
             @Override
@@ -290,6 +298,14 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] perms, int[] results) {
+        if (requestCode == REQ_LIVE_PERM) {
+            PermissionRequest r = pendingWebPerm; pendingWebPerm = null;
+            if (r == null) return;
+            boolean all = results.length > 0;
+            for (int g : results) if (g != PackageManager.PERMISSION_GRANTED) all = false;
+            if (all) r.grant(r.getResources()); else r.deny();
+            return;
+        }
         if (requestCode == REQ_CAMERA_PERM) {
             if (pendingParams != null || fileCallback != null) openChooser(pendingParams);
             return;

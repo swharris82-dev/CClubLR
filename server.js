@@ -6,6 +6,7 @@ const { db, getOrCreateUnit, unitFull } = require('./db');
 const { getProfile, listTypes, requiresErrorCode } = require('./profiles');
 const { listManufacturers, getManufacturer } = require('./manufacturers');
 const ops = require('./ops');
+const ai = require('./ai');
 
 const app = express();
 // Data plate photos arrive as base64 in the request body, so this has to be
@@ -18,7 +19,6 @@ const SPANISH_NOTE = `\n\nLANGUAGE: The technician reading this has the app set 
 app.use(express.static(path.join(__dirname, 'public')));
 
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const ALLOW_SIGNUP = process.env.ALLOW_SIGNUP !== 'false';
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
@@ -72,7 +72,7 @@ function auth(req, res, next) {
 // Tells the front end whether to show the login screen at all.
 app.get('/api/config', (req, res) => {
   const prop = db.prepare('SELECT name, city FROM properties WHERE id=1').get() || {};
-  res.json({ demo: DEMO_MODE, allowSignup: ALLOW_SIGNUP, property: prop.name || '', city: prop.city || '' });
+  res.json({ demo: DEMO_MODE, allowSignup: ALLOW_SIGNUP, property: prop.name || '', city: prop.city || '', ai: ai.ready(), live: ai.liveReady() });
 });
 
 
@@ -125,6 +125,55 @@ try {
   const n = require('./ahus').loadAhus();
   if (n) console.log(`  Added ${n} air handling unit(s) from the AHU sheet.`);
 } catch (e) { console.log('  Could not load AHU list: ' + e.message); }
+
+/* ================= BACKUP AND RESTORE ================= */
+
+// One file with everything in it. Used for safekeeping and for moving the
+// app to a new host. Admin only.
+const fs = require('fs');
+const os = require('os');
+const { DB_FILE } = require('./db');
+
+app.get('/api/admin/backup', auth, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Only an admin can download a backup' });
+  const tmp = path.join(os.tmpdir(), `ciq-backup-${Date.now()}.db`);
+  try {
+    await db.backup(tmp);
+    res.download(tmp, `clubhouse-iq-backup-${new Date().toISOString().slice(0, 10)}.db`, () => fs.unlink(tmp, () => {}));
+  } catch (e) { res.status(500).json({ error: 'Backup failed: ' + e.message }); }
+});
+
+app.post('/api/admin/restore', auth, express.raw({ type: 'application/octet-stream', limit: '300mb' }), (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Only an admin can restore a backup' });
+  if (DEMO_MODE) return res.status(400).json({ error: 'Restore is turned off in demo mode' });
+  const buf = req.body;
+  if (!Buffer.isBuffer(buf) || buf.length < 4096 || buf.slice(0, 15).toString() !== 'SQLite format 3') {
+    return res.status(400).json({ error: 'That is not a Clubhouse IQ backup file' });
+  }
+  const incoming = DB_FILE + '.incoming';
+  try {
+    fs.writeFileSync(incoming, buf);
+    const Database = require('better-sqlite3');
+    const test = new Database(incoming, { readonly: true });
+    const ok = test.prepare("SELECT COUNT(*) c FROM sqlite_master WHERE type='table' AND name IN ('units','users','jobs')").get().c === 3;
+    const users = ok ? test.prepare('SELECT COUNT(*) c FROM users').get().c : 0;
+    test.close();
+    if (!ok) { fs.unlinkSync(incoming); return res.status(400).json({ error: 'That file is a database, but not a Clubhouse IQ backup' }); }
+    if (!users) { fs.unlinkSync(incoming); return res.status(400).json({ error: 'That backup has no accounts in it, so nobody could sign in afterward' }); }
+    // Keep the current data beside it, in case the restore was a mistake.
+    try { db.pragma('wal_checkpoint(TRUNCATE)'); } catch (e) {}
+    db.close();
+    try { fs.copyFileSync(DB_FILE, DB_FILE + '.before-restore'); } catch (e) {}
+    ['-wal', '-shm'].forEach(x => { try { fs.unlinkSync(DB_FILE + x); } catch (e) {} });
+    fs.renameSync(incoming, DB_FILE);
+    res.json({ ok: true });
+    console.log('  Database restored from an uploaded backup. Restarting.');
+    setTimeout(() => process.exit(0), 800); // the host starts it again on the new data
+  } catch (e) {
+    try { fs.unlinkSync(incoming); } catch (x) {}
+    res.status(500).json({ error: 'Restore failed: ' + e.message });
+  }
+});
 
 /* ================= UNITS ================= */
 
@@ -315,9 +364,6 @@ function loopContext(unit) {
 }
 
 app.post('/api/triage', auth, async (req, res) => {
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not set on the server' });
-  }
   const { apt, report, error_code } = req.body || {};
   if (!report || !report.trim()) return res.status(400).json({ error: 'Describe the problem first' });
 
@@ -382,36 +428,93 @@ Respond with ONLY a JSON object, no preamble and no markdown fences, in this exa
 Rank 3-5 causes, highest odds first. Every cause must be plausible for THIS equipment type and THIS manufacturer. Do not offer diagnostics that do not apply to this equipment. If the history shows this is a repeat of a prior failure, say so plainly in history_flags. If the central plant status shows other plant equipment failing, weigh a plant-wide cause heavily and say so in systemic_flag.` + (wantsSpanish(req) ? SPANISH_NOTE : '');
 
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1600,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    if (!r.ok) {
-      const t = await r.text();
-      return res.status(502).json({ error: 'Diagnostic service error: ' + t.slice(0, 200) });
-    }
-    const data = await r.json();
-    const text = (data.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n');
-    const clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    let parsed;
-    try {
-      parsed = JSON.parse(clean);
-    } catch (e) {
-      return res.status(502).json({ error: 'Could not read diagnostic response', raw: clean.slice(0, 500) });
-    }
+    const parsed = await ai.askJson({ prompt, maxTokens: 4000 });
+    if (!Array.isArray(parsed.causes)) parsed.causes = [];
     res.json({ triage: parsed });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(e.kind === 'nokey' ? 503 : 502).json({ error: e.message });
   }
+});
+
+/* ================= AI STATUS ================= */
+
+// Runs a real test call against each AI service so a manager can see why
+// diagnosis is or is not working, in plain words.
+app.get('/api/ai/status', auth, async (req, res) => {
+  if (!['admin', 'manager'].includes(req.user.role)) {
+    return res.json({ ready: ai.ready(), live: ai.liveReady() });
+  }
+  try { res.json(await ai.status()); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ================= LIVE VIDEO DIAGNOSIS ================= */
+
+// The tech points the phone at the equipment and talks. Video and voice go
+// straight from the phone to Gemini Live. This route hands the phone a
+// single-use pass and the instructions for the session, built from the
+// equipment record the same way the written diagnosis is.
+function liveInstructions(unit, spanish, userName) {
+  const profile = getProfile(unit ? unit.system_type : null);
+  const mfr = unit && unit.manufacturer ? getManufacturer(unit.manufacturer) : null;
+  let t = `You are a senior facilities and HVAC technician on a live video call with ${userName || 'the on-site technician'} at the Country Club of Little Rock. You can see through the phone camera and hear the tech. The club has a central plant (water-cooled chiller, cooling tower, PHX-1 free cooling heat exchanger, boilers, pumps) feeding chilled and hot water to multizone air handlers and fan coils, commercial kitchens with walk-ins, a pool, and indoor tennis. Most clubhouse air handlers date to 1968. An Alerton BAS runs the plant.
+
+How to run the call:
+- Talk like a coworker standing next to him. Short sentences. One step at a time, then wait for what he sees or measures.
+- Say what you actually see in the video: nameplates, gauges, wiring, burn marks, ice, leaks, fault lights, display codes. If you cannot see something clearly, ask him to move closer, hold steady, or add light. Never pretend to read something you cannot read.
+- Ask for the fault code or reading before guessing on equipment that reports its own faults.
+- Work cheapest and most likely checks first. Give the expected reading with every measurement you ask for.
+- Safety comes first. Before any step near live voltage, rotating parts, gas, steam, hot water, refrigerant, or confined spaces, say the hazard and the lockout or PPE step in one sentence. If something looks unsafe, say stop.
+- If the problem looks like the central plant or the BAS rather than this one piece of equipment, say so.
+- When the cause is found, finish with: the cause, what fixed it or what part is needed, and anything to log.
+- Never use em dashes.`;
+  if (unit) {
+    t += `\n\n=== EQUIPMENT ON THIS CALL ===\n${buildHistoryContext(unit)}${loopContext(unit)}`;
+    t += `\n=== RULES FOR THIS EQUIPMENT TYPE ===\n${profile.guidance}\nStandard first move: ${profile.firstMove}`;
+    if (mfr) t += `\n=== ${unit.manufacturer} ===\nWhere codes are read: ${mfr.codes}\n${mfr.guidance}`;
+  } else {
+    t += `\n\nNo equipment record is open. Start by asking what he is looking at and have him show you the data plate.`;
+  }
+  if (spanish) t += `\n\nSpeak in clear, plain Latin American Spanish that a maintenance crew would use. Trade terms the crew says in English (breaker, contactor, capacitor, chiller) can stay in English.`;
+  return t.slice(0, 24000);
+}
+
+app.post('/api/live/token', auth, async (req, res) => {
+  if (!['admin', 'manager', 'tech'].includes(req.user.role)) return res.status(403).json({ error: 'Live diagnosis is for maintenance staff' });
+  const { apt, note } = req.body || {};
+  try {
+    const unit = apt ? unitFull(getOrCreateUnit(apt).id) : null;
+    let systemText = liveInstructions(unit, wantsSpanish(req), req.user.name);
+    if (note && String(note).trim()) systemText += `\n\nWhat was reported before the call: "${String(note).trim().slice(0, 600)}"`;
+    const pass = await ai.liveToken({ systemText, spanish: wantsSpanish(req) });
+    res.json(Object.assign(pass, { apt: unit ? unit.apt : null }));
+  } catch (e) {
+    res.status(e.kind === 'nokey' ? 503 : 502).json({ error: e.message });
+  }
+});
+
+// Turns the call transcript into a draft history entry the tech can edit.
+app.post('/api/live/summary', auth, async (req, res) => {
+  const { transcript, apt } = req.body || {};
+  const lines = Array.isArray(transcript) ? transcript : [];
+  const text = lines.map(l => `${l.who === 'tech' ? 'TECH' : 'AI'}: ${String(l.text || '').trim()}`).filter(l => l.length > 6).join('\n').slice(-14000);
+  if (text.length < 40) return res.status(400).json({ error: 'There was not enough conversation to summarize.' });
+  const prompt = `Below is the transcript of a live video diagnosis call between a maintenance technician and an AI assistant at the Country Club of Little Rock${apt ? `, about equipment ${apt}` : ''}. The tech's lines came from speech recognition and may have small errors.
+
+${text}
+
+Write a service history entry from it. Only use what was actually said. Do not invent readings or repairs. Never use em dashes. Respond with ONLY a JSON object:
+{
+  "reported": "the problem as it was first described, one sentence",
+  "diagnosis": "the cause that was found, or the most likely cause if it was not confirmed, one sentence",
+  "work_performed": "what the tech actually did or measured during the call, 1 to 3 sentences, or empty if nothing was done yet",
+  "error_code": "any fault code that was read, or empty",
+  "parts": "parts named as needed, or empty",
+  "follow_up": "anything left to do, or empty",
+  "priority": "emergency" | "same-day" | "normal" | "low"
+}` + (wantsSpanish(req) ? SPANISH_NOTE : '');
+  try { res.json({ summary: await ai.askJson({ prompt, maxTokens: 2000 }) }); }
+  catch (e) { res.status(502).json({ error: e.message }); }
 });
 
 /* ================= DATA PLATE READER ================= */
@@ -420,9 +523,6 @@ Rank 3-5 causes, highest odds first. Every cause must be plausible for THIS equi
 // on an equipment registry line. Everything it returns is a suggestion the tech
 // checks against the plate before saving. It never invents a value it cannot read.
 app.post('/api/plate-read', auth, async (req, res) => {
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not set on the server' });
-  }
   const { image, media_type, system_type, manufacturer } = req.body || {};
   if (!image) return res.status(400).json({ error: 'No photo came through. Try again.' });
 
@@ -457,41 +557,10 @@ Return ONLY a JSON object, with no markdown fence:
 Transcribe the serial number character by character. Do not normalize it, do not drop leading zeros, and do not correct what looks like a typo. Where a character is ambiguous between 0 and O, or 1 and I, use the most likely character and add "serial" to "unreadable" so the tech re-checks it.`;
 
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 900,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mt, data: image } },
-            { type: 'text', text: prompt }
-          ]
-        }]
-      })
-    });
-    if (!r.ok) {
-      const t = await r.text();
-      return res.status(502).json({ error: 'Plate reader error: ' + t.slice(0, 200) });
-    }
-    const data = await r.json();
-    const text = (data.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n');
-    const clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    let parsed;
-    try {
-      parsed = JSON.parse(clean);
-    } catch (e) {
-      return res.status(502).json({ error: 'Could not read the plate response', raw: clean.slice(0, 300) });
-    }
+    const parsed = await ai.askJson({ prompt, image, mediaType: mt, maxTokens: 2000 });
     res.json({ plate: parsed });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(e.kind === 'nokey' ? 503 : 502).json({ error: e.message });
   }
 });
 
@@ -519,7 +588,7 @@ app.get('/api/unit/:apt/brief', auth, async (req, res) => {
   if (!force && unit.ai_brief && unit.ai_brief_stamp === stamp) {
     return res.json({ brief: unit.ai_brief, cached: true, at: unit.ai_brief_at });
   }
-  if (!ANTHROPIC_API_KEY) {
+  if (!ai.ready()) {
     return res.json({ brief: '', unavailable: true });
   }
 
@@ -541,22 +610,7 @@ ${mfr ? '\nBrand context: ' + mfr.guidance.slice(0, 700) : ''}
 Write 2-4 short sentences, plain spoken, no preamble, no bullet points, no headings, no em dashes. Lead with the single most important thing about this equipment. Call out repeat failures, open safety device problems, in-warranty components, inspection or certificate dates, anything happening on the central plant that affects it, and anything that has bitten someone here before. If it is clean and unremarkable, say so briefly rather than padding. Do not restate the asset tag.` + (wantsSpanish(req) ? SPANISH_NOTE : '');
 
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 400,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    if (!r.ok) return res.json({ brief: '', unavailable: true });
-    const data = await r.json();
-    const text = (data.content || []).filter(c => c.type === 'text').map(c => c.text).join(' ').trim();
+    const text = (await ai.ask({ prompt, maxTokens: 1200 })).replace(/\s+/g, ' ').trim();
     const at = new Date().toISOString();
     db.prepare('UPDATE units SET ai_brief=?, ai_brief_at=?, ai_brief_stamp=? WHERE id=?')
       .run(text, at, stamp, unit.id);

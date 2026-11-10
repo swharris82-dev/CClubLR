@@ -3,6 +3,37 @@
 Equipment tracking, work history, and AI diagnostics for the Country Club of Little Rock.
 Node + SQLite. One codebase, no external database to configure. Forked from Unit IQ.
 
+## Version 2: what changed
+
+- **New look.** Bottom navigation on phones (Work, Equipment, Diagnose, Dashboard, More), a side rail on wide screens, and a cleaner card layout everywhere. The styling lives in `public/app.css`.
+- **Live video diagnosis.** On the Diagnose screen, Start live video opens the camera and microphone and connects the tech to Gemini Live. It sees the equipment, talks back out loud with captions, and already knows the open equipment's record, history, and plant status. Ending the call drafts a history entry to review and save. Code: `public/live-ui.js`, routes `/api/live/token` and `/api/live/summary` in `server.js`.
+- **AI that says what is wrong.** All AI calls go through `ai.js`. It works with a Google Gemini key, an Anthropic key, or both (one backs up the other). More > Check AI connection runs a real test of each key and reports the result in plain words.
+- **Backup and restore.** More > Back up data (admin) downloads the whole database as one file and can restore one. This is how the data moves to a new host.
+
+## Move to a new Render account
+
+1. On the old site, sign in as admin: More > Back up data > Download backup file. (If the old site cannot be reached any more, skip this and start fresh.)
+2. Create the new Render account at render.com and connect GitHub to it.
+3. New > Blueprint > pick `swharris82-dev/CClubLR`. Render reads `render.yaml` and sets up the service, a 1 GB disk, and the settings.
+4. When it asks, paste `GEMINI_API_KEY` (from aistudio.google.com, API keys). `ANTHROPIC_API_KEY` is optional.
+5. Deploy. Open the new address and create the first account. The first account is the admin.
+6. More > Back up data > Restore from a backup, and pick the file from step 1. The app restarts with all the old data and the old logins.
+7. More > Check AI connection. Everything should be green.
+8. In Render, add `PUBLIC_URL` with the new address so QR tags and emails point at it.
+
+The Android app has the old address built in (`android/app/build.gradle`, `APP_URL`). Change it to the new address and rebuild before handing out a new APK. The rebuilt app also asks for the microphone, which live video needs.
+
+## Environment variables for AI
+
+| Variable | Notes |
+|---|---|
+| `GEMINI_API_KEY` | Google Gemini. Runs written diagnosis, the plate reader, briefs, and is required for live video. |
+| `ANTHROPIC_API_KEY` | Anthropic Claude. Optional. Runs everything except live video, and backs up Gemini if both are set. |
+| `AI_PROVIDER` | Optional. `gemini` or `anthropic` to pick which goes first when both keys are set. |
+| `GEMINI_MODEL`, `GEMINI_LIVE_MODEL`, `ANTHROPIC_MODEL`, `GEMINI_VOICE` | Optional overrides. Defaults: `gemini-3.8-flash`, `gemini-3.8-live`, `claude-sonnet-5-5`, `Kore`. |
+
+Live video needs HTTPS (Render provides it) and a browser that allows camera and microphone. Calls run up to 30 minutes.
+
 ## What it does
 
 - **Equipment directory.** Every piece of equipment has a tag (BLR-1, CT-1, P-1, HP-CH-01) and a building (Central Plant, Clubhouse, Indoor Tennis Center, Pool Pavilion, and so on).
@@ -31,7 +62,7 @@ any phone, with no login and no laptop.
 4. Instance type: **Free**.
 5. Environment variables:
    - `DEMO_MODE` = `true`
-   - `ANTHROPIC_API_KEY` = your key
+   - `GEMINI_API_KEY` = your key
    - `JWT_SECRET` = any long random string
 6. Deploy. You get a URL like `clubhouse-iq.onrender.com`.
 
@@ -98,7 +129,7 @@ Open http://localhost:3000. The first account created becomes the manager.
 
 | Variable | Required | Notes |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | yes | From console.anthropic.com. Server-side only, never exposed to the browser. |
+| `GEMINI_API_KEY` or `ANTHROPIC_API_KEY` | yes | See the AI table above. Server-side only, never exposed to the browser. |
 | `JWT_SECRET` | yes in production | Any long random string. Sessions break if it changes. |
 | `DATA_DIR` | on Render | Set to `/var/data` so the database survives restarts. |
 | `ALLOW_SIGNUP` | optional | Set to `false` to close signups once your techs have accounts. |

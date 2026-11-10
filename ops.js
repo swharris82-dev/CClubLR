@@ -837,8 +837,8 @@ async function emailMonthly(month) {
 }
 
 async function aiSummary(d) {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) throw new Error('The AI summary needs ANTHROPIC_API_KEY set on the server');
+  const ai = require('./ai');
+  if (!ai.ready()) throw new Error('The AI summary needs GEMINI_API_KEY or ANTHROPIC_API_KEY set on the server');
   const facts = JSON.stringify({
     month: d.label, work_orders: d.wo, labor: d.labor, parts: { used: d.parts.used, low_stock: d.parts.low.map(p => p.name) },
     vendors: { spend: d.vendors.total, top: d.vendors.byVendor.slice(0, 4), expiring_contracts: d.vendors.expiring.map(c => ({ title: c.title, vendor: c.vendor, ends: c.end_date })) },
@@ -851,14 +851,7 @@ Here is the month's data as JSON:
 ${facts}
 
 Write 2 short paragraphs, plain and direct, no headings, no bullet points, no em dashes. First paragraph: what got done and the headline numbers that matter to a GM (work completed, PM compliance, cost avoided by doing work in-house, vendor spend). Second paragraph: what needs attention or a decision next month (expiring contracts, repeat-failure equipment that may need capital replacement, safety items, low stock). Only use facts from the data. If a number is zero or missing, do not make a point of it. Under 170 words total.`;
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 600, messages: [{ role: 'user', content: prompt }] })
-  });
-  if (!r.ok) throw new Error('Summary service error: ' + (await r.text()).slice(0, 160));
-  const data = await r.json();
-  return (data.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n').replace(/—/g, ',').trim();
+  return (await ai.ask({ prompt, maxTokens: 1500 })).replace(/—/g, ',').trim();
 }
 
 /* =================================================================

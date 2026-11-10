@@ -6,7 +6,8 @@ const fs = require('fs');
 const DATA_DIR = process.env.DATA_DIR || __dirname;
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-const db = new Database(path.join(DATA_DIR, 'clubhouseiq.db'));
+const DB_FILE = path.join(DATA_DIR, 'clubhouseiq.db');
+const db = new Database(DB_FILE);
 db.pragma('journal_mode = WAL');
 
 db.exec(`
@@ -209,4 +210,4 @@ function unitFull(unitId) {
   return unit;
 }
 
-module.exports = { db, getOrCreateUnit, unitFull, parseApt };
+module.exports = { db, DB_FILE, getOrCreateUnit, unitFull, parseApt };

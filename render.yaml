@@ -1,0 +1,32 @@
+# Render Blueprint for Clubhouse IQ.
+# In Render: New > Blueprint > pick this repo. Render reads this file and
+# builds the service, the disk, and the settings below. It will ask for the
+# values marked "sync: false" during setup.
+services:
+  - type: web
+    name: clubhouse-iq-cclr
+    runtime: node
+    plan: starter            # a disk needs a paid plan. Free plans wipe data on every restart.
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/config
+    autoDeploy: true
+    disk:
+      name: clubhouse-iq-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: DATA_DIR
+        value: /var/data
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PROPERTY_NAME
+        value: Country Club of Little Rock
+      - key: PROPERTY_CITY
+        value: Little Rock, AR
+      - key: TZ_NAME
+        value: America/Chicago
+      - key: GEMINI_API_KEY      # from aistudio.google.com. Runs diagnosis and live video.
+        sync: false
+      - key: ANTHROPIC_API_KEY   # optional backup for written diagnosis. Leave blank to skip.
+        sync: false
