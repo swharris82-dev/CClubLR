@@ -497,6 +497,7 @@ td b{color:var(--text);font-family:var(--mono);}
     <div class="tab" data-tab="history">History</div>
     <div class="tab" data-tab="map">Map</div>
     <div class="tab" data-tab="kitchen">Kitchen</div>
+    <div class="tab" data-tab="safety">Life safety</div>
     <div class="tab" data-tab="parts">Parts</div>
     <div class="tab" data-tab="vendors">Vendors</div>
     <div class="tab" data-tab="capital">Capital</div>
@@ -618,6 +619,7 @@ td b{color:var(--text);font-family:var(--mono);}
   <div id="tab-team" class="hide"><div id="teamBody"></div></div>
   <div id="tab-map" class="hide"><div id="mapBody"></div></div>
   <div id="tab-kitchen" class="hide"><div id="kitchenBody"></div></div>
+  <div id="tab-safety" class="hide"><div id="safetyBody"></div></div>
   <div id="tab-capital" class="hide"><div id="capitalBody"></div></div>
 
 </div>
@@ -712,7 +714,7 @@ async function loadTypes(){
 }
 
 /* ---------- tabs ---------- */
-const ALLTABS=['work','diagnose','record','history','map','kitchen','parts','vendors','capital','dash','reports','team'];
+const ALLTABS=['work','diagnose','record','history','map','kitchen','safety','parts','vendors','capital','dash','reports','team'];
 function workLoad(){ if(isStaff()) WORKVIEW='wo'; WORKVIEW==='pm'?loadPm():WORKVIEW==='events'?loadEvents():loadWos(); }
 function showTab(name){
   TAB=name;
@@ -730,6 +732,7 @@ function showTab(name){
   if(TAB==='work') workLoad();
   if(TAB==='map') loadMap();
   if(TAB==='kitchen') loadKitchen();
+  if(TAB==='safety') loadSafety();
   if(TAB==='capital') loadCapital();
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>showTab(t.dataset.tab));
@@ -1838,6 +1841,7 @@ function showDemoBanner(){
 }
 </script>
 <script src="/pm-ui.js"></script>
+<script src="/lifesafety-ui.js"></script>
 <script>document.querySelectorAll('.langBtn').forEach(function(b){b.textContent=window.LANG==='es'?'English':'Español';b.onclick=function(){toggleLang();};});</script>
 </body>
 </html>

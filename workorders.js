@@ -33,7 +33,7 @@ const DEPARTMENTS = [
   'Member', 'Other'
 ];
 const CATEGORIES = ['HVAC', 'Boiler', 'Cooling tower', 'Water treatment', 'Plumbing',
-  'Electrical', 'Refrigeration', 'Kitchen', 'Pool', 'Building', 'Grounds', 'PM', 'General'];
+  'Electrical', 'Refrigeration', 'Kitchen', 'Life safety', 'Pool', 'Building', 'Grounds', 'PM', 'General'];
 
 const OPEN_SQL = `('new','open','in_progress','on_hold')`;
 

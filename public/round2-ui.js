@@ -3,10 +3,10 @@
    everything here runs from functions called after the main script loads. */
 
 Object.assign(ROLE_TABS,{
-  admin:['work','diagnose','record','history','map','kitchen','parts','vendors','capital','dash','reports','team'],
-  manager:['work','diagnose','record','history','map','kitchen','parts','vendors','capital','dash','reports','team'],
-  tech:['work','diagnose','record','history','map','kitchen','parts','vendors','capital','dash','reports'],
-  viewer:['dash','map','work','kitchen','capital','vendors','reports'],
+  admin:['work','diagnose','record','history','map','kitchen','safety','parts','vendors','capital','dash','reports','team'],
+  manager:['work','diagnose','record','history','map','kitchen','safety','parts','vendors','capital','dash','reports','team'],
+  tech:['work','diagnose','record','history','map','kitchen','safety','parts','vendors','capital','dash','reports'],
+  viewer:['dash','map','work','kitchen','safety','capital','vendors','reports'],
   staff:['work','kitchen']
 });
 

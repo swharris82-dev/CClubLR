@@ -9,6 +9,7 @@ window.ES_DICT = {
 "History": "Historial",
 "Map": "Mapa",
 "Kitchen": "Cocina",
+"Life safety": "Seguridad contra incendios",
 "Parts": "Repuestos",
 "Vendors": "Proveedores",
 "Capital": "Capital",
