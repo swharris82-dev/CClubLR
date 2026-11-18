@@ -24,19 +24,28 @@ body{margin:0;background:var(--bg);font-family:'Inter',sans-serif;color:var(--te
 .sign img.qr{width:220px;height:220px;margin:14px auto 8px;display:block;}
 .sign p{margin:0;color:var(--mid);font-size:14px;line-height:1.45;}
 .sign .url{font-size:11px;color:#7C8494;margin-top:8px;word-break:break-all;}
+/* One full-page sign per sheet of letter paper. */
+@page{size:letter portrait;margin:0.5in;}
 @media print{
   .bar{display:none;}
-  body{background:#fff;}
-  .grid{display:block;padding:0;}
-  .sign{width:100%;height:48vh;margin:0 0 2vh;display:flex;flex-direction:column;justify-content:center;border-width:3px;}
-  .sign img.qr{width:260px;height:260px;}
+  body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .grid{display:block;padding:0;max-width:none;}
+  .sign{width:7.5in;height:9.8in;margin:0;padding:0.5in 0.4in;display:flex;flex-direction:column;justify-content:center;align-items:center;
+        border:6px double var(--navy);border-radius:14px;page-break-after:always;break-after:page;overflow:hidden;}
+  .sign:last-child{page-break-after:auto;break-after:auto;}
+  .sign img.crest{height:1.6in;}
+  .sign h2{font-size:46px;margin:0.2in 0 0.08in;}
+  .sign .b{font-size:20px;letter-spacing:4px;padding-bottom:0.12in;border-bottom:3px solid var(--gold);}
+  .sign img.qr{width:4in;height:4in;margin:0.3in auto 0.25in;}
+  .sign p{font-size:20px;line-height:1.5;}
+  .sign .url{font-size:12px;margin-top:0.2in;}
 }
 </style>
 </head>
 <body>
 <div class="bar">
   <b>Maintenance request signs</b>
-  <span>One sign per building. Print, laminate, and post near the time clock, kitchen, pro shop, and front desk. Scanning opens the request page with that building already picked.</span>
+  <span>One sign per building, one per page. Print, laminate, and post near the time clock, kitchen, pro shop, and front desk. Scanning opens the request page with that building already picked.</span>
   <button onclick="window.print()">Print</button>
 </div>
 <div class="grid" id="grid"></div>
