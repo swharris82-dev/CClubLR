@@ -313,7 +313,7 @@ function conflictsFor(ev) {
     if (hit) out.push({ type: 'vendor', id: c.id, title: `${c.vendor}: ${c.title}`, date: c.next_visit, building: c.covers });
   });
   db.prepare(`SELECT i.id, i.title, i.next_due, i.area FROM compliance_items i WHERE i.active=1 AND i.next_due IS NOT NULL AND date(i.next_due) BETWEEN date(?) AND date(?)`).all(from, to).forEach(i => {
-    if (eventMatches(ev, 'Clubhouse')) out.push({ type: 'kitchen', id: i.id, title: i.title, date: i.next_due, building: 'Clubhouse' });
+    if (eventMatches(ev, 'Clubhouse')) out.push({ type: i.area === 'Life safety' ? 'lifesafety' : 'kitchen', id: i.id, title: i.title, date: i.next_due, building: 'Clubhouse' });
   });
   return out;
 }
@@ -415,7 +415,7 @@ const TEMP_DEFAULTS = [
   ['Dish machine final rinse', 'hot', 180, null, 1, 'Dish room', null]
 ];
 function ensureKitchenDefaults() {
-  if (db.prepare('SELECT COUNT(*) c FROM compliance_items').get().c === 0) {
+  if (db.prepare(`SELECT COUNT(*) c FROM compliance_items WHERE area='Kitchen'`).get().c === 0) {
     const t = today();
     const ins = db.prepare('INSERT INTO compliance_items (title, area, freq_days, why, sort, next_due) VALUES (?,?,?,?,?,?)');
     COMPLIANCE_DEFAULTS.forEach((c, i) => ins.run(c[0], c[1], c[2], c[3], i, t));
@@ -458,7 +458,7 @@ function kitchenState() {
     p.expected7 = p.checks * 7;
     p.logged7 = days.reduce((s, d) => s + Math.min(d.n, p.checks), 0);
   });
-  const items = db.prepare(`SELECT i.*, v.name vendor_name, v.phone vendor_phone FROM compliance_items i LEFT JOIN vendors v ON v.id=i.vendor_id WHERE i.active=1 ORDER BY i.sort, i.id`).all()
+  const items = db.prepare(`SELECT i.*, v.name vendor_name, v.phone vendor_phone FROM compliance_items i LEFT JOIN vendors v ON v.id=i.vendor_id WHERE i.active=1 AND i.area='Kitchen' ORDER BY i.sort, i.id`).all()
     .map(i => Object.assign(i, { days: i.next_due ? daysBetween(t, i.next_due) : null, state: !i.last_done ? 'never' : daysBetween(t, i.next_due) < 0 ? 'late' : daysBetween(t, i.next_due) <= 14 ? 'soon' : 'ok' }));
   const current = items.filter(i => i.state === 'ok' || i.state === 'soon').length;
   const exp = points.reduce((s, p) => s + p.expected7, 0), got = points.reduce((s, p) => s + p.logged7, 0);
@@ -476,7 +476,7 @@ function binderHtml(days = 30) {
   const points = db.prepare('SELECT * FROM temp_points WHERE active=1 ORDER BY sort, id').all();
   const logs = db.prepare(`SELECT l.*, p.name FROM temp_logs l JOIN temp_points p ON p.id=l.point_id WHERE datetime(l.at) >= datetime(?, '-1 day') ORDER BY l.at`).all(from)
     .map(l => Object.assign(l, localParts(l.at))).filter(l => l.date >= from);
-  const items = db.prepare('SELECT * FROM compliance_items WHERE active=1 ORDER BY sort, id').all();
+  const items = db.prepare(`SELECT * FROM compliance_items WHERE active=1 AND area='Kitchen' ORDER BY sort, id`).all();
   const hist = db.prepare('SELECT * FROM compliance_log WHERE date(done_on) >= date(?, \'-400 days\') ORDER BY done_on DESC').all(t);
   const dates = []; for (let d = from; d <= t; d = addDays(d, 1)) dates.push(d);
   const cell = (p, d, am) => {
@@ -535,7 +535,7 @@ function seedDemo() {
       });
     }
   }
-  const items = db.prepare('SELECT * FROM compliance_items').all();
+  const items = db.prepare(`SELECT * FROM compliance_items WHERE area='Kitchen'`).all();
   if (items.length && !items.some(i => i.last_done)) {
     const lags = [150, 70, 95, 40, 12, 20, 60, 35, 200, 10];
     items.forEach((it, i) => {

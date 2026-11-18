@@ -496,6 +496,7 @@ function computeAlerts(user) {
   if (safety) push('warn', 'safety', `${safety} safety device${safety > 1 ? 's' : ''} out of service`, '', { tab: 'reports' });
 
   try { out.push(...require('./round2').alerts(user)); } catch (e) { /* optional module */ }
+  try { out.push(...require('./lifesafety').alerts(user)); } catch (e) { /* optional module */ }
   const rank = { critical: 0, warn: 1, info: 2 };
   return out.sort((a, b) => rank[a.level] - rank[b.level]);
 }
@@ -732,6 +733,7 @@ function monthlyData(monthIn) {
            vendors: { total: Math.round(vend.total), invoices: vend.n, byVendor, contractAnnual: Math.round(contractAnnual), expiring: contracts },
            byBuilding, byCategory, repeat, completed, openNow, pmOverdue, safety,
            pmScore: (() => { try { return require('./pm2').scorecard(start, end); } catch (e) { return null; } })(),
+           lifeSafety: (() => { try { return require('./lifesafety').monthSummary(start, end); } catch (e) { return null; } })(),
            summary: getSetting('summary:' + month) };
 }
 
@@ -772,6 +774,13 @@ ${d.pmScore ? `<div class="eb">Preventive maintenance</div>
   ${K(d.pmScore.out_of_range, 'Readings out of range', d.pmScore.readings + ' readings, ' + d.pmScore.repairs_from_readings + (d.pmScore.repairs_from_readings === 1 ? ' repair' : ' repairs') + ' opened')}
 </div>
 <p class="dim">Planned work is PM. The higher the planned share, the fewer surprises. Readings out of range are problems caught during PM, before they turned into breakdowns.</p>` : ''}
+${d.lifeSafety ? `<div class="eb">Life safety</div>
+<div class="kpis">
+  ${K(d.lifeSafety.score, 'Life safety readiness', 'out of 100')}
+  ${K(d.lifeSafety.checks, 'Device checks logged', d.lifeSafety.failed + ' failed')}
+  ${K(d.lifeSafety.out_of_service, 'Devices out of service', 'right now')}
+  ${K(d.lifeSafety.items_late, 'Contractor inspections past due', 'fire alarm, sprinklers, generator, elevator')}
+</div>` : ''}
 
 <div class="eb">Needs a decision or follow-up</div>
 <ul class="flags">

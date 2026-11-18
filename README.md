@@ -22,6 +22,7 @@ Repository: github.com/swharris82-dev/CClubLR
 | A filter change stalls because the filters aren't on the shelf | Each PM carries its parts kit, and the app builds the shopping list before the work comes due |
 | Replacement costs surprise the budget | A 10-year capital plan projects replacements from equipment age, condition, and inflation |
 | Vendor insurance and contracts expire without anyone noticing | Insurance, W-9s, and contract renewals are tracked with alerts |
+| Fire extinguishers, exit lights, AEDs, and fire doors get checked on paper, if at all | A life safety program: QR tag on every device, monthly checks on the phone, a failed check opens a work order, and a fire marshal binder prints in one tap |
 | No easy way to show leadership what maintenance accomplished | A printable monthly facilities report, with an optional AI-written summary |
 
 ---
@@ -80,6 +81,40 @@ The PM schedule has five views: **Schedule**, **Rounds**, **Parts**, **Scorecard
 - An out-of-range reading automatically opens a maintenance work order
 - Tracks scheduled services: hood cleaning, grease trap, fire suppression
 - One-tap printable inspector binder
+
+### Life safety program
+Everything the fire marshal, the state elevator inspector, and the insurance carrier ask about, in one place.
+
+- **Devices:** fire extinguishers, emergency lights and exit signs, AEDs, fire doors, sprinkler risers, the fire alarm panel, the generator, and elevators. Each gets a tag (FE-CH-01, EL-CH-03, AED-FC-01, ELV-CH-1) and a QR label. Add a whole floor at once with **How many**.
+- **In-house checks with pass/fail and readings:**
+  - Extinguishers: monthly (NFPA 10)
+  - Emergency lights and exit signs: monthly 30-second test and annual 90-minute test (NFPA 101)
+  - AEDs: monthly readiness, with pad and battery expiration dates
+  - Fire doors: monthly walk (NFPA 80)
+  - Sprinkler risers: monthly, with supply and system pressure readings (NFPA 25)
+  - Fire alarm panel: monthly, with battery age (NFPA 72)
+  - Generator: weekly inspection and monthly 30-minute load run with run time, load, and hour meter (NFPA 110)
+  - Elevators: monthly owner check, including the emergency phone and firefighter recall
+- **A failed item opens a work order** and marks the device out of service until it passes a check.
+- **Contractor inspections and certificates:** fire alarm annual, sprinkler quarterly/annual/5-year, fire line backflow, extinguisher annual service, fire door annual, generator load bank and transfer switch, elevator state inspection and certificate, contractor visits, Category 1 and Category 5 tests, AED program review. Each has its own schedule and history.
+- **Alerts:** devices out of service, checks due, inspections past due, AED pads or batteries, panel batteries, and the elevator certificate coming up for renewal.
+- **Scan a QR tag** on any device and the check that's due opens. Works offline; checks upload when the signal comes back.
+
+### Life safety reports
+A report builder with presets and options. Every report carries the club crest and the club's print style, and prints or saves as PDF.
+
+| Preset | What it is |
+|---|---|
+| Fire Marshal Binder | Crest cover page with contents, summary, contractor inspections, every device, deficiencies and fixes, expiring items, history, sign-off. Each section starts a new page for a 3-ring binder |
+| Program Summary | One report for the Director of Facilities or the GM |
+| Deficiencies and Corrective Actions | Every failed check, its work order, and whether it has passed since |
+| Inspections Due | A printable walk list with a box to tick |
+| Device Inventory | Every device with tag, location, details, and status |
+| Inspection History | Every check logged in the period, with readings |
+| Paper Log Sheets | Monthly sign-off sheets, one page per building, a box for each month. Checks already logged print in the boxes, or leave them blank |
+| AED Readiness / Elevator Compliance | Focused reports for those programs |
+
+Options: report title, date range (30 days, 90 days, 12 months, this year), device types, buildings, sections to include, group by building or device type, coming-due window, log sheet year, page breaks for binders, prepared-by name, and notes printed on the report. The monthly facilities report also gets a life safety block.
 
 ### Events calendar
 - Club events alongside PM, work orders, and vendor visits
@@ -214,6 +249,17 @@ End the checklist line with the unit and range in brackets:
 1. Open **Kitchen**, then **Inspector binder**.
 2. Tap **Print or Save PDF**.
 
+### Do a life safety check
+1. Scan the QR tag on the device, or open **More**, then **Life safety**, and tap the device.
+2. Tap **Pass** or **Fail** on each line and enter any readings.
+3. If you replaced pads, a battery, or had the extinguisher serviced, update the date on the same screen.
+4. Tap **Save check**. A fail opens a work order on its own.
+
+### Print the fire marshal binder or paper log sheets
+1. Open **Life safety**, then **Reports**.
+2. Tap **Fire marshal binder** or **Paper log sheets**, or pick a report and set the options.
+3. Tap **Build report**, then **Print or save PDF**.
+
 ### Run the monthly report (manager)
 1. Open **Reports**, then **Monthly facilities report**.
 2. Turn on **AI summary** if you want a written overview.
@@ -238,7 +284,8 @@ Keep working as normal. A banner shows you're offline. Your changes save on the 
 | `ops.js` | Users, parts, vendors, alerts, monthly report |
 | `round2.js` | Map, kitchen compliance, events, capital plan, photos, signatures |
 | `ahus.js` | The club's 12 air handlers from the AHU sheet |
-| `public/` | The app screens (`index.html`, `ops-ui.js`, `round2-ui.js`, `pm-ui.js`) |
+| `lifesafety.js` | Life safety devices, checks, contractor inspections, alerts, and the report builder |
+| `public/` | The app screens (`index.html`, `ops-ui.js`, `round2-ui.js`, `pm-ui.js`, `ls-ui.js`) |
 
 ### Run locally
 ```bash
