@@ -48,10 +48,13 @@ function explain(provider, status, bodyText) {
   } catch (e) { detail = String(bodyText || '').slice(0, 160); }
   const low = detail.toLowerCase();
   const who = NAME[provider], kv = KEYVAR[provider];
+  // The service's own words, so the real reason shows on the AI check screen.
+  // Keys are never echoed back by either service, so this is safe to show.
+  const said = detail ? ` ${who} said (${status}): "${String(detail).replace(/\s+/g, ' ').trim().slice(0, 200)}"` : ` (HTTP ${status})`;
   if (status === 401 || status === 403 || low.includes('api key not valid') || low.includes('invalid x-api-key') || low.includes('authentication'))
-    return new AiError(`The ${who} key on the server was rejected. Check ${kv} in the hosting settings.`, 'key', provider);
+    return new AiError(`The ${who} key on the server was rejected. Check ${kv} in the hosting settings.${said}`, 'key', provider);
   if (low.includes('credit balance') || low.includes('billing') || status === 402)
-    return new AiError(`The ${who} account is out of credit or has no billing set up. Add credit, then try again.`, 'billing', provider);
+    return new AiError(`The ${who} account is out of credit or has no billing set up. Add credit, then try again.${said}`, 'billing', provider);
   if (status === 429 || low.includes('quota') || low.includes('rate limit'))
     return new AiError(`${who} is turning requests away right now (rate or quota limit). Wait a minute and try again.`, 'quota', provider);
   if (status === 404 || low.includes('not_found') || low.includes('is not found') || low.includes('not supported'))
