@@ -30,3 +30,5 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY   # optional backup for written diagnosis. Leave blank to skip.
         sync: false
+      - key: PLANT_INGEST_KEY    # 24+ random characters. The plant gateway sends it to post BAS readings.
+        sync: false

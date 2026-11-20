@@ -55,6 +55,7 @@
     <div class="more-grid">
       <div class="tab" data-tab="map">Map<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4zM9 4v14M15 6v14"/></svg></div>
       <div class="tab wr" data-tab="lifesafety">Life safety<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c2.5 3 5 5.300 5 9.200A5 5 0 0 1 12 17a5 5 0 0 1-5-5.300c0-1.900.9-3.400 2.200-4.700.3 1.600 1.100 2.600 2.200 3.100C11 7.700 11 5 12 2.500zM6 21h12"/></svg></div>
+      <div class="tab nostaff" data-tab="plant">Plant<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M5 20V9l4 3V9l4 3V5h6v15M15 9h2M15 13h2"/></svg></div>
       <div class="tab" data-tab="kitchen">Kitchen<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v7a2 2 0 0 0 2 2v9M5 3v6M9 3v6M17 3c-1.7 1.5-2.5 3.6-2.5 6.5V13H17v8"/></svg></div>
       <div class="tab" data-tab="parts">Parts<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7v10l8 4 8-4V7l-8-4zM4 7l8 4 8-4M12 11v10"/></svg></div>
       <div class="tab" data-tab="vendors">Vendors<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7M7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM17.5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg></div>
@@ -197,6 +198,7 @@
   <div id="tab-vendors" class="hide"><div id="vendorsBody"></div></div>
   <div id="tab-team" class="hide"><div id="teamBody"></div></div>
   <div id="tab-map" class="hide"><div id="mapBody"></div></div>
+  <div id="tab-plant" class="hide"><div id="plantBody"></div></div>
   <div id="tab-kitchen" class="hide"><div id="kitchenBody"></div></div>
   <div id="tab-lifesafety" class="hide"><div id="lsBody"></div></div>
   <div id="tab-capital" class="hide"><div id="capitalBody"></div></div>
@@ -293,7 +295,7 @@ async function loadTypes(){
 }
 
 /* ---------- tabs ---------- */
-const ALLTABS=['work','diagnose','record','history','map','kitchen','lifesafety','parts','vendors','capital','dash','reports','team'];
+const ALLTABS=['work','diagnose','record','history','map','plant','kitchen','lifesafety','parts','vendors','capital','dash','reports','team'];
 function workLoad(){ if(isStaff()) WORKVIEW='wo'; WORKVIEW==='pm'?loadPm():WORKVIEW==='events'?loadEvents():loadWos(); }
 function showTab(name){
   TAB=name;
@@ -314,12 +316,13 @@ function showTab(name){
   if(TAB==='kitchen') loadKitchen();
   if(TAB==='capital') loadCapital();
   if(TAB==='lifesafety'&&window.loadLs) loadLs();
+  if(TAB==='plant'&&window.loadPlant) loadPlant(); else if(window.plantStop) plantStop();
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ closeMore(); showTab(t.dataset.tab); window.scrollTo(0,0); });
 
 /* ---------- navigation shell ---------- */
-const MORE_TABS=['map','kitchen','lifesafety','parts','vendors','capital','reports','team'];
-const TITLES={work:'Work',diagnose:'Diagnose',record:'Equipment',history:'Equipment',map:'Map',kitchen:'Kitchen',lifesafety:'Life safety',parts:'Parts',
+const MORE_TABS=['map','plant','kitchen','lifesafety','parts','vendors','capital','reports','team'];
+const TITLES={work:'Work',diagnose:'Diagnose',record:'Equipment',history:'Equipment',map:'Map',plant:'Central plant',kitchen:'Kitchen',lifesafety:'Life safety',parts:'Parts',
   vendors:'Vendors',capital:'Capital',dash:'Dashboard',reports:'Reports',team:'Team'};
 let AI_CFG={ai:true,live:true};
 function syncNav(){
@@ -1451,6 +1454,7 @@ function showDemoBanner(){
 <script src="/pm-ui.js"></script>
 <script src="/live-ui.js"></script>
 <script src="/ls-ui.js"></script>
+<script src="/plant-ui.js"></script>
 <script>document.querySelectorAll('.langBtn').forEach(function(b){b.textContent=window.LANG==='es'?'English':'Español';b.onclick=function(){toggleLang();};});</script>
 </body>
 </html>

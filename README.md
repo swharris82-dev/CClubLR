@@ -141,6 +141,13 @@ Options: report title, date range (30 days, 90 days, 12 months, this year), devi
 - What people type (work order titles, notes, equipment names, building names) is shown as typed. Emails, texts, and the monthly report stay in English.
 - The Spanish words live in `public/es.js`. To fix or add a translation, add a line there: English on the left, Spanish on the right.
 
+### Central plant monitor
+- More, then Plant. A live drawing of the plant: cooling tower and fan, York YK chiller with its OptiView status, CW and CHW pumps, PHX-1, the clubhouse loop, and the water-cooled walk-in. Pipes are colored by water temperature and show flow when the pump runs.
+- Alarms open and clear on their own: chiller shutdown (with the York panel message), short cycling, walk-in above 41°F, tower VFD not following the BAS, condenser water too cold, low chilled water delta T, PHX-1 on with no cooling, and the gateway going quiet. Each alarm lists what to check and turns into a work order with one tap. Active alarms also show on the dashboard alert list.
+- Readings, 4-hour trends, and a York fault lookup summarized from the service and operation manuals.
+- Data comes from a read-only BACnet gateway on the BAS network that posts to `/api/plant/ingest` with the `X-Plant-Key` header (`PLANT_INGEST_KEY`). The Gateway tab shows the point list, the BACnet object for each, and the last reading. Nothing in the app writes to the BAS.
+- Demo mode: with no gateway connected, the screen runs a simulation of the club's plant with seven scenarios taken from real events (flow switch trips, low temperature short cycling, the tower drive ignoring the BAS, low delta T, the walk-in losing condenser water, PHX-1 with no flow). Demo alarms never make real work orders.
+
 ### Android app
 - Installs like any other app
 - Camera and gallery access for photos and data plate scans
@@ -322,6 +329,7 @@ Keep the signing keystore (`.jks`) and its password somewhere safe. Every future
 
 ## Roadmap
 - Google Play release
+- BACnet gateway box for the plant monitor (reads devices 120, 5001 and 505002)
 - Pull hour meters and readings straight from the Alerton BAS instead of typing them
 - Live video and voice diagnosis through Gemini
 - Club-owned domain

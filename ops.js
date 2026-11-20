@@ -497,6 +497,7 @@ function computeAlerts(user) {
 
   try { out.push(...require('./round2').alerts(user)); } catch (e) { /* optional module */ }
   try { out.push(...require('./lifesafety').alerts(user)); } catch (e) { /* optional module */ }
+  try { out.push(...require('./plant').alerts(user)); } catch (e) { /* optional module */ }
   const rank = { critical: 0, warn: 1, info: 2 };
   return out.sort((a, b) => rank[a.level] - rank[b.level]);
 }
