@@ -121,6 +121,7 @@ require('./pm2').mount(app, auth);
 require('./lifesafety').mount(app, auth);
 require('./plant').mount(app, auth);
 require('./privacy').mount(app, auth);
+require('./native').mount(app, auth);
 
 // Air handling units from the club's AHU sheet. Adds any that are missing,
 // never overwrites ones already edited in the app.

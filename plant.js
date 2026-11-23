@@ -140,6 +140,7 @@ function evaluate() {
     if (hit && !cur) {
       db.prepare(`INSERT INTO plant_alarms (rule, level, equipment, title, detail, fault, started_at) VALUES (?,?,?,?,?,?,?)`)
         .run(r.id, r.level, r.eq, hit.title, hit.detail, hit.fault || '', now);
+      try { require('./native').plantAlarm({ rule: r.id, level: r.level, title: hit.title, detail: hit.detail }); } catch (e) { /* push is optional */ }
     } else if (hit && cur) {
       db.prepare('UPDATE plant_alarms SET detail=?, title=? WHERE id=?').run(hit.detail, hit.title, cur.id);
     } else if (!hit && cur) {

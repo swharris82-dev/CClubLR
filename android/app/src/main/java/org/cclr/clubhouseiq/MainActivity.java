@@ -67,6 +67,8 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> fileCallback;
     private Uri cameraUri;
     private WebChromeClient.FileChooserParams pendingParams;
+    private NativeFeatures nat;
+    private FrameLayout rootView;
 
     @Override
     protected void onCreate(Bundle saved) {
@@ -93,7 +95,10 @@ public class MainActivity extends Activity {
         root.addView(offlineView, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
         setContentView(root);
+        rootView = root;
         setupWebView();
+        nat = new NativeFeatures(this, web, HOST);
+        web.addJavascriptInterface(nat.bridge(), "CIQAndroid");
         applyEdgeToEdge(root);
         // Android 13+ predictive back. On Android 16 (target 36) onBackPressed() is no longer
         // called, so back has to come through this callback.
@@ -107,6 +112,8 @@ public class MainActivity extends Activity {
         } else {
             Uri data = getIntent() != null ? getIntent().getData() : null;
             web.loadUrl(data != null && HOST.equals(data.getHost()) ? data.toString() : BuildConfig.APP_URL);
+            // A photo shared in from another app waits until the page is ready.
+            nat.handleIntent(getIntent(), false);
         }
     }
 
@@ -134,12 +141,14 @@ public class MainActivity extends Activity {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 bar.setVisibility(View.VISIBLE);
+                if (nat != null) nat.onPageStarted();
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 bar.setVisibility(View.GONE);
                 CookieManager.getInstance().flush();
+                if (nat != null) nat.onPageReady();
             }
 
             @Override
@@ -285,6 +294,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (nat != null && nat.onActivityResult(requestCode, resultCode)) return;
         if (requestCode != REQ_FILE) {
             super.onActivityResult(requestCode, resultCode, data);
             return;
@@ -307,6 +317,7 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] perms, int[] results) {
+        if (nat != null && nat.onPermission(requestCode, results)) return;
         if (requestCode == REQ_LIVE_PERM) {
             PermissionRequest r = pendingWebPerm; pendingWebPerm = null;
             if (r == null) return;
@@ -434,6 +445,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        setIntent(intent);
+        // NFC tag taps, shared photos and app links go to the running page without a reload.
+        if (nat != null && nat.handleIntent(intent, true)) return;
         Uri data = intent.getData();
         if (data != null && HOST.equals(data.getHost())) web.loadUrl(data.toString());
     }
@@ -455,8 +469,10 @@ public class MainActivity extends Activity {
         root.requestApplyInsets();
     }
 
+    // Android 12 and older. Android 13+ uses the OnBackInvokedCallback registered in onCreate.
     @Override
     @SuppressWarnings("deprecation")
+    @android.annotation.SuppressLint("GestureBackNavigation")
     public void onBackPressed() {
         handleBack();
     }
@@ -483,12 +499,14 @@ public class MainActivity extends Activity {
         super.onPause();
         CookieManager.getInstance().flush();
         web.onPause();
+        if (nat != null) nat.onPause();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         web.onResume();
+        if (nat != null) nat.onResume(rootView);
     }
 
     @Override

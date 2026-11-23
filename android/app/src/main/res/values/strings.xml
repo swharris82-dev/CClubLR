@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Clubhouse IQ</string>
+    <string name="widget_desc">Open work, PM due today, and plant status</string>
+    <string name="sc_newwo">New work order</string>
+    <string name="sc_newwo_long">Create a work order</string>
+    <string name="sc_nfc">Scan tag</string>
+    <string name="sc_nfc_long">Scan an equipment tag</string>
+    <string name="sc_plant">Plant</string>
+    <string name="sc_plant_long">Central plant status</string>
 </resources>
