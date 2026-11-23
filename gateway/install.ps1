@@ -24,6 +24,11 @@ if (Get-ScheduledTask -TaskName $Task -ErrorAction SilentlyContinue) { Stop-Sche
 
 # ---- files
 Say 'Copying files'
+if (Test-Path $Dir) {
+    # Repair permissions left by version 1.0 of this installer, which locked the files themselves.
+    takeown /F $Dir /R /D Y 2>&1 | Out-Null
+    icacls $Dir /reset /T /C /Q 2>&1 | Out-Null
+}
 New-Item -ItemType Directory -Force -Path $Dir | Out-Null
 foreach ($f in 'ciq_gateway.py', 'config.example.json', 'requirements.txt', 'uninstall.cmd', 'uninstall.ps1', 'Gateway tools.cmd', 'README.md') {
     if (Test-Path (Join-Path $Src $f)) { Copy-Item (Join-Path $Src $f) $Dir -Force }
@@ -108,8 +113,10 @@ if (Test-Path $cfgPath) {
     Write-Host "Saved $cfgPath"
 }
 
-# ---- lock the folder to administrators and SYSTEM (config.json holds the key)
-icacls $Dir /inheritance:r /grant:r '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-18:(OI)(CI)F' /T /Q | Out-Null
+# ---- lock the folder to administrators and SYSTEM (config.json holds the key).
+# Set on the folder only; files and subfolders inherit it.
+icacls $Dir /grant:r '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-18:(OI)(CI)F' /Q | Out-Null
+icacls $Dir /inheritance:r /Q | Out-Null
 
 # ---- firewall: BACnet answers come back to this UDP port
 Say 'Firewall'
