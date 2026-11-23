@@ -1,0 +1,62 @@
+# Cloud builds for Clubhouse IQ (codemagic.io). No Mac needed.
+# Setup is in ios/README.md.
+workflows:
+  ios-testflight:
+    name: iPhone app to TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: Clubhouse IQ API key      # App Store Connect API key added in Codemagic > Team integrations
+    environment:
+      groups:
+        - apple                                     # APPLE_TEAM_ID
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: org.cclr.clubhouseiq
+    scripts:
+      - name: Generate the Xcode project
+        script: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+      - name: Signing for the app, widget and share extension
+        script: |
+          for id in org.cclr.clubhouseiq org.cclr.clubhouseiq.widget org.cclr.clubhouseiq.share; do
+            app-store-connect fetch-signing-files "$id" --type IOS_APP_STORE --create
+          done
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles --project ios/ClubhouseIQ.xcodeproj
+      - name: Build number
+        script: |
+          cd ios
+          agvtool new-version -all $(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0) + 1))
+      - name: Build
+        script: xcode-project build-ipa --project ios/ClubhouseIQ.xcodeproj --scheme ClubhouseIQ
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+
+  android-release:
+    name: Android app bundle for Google Play
+    instance_type: linux_x2
+    max_build_duration: 30
+    environment:
+      groups:
+        - android                                   # CIQ_KEYSTORE_B64, CIQ_KEYSTORE_PASS; optional GOOGLE_SERVICES_JSON
+      java: 17
+    scripts:
+      - name: Keys and Firebase config
+        script: |
+          echo "$CIQ_KEYSTORE_B64" | base64 --decode > /tmp/upload.jks
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json; fi
+      - name: Build
+        script: |
+          cd android
+          export CIQ_KEYSTORE=/tmp/upload.jks
+          ./gradlew bundleRelease
+    artifacts:
+      - android/app/build/outputs/bundle/release/*.aab

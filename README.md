@@ -323,7 +323,41 @@ See `SETUP.md` for the full list and step-by-step configuration.
 - Disk: mount at `/data`, 1 GB
 
 ### Android build
-Keep the signing keystore (`.jks`) and its password somewhere safe. Every future update to the app must be signed with the same key, and Google Play will reject an update signed with anything else.
+Targets Android 16 (API 36), which Google Play requires for new apps and updates.
+
+Signed release build (needs the Android SDK with platform 36 and build-tools 36):
+```
+cd android
+CIQ_KEYSTORE=/path/to/clubhouseiq-upload.jks CIQ_KEYSTORE_PASS=... gradle bundleRelease
+```
+The file to upload to Play is `android/app/build/outputs/bundle/release/app-release.aab`. Raise `versionCode` in `android/app/build.gradle` before every upload.
+
+`clubhouseiq-upload.jks` is the upload key (alias `clubhouseiq`). Turn on Play App Signing when you create the app, so Google holds the real signing key and a lost upload key can be reset through Play support. Never commit the keystore or its password.
+
+### Native apps (Android and iPhone)
+The apps add what a browser can't do, which is also what the app stores look for:
+- **NFC equipment tags.** Stick an NTAG213/215/216 tag on each unit. In the app, open the equipment and tap **Write NFC tag**. Tapping the tag later opens that equipment, even with the app closed. Tags hold the same link as the QR tags (`/?u=TAG`).
+- **Push alerts.** Plant alarms and emergencies (urgent channel / Time Sensitive on iPhone), new requests, and work assigned to you. Turn on under My account, This phone.
+- **Offline.** My account, Download for offline saves every equipment record and the open work. The app also refreshes it twice a day.
+- **Widgets.** Open work, PM due today, plant status. Android home screen; iPhone home and lock screen.
+- **On-device reading.** Record screen, **Read plate on phone** and **Scan barcode**. Works with no signal.
+- **Fingerprint / Face ID lock**, **share a photo into a work order** from the Photos app, and **shortcuts** (long-press the icon; on iPhone also Siri: "Log a work order in Clubhouse IQ").
+
+Server settings (Render, Environment):
+
+| Setting | For |
+| --- | --- |
+| `FIREBASE_SERVICE_ACCOUNT` | Android push. Firebase console > Project settings > Service accounts > Generate new private key. Paste the JSON on one line. |
+| `APNS_KEY`, `APNS_KEY_ID`, `APPLE_TEAM_ID` | iPhone push and tag links. See `ios/README.md`. |
+| `ANDROID_CERT_SHA256` | Android tag links open the app without asking. Play Console > Setup > App signing > SHA-256 (app signing key, then upload key, comma separated). |
+
+Android push also needs `android/app/google-services.json` (Firebase console > Add app > Android, package `org.cclr.clubhouseiq`). Without it the app builds and runs, just without push.
+
+The iPhone app is built in the cloud with Codemagic (`codemagic.yaml`). Steps are in `ios/README.md`.
+
+### Google Play listing links
+- Privacy policy: `https://clubhouse-iq.onrender.com/privacy.html`
+- Account deletion: `https://clubhouse-iq.onrender.com/delete-account.html` (signed-in users can also use My account, Request account deletion; admins handle requests under My account)
 
 ---
 

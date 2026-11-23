@@ -4,14 +4,14 @@ plugins {
 
 android {
     namespace 'org.cclr.clubhouseiq'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         applicationId "org.cclr.clubhouseiq"
         minSdk 26
-        targetSdk 35
-        versionCode 1
-        versionName "1.0"
+        targetSdk 36
+        versionCode 3
+        versionName "3.0"
         // Change this to point the app at a different server.
         buildConfigField "String", "APP_URL", "\"https://clubhouse-iq.onrender.com/\""
     }
@@ -41,4 +41,19 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+}
+
+dependencies {
+    implementation 'androidx.core:core:1.17.0'
+    // Push alerts. Needs app/google-services.json from the Firebase console to turn on.
+    implementation platform('com.google.firebase:firebase-bom:35.2.0')
+    implementation 'com.google.firebase:firebase-messaging'
+    // On-device nameplate text and barcode reading (bundled models, work offline)
+    implementation 'com.google.mlkit:text-recognition:16.0.1'
+    implementation 'com.google.mlkit:barcode-scanning:17.3.0'
+}
+
+// Firebase config is optional: without google-services.json the app builds and runs, just without push.
+if (file('google-services.json').exists()) {
+    apply plugin: 'com.google.gms.google-services'
 }

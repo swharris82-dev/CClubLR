@@ -225,7 +225,7 @@ function gate(req) {
   }
 
   // Everyone signed in can manage their own account.
-  if (p === '/api/me' || p === '/api/me/password' || p === '/api/alerts' || p === '/api/alerts/test' || p === '/api/notify/status') return null;
+  if (p === '/api/me' || p === '/api/me/password' || p === '/api/me/delete-request' || p === '/api/devices' || p === '/api/devices/test' || p === '/api/push/status' || p === '/api/alerts' || p === '/api/alerts/test' || p === '/api/notify/status') return null;
 
   if (role === 'tech') {
     if (p.startsWith('/api/users')) return 'Only a manager can manage accounts';
@@ -498,6 +498,7 @@ function computeAlerts(user) {
   try { out.push(...require('./round2').alerts(user)); } catch (e) { /* optional module */ }
   try { out.push(...require('./lifesafety').alerts(user)); } catch (e) { /* optional module */ }
   try { out.push(...require('./plant').alerts(user)); } catch (e) { /* optional module */ }
+  try { out.push(...require('./privacy').alerts(user)); } catch (e) { /* optional module */ }
   const rank = { critical: 0, warn: 1, info: 2 };
   return out.sort((a, b) => rank[a.level] - rank[b.level]);
 }
@@ -588,6 +589,7 @@ async function announceWorkOrder(w) {
     <p style="margin:0 0 10px;white-space:pre-wrap">${escH(w.description || '')}</p>
     ${w.requested_by ? `<p style="margin:0;color:#4A5466">From ${escH(w.requested_by)}${w.requester_dept ? ' · ' + escH(w.requester_dept) : ''}${w.requester_contact ? ' · ' + escH(w.requester_contact) : ''}</p>` : ''}`);
   const sms = `${isEm ? 'EMERGENCY' : 'New request'} #${w.id} ${where ? '(' + where + ') ' : ''}${w.title}${appUrl() ? ' ' + appUrl() : ''}`;
+  try { require('./native').workOrder(w); } catch (e) { /* push is optional */ }
   for (const { u, p } of recipients(kind)) {
     if (p.email) await sendEmail(u.email, subject, html, text, kind, w.id);
     if (p.sms && u.phone) await sendSms(u.phone, sms, kind, w.id);
@@ -597,6 +599,7 @@ async function announceWorkOrder(w) {
 async function announceAssignment(w, name) {
   const u = db.prepare('SELECT * FROM users WHERE name=? AND active=1').get(name);
   if (!u) return;
+  try { require('./native').assigned(w, name); } catch (e) { /* push is optional */ }
   const p = notifyPrefs(u).assigned || {};
   const subject = `Assigned to you: WO #${w.id} ${w.title}`;
   if (p.email) await sendEmail(u.email, subject, emailShell(subject, `<p>${escH([w.building, w.location].filter(Boolean).join(' · '))}</p><p style="white-space:pre-wrap">${escH(w.description || '')}</p>`), subject, 'assigned', w.id);

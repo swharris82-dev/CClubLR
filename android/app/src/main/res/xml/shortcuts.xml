@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="newwo" android:enabled="true" android:icon="@drawable/ic_sc_wo"
+        android:shortcutShortLabel="@string/sc_newwo" android:shortcutLongLabel="@string/sc_newwo_long">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="org.cclr.clubhouseiq"
+            android:targetClass="org.cclr.clubhouseiq.MainActivity" android:data="https://clubhouse-iq.onrender.com/?action=newwo" />
+    </shortcut>
+    <shortcut android:shortcutId="nfc" android:enabled="true" android:icon="@drawable/ic_sc_nfc"
+        android:shortcutShortLabel="@string/sc_nfc" android:shortcutLongLabel="@string/sc_nfc_long">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="org.cclr.clubhouseiq"
+            android:targetClass="org.cclr.clubhouseiq.MainActivity" android:data="https://clubhouse-iq.onrender.com/?action=nfc" />
+    </shortcut>
+    <shortcut android:shortcutId="plant" android:enabled="true" android:icon="@drawable/ic_sc_plant"
+        android:shortcutShortLabel="@string/sc_plant" android:shortcutLongLabel="@string/sc_plant_long">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="org.cclr.clubhouseiq"
+            android:targetClass="org.cclr.clubhouseiq.MainActivity" android:data="https://clubhouse-iq.onrender.com/?tab=plant" />
+    </shortcut>
+</shortcuts>

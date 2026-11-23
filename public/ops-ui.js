@@ -116,8 +116,29 @@ async function accountSheet(forcePw){
         '<div class="dim" style="margin-top:6px">'+(st.email?'Email is on.':'Email is not set up on the server yet.')+' '+(st.sms?'Texts are on.':'Texts are not set up on the server yet.')+'</div>';
     }
     h+='<button class="btn full" style="margin-top:12px" onclick="saveMe()">Save</button>'+errBox('meMsg')+'</div>';
+    if(ME.role==='admin') h+='<div class="panel" id="delReqs"><div class="eyebrow">Account deletion requests</div><span class="spin"></span></div>';
+    h+='<div class="panel"><div class="eyebrow">Delete my account</div><div class="dim" style="font-size:14px">Ask your administrator to delete your account and the personal details tied to it. Work records you made stay with the club.</div>'+
+       '<button class="btn-2 full" id="delMeBtn" style="margin-top:10px;color:var(--rose)" onclick="askDeleteMe()">Request account deletion</button>'+errBox('delMsg')+'</div>';
   }
+  h+='<div style="text-align:center;margin:6px 0 10px"><a href="/privacy.html" target="_blank" rel="noopener" style="font-size:13.5px">Privacy policy</a></div>';
   sheet(me.name,'My account',h);
+  if(!me.demo&&ME.role==='admin') drawDelReqs();
+}
+async function drawDelReqs(r){
+  const box=$('delReqs'); if(!box) return;
+  try{ r=r||(await api('/account-deletions')).requests; }catch(e){ box.innerHTML='<div class="eyebrow">Account deletion requests</div><div class="dim">'+esc(e.message)+'</div>'; return; }
+  box.innerHTML='<div class="eyebrow">Account deletion requests</div>'+(r.length?r.map(x=>'<div style="padding:8px 0;border-top:1px solid var(--edge)"><b>'+esc(x.name||x.email)+'</b><div class="dim" style="font-size:13px">'+esc(x.email)+' · '+esc(x.created_at)+(x.note?' · '+esc(x.note):'')+'</div>'+
+    '<button class="btn-2" style="margin-top:6px;color:var(--rose)" id="dr'+x.id+'" onclick="doneDelReq('+x.id+')">Delete this account</button></div>').join(''):'<div class="dim" style="font-size:14px">None open.</div>');
+}
+async function doneDelReq(id){
+  const b=$('dr'+id); if(b&&!b.dataset.sure){ b.dataset.sure='1'; b.textContent='Tap again to delete their name, email and sign-in'; return; }
+  try{ drawDelReqs((await api('/account-deletions/'+id+'/done',{method:'POST'})).requests); toast('Account deleted'); }catch(e){ toast(e.message); }
+}
+async function askDeleteMe(){
+  const b=$('delMeBtn');
+  if(!b.dataset.sure){ b.dataset.sure='1'; b.textContent='Tap again to send the request'; return; }
+  try{ await api('/me/delete-request',{method:'POST',body:{}}); b.textContent='Request sent to your administrator'; b.disabled=true; toast('Deletion request sent'); }
+  catch(e){ showErr('delMsg',e); }
 }
 async function savePw(){
   try{ await api('/me/password',{method:'POST',body:{current:$('pwC').value,next:$('pwN').value}}); ME.must_change=false; toast('Password updated'); closeSheet(); }

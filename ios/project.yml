@@ -1,0 +1,99 @@
+# Clubhouse IQ for iPhone. Generate the Xcode project with XcodeGen:
+#   brew install xcodegen && cd ios && xcodegen generate
+# Codemagic does this automatically (see codemagic.yaml at the repo root).
+name: ClubhouseIQ
+options:
+  bundleIdPrefix: org.cclr
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    MARKETING_VERSION: "3.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ${APPLE_TEAM_ID}
+    SWIFT_VERSION: "5.0"
+    CODE_SIGN_STYLE: Automatic
+targets:
+  ClubhouseIQ:
+    type: application
+    platform: iOS
+    sources: [App]
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Clubhouse IQ
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchStoryboardName: ""
+        UILaunchScreen: { UIColorName: "" }
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UIBackgroundModes: [remote-notification]
+        ITSAppUsesNonExemptEncryption: false
+        CIQAppURL: https://clubhouse-iq.onrender.com/
+        NSCameraUsageDescription: Take photos of equipment, data plates and repairs, and use live video diagnosis.
+        NSMicrophoneUsageDescription: Talk through a repair during live video diagnosis.
+        NSPhotoLibraryUsageDescription: Attach photos of equipment and repairs to work orders.
+        NFCReaderUsageDescription: Read and write the NFC tags on club equipment.
+        NSFaceIDUsageDescription: Unlock Clubhouse IQ with Face ID.
+        WKAppBoundDomains: [clubhouse-iq.onrender.com]
+        UIApplicationShortcutItems:
+          - { UIApplicationShortcutItemType: newwo, UIApplicationShortcutItemTitle: New work order, UIApplicationShortcutItemIconSymbolName: plus.square }
+          - { UIApplicationShortcutItemType: nfc, UIApplicationShortcutItemTitle: Scan equipment tag, UIApplicationShortcutItemIconSymbolName: wave.3.right }
+          - { UIApplicationShortcutItemType: plant, UIApplicationShortcutItemTitle: Central plant, UIApplicationShortcutItemIconSymbolName: building.2 }
+    entitlements:
+      path: App/ClubhouseIQ.entitlements
+      properties:
+        aps-environment: production
+        com.apple.developer.associated-domains: [applinks:clubhouse-iq.onrender.com]
+        com.apple.developer.nfc.readersession.formats: [NDEF, TAG]
+        com.apple.developer.usernotifications.time-sensitive: true
+        com.apple.security.application-groups: [group.org.cclr.clubhouseiq]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.cclr.clubhouseiq
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1,2"
+    dependencies:
+      - target: ClubhouseIQWidget
+      - target: ClubhouseIQShare
+  ClubhouseIQWidget:
+    type: app-extension
+    platform: iOS
+    sources: [Widget]
+    info:
+      path: Widget/Info.plist
+      properties:
+        CFBundleDisplayName: Clubhouse IQ
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension: { NSExtensionPointIdentifier: com.apple.widgetkit-extension }
+    entitlements:
+      path: Widget/Widget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.org.cclr.clubhouseiq]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.cclr.clubhouseiq.widget
+  ClubhouseIQShare:
+    type: app-extension
+    platform: iOS
+    sources: [ShareExtension]
+    info:
+      path: ShareExtension/Info.plist
+      properties:
+        CFBundleDisplayName: Clubhouse IQ
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule: { NSExtensionActivationSupportsImageWithMaxCount: 1 }
+    entitlements:
+      path: ShareExtension/Share.entitlements
+      properties:
+        com.apple.security.application-groups: [group.org.cclr.clubhouseiq]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.cclr.clubhouseiq.share
