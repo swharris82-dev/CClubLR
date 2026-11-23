@@ -1,0 +1,53 @@
+{
+  "server": "https://clubhouse-iq.onrender.com",
+  "key": "PASTE THE PLANT_INGEST_KEY FROM RENDER HERE",
+  "interval_seconds": 60,
+  "timeout_seconds": 6,
+
+  "bacnet": {
+    "address": "192.168.1.50/24",
+    "instance": 3999001,
+    "foreign_bbmd": "",
+    "ttl": 300
+  },
+
+  "devices": {
+    "120":    { "name": "BCM-ETH plant controller", "address": "192.168.1.43" },
+    "5001":   { "name": "York YK chiller (SC-EQ)", "address": "" },
+    "505002": { "name": "Tower fan VFD (ABB ACH580)", "address": "" }
+  },
+
+  "points": [
+    { "key": "lchwt",        "device": 5001,   "object": "analog-value,5",  "note": "LEAVING CH LIQ TEMP" },
+    { "key": "echwt",        "device": 5001,   "object": "analog-value,6",  "note": "ENTERING CH LIQ TEMP" },
+    { "key": "ecwt",         "device": 5001,   "object": "analog-value,10", "note": "ENTERING COND WATER TEMP" },
+    { "key": "lcwt",         "device": 5001,   "object": "analog-value,11", "note": "LEAVING COND WATER TEMP" },
+    { "key": "evap_psi",     "device": 5001,   "object": "analog-value,7",  "note": "EVAPORATOR PRESSURE" },
+    { "key": "cond_psi",     "device": 5001,   "object": "analog-value,8",  "note": "CONDENSER PRESSURE" },
+    { "key": "fla_pct",      "device": 5001,   "object": "analog-value,12", "note": "MOTOR CURRENT PCT FLA" },
+    { "key": "chw_sp",       "device": 5001,   "object": "analog-value,19", "note": "LEAVING CH LIQ TEMP ACT SP" },
+    { "key": "starts",       "device": 5001,   "object": "analog-value,27", "note": "NUMBER OF STARTS" },
+    { "key": "comp_running", "device": 5001,   "object": "binary-value,5",  "type": "bool", "note": "COMPR MOTOR STATUS" },
+    { "key": "fault_text",   "device": 5001,   "objects": ["analog-value,402", "analog-value,403"], "labels": ["SAFETY", "CYCLING"],
+      "type": "fault", "note": "UNIT SAFETY / CYCLING FAULT CODE. Name codes under fault_codes below." },
+
+    { "key": "tower_hz",     "device": 505002, "object": "analog-value,1",  "note": "OUTPUT FREQ (Hz)" },
+
+    { "key": "tower_signal", "device": 120, "object": "", "note": "Signal to tower fan, % (Mechanical System graphic)" },
+    { "key": "chws",         "device": 120, "object": "", "note": "CHW supply to building" },
+    { "key": "chwr",         "device": 120, "object": "", "note": "CHW return from building" },
+    { "key": "chw_gpm",      "device": 120, "object": "", "note": "CHW flow, gpm" },
+    { "key": "oa_db",        "device": 120, "object": "", "note": "Outside air temp" },
+    { "key": "oa_wb",        "device": 120, "object": "", "note": "Outside air wet bulb" },
+    { "key": "cw_pump",      "device": 120, "object": "", "type": "bool", "note": "Condenser water pump command or status" },
+    { "key": "chw_pump",     "device": 120, "object": "", "type": "bool", "note": "Building CHW pump command or status" },
+    { "key": "phx_on",       "device": 120, "object": "", "type": "bool", "note": "PHX-1 free cooling status" },
+    { "key": "phx_chw_in",   "device": 120, "object": "", "note": "PHX-1 CHW in temp" },
+    { "key": "phx_chw_out",  "device": 120, "object": "", "note": "PHX-1 CHW out temp" },
+    { "key": "walkin_temp",  "device": 120, "object": "", "note": "Walk-in cooler box temp (lower level Cooler)" }
+  ],
+
+  "fault_codes": {
+    "_example": "Put a York code number and its panel message here, like \"21\": \"LEAVING CHILLED LIQUID - LOW TEMPERATURE\""
+  }
+}
