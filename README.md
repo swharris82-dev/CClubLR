@@ -323,7 +323,20 @@ See `SETUP.md` for the full list and step-by-step configuration.
 - Disk: mount at `/data`, 1 GB
 
 ### Android build
-Keep the signing keystore (`.jks`) and its password somewhere safe. Every future update to the app must be signed with the same key, and Google Play will reject an update signed with anything else.
+Targets Android 16 (API 36), which Google Play requires for new apps and updates.
+
+Signed release build (needs the Android SDK with platform 36 and build-tools 36):
+```
+cd android
+CIQ_KEYSTORE=/path/to/clubhouseiq-upload.jks CIQ_KEYSTORE_PASS=... gradle bundleRelease
+```
+The file to upload to Play is `android/app/build/outputs/bundle/release/app-release.aab`. Raise `versionCode` in `android/app/build.gradle` before every upload.
+
+`clubhouseiq-upload.jks` is the upload key (alias `clubhouseiq`). Turn on Play App Signing when you create the app, so Google holds the real signing key and a lost upload key can be reset through Play support. Never commit the keystore or its password.
+
+### Google Play listing links
+- Privacy policy: `https://clubhouse-iq.onrender.com/privacy.html`
+- Account deletion: `https://clubhouse-iq.onrender.com/delete-account.html` (signed-in users can also use My account, Request account deletion; admins handle requests under My account)
 
 ---
 

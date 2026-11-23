@@ -225,7 +225,7 @@ function gate(req) {
   }
 
   // Everyone signed in can manage their own account.
-  if (p === '/api/me' || p === '/api/me/password' || p === '/api/alerts' || p === '/api/alerts/test' || p === '/api/notify/status') return null;
+  if (p === '/api/me' || p === '/api/me/password' || p === '/api/me/delete-request' || p === '/api/alerts' || p === '/api/alerts/test' || p === '/api/notify/status') return null;
 
   if (role === 'tech') {
     if (p.startsWith('/api/users')) return 'Only a manager can manage accounts';
@@ -498,6 +498,7 @@ function computeAlerts(user) {
   try { out.push(...require('./round2').alerts(user)); } catch (e) { /* optional module */ }
   try { out.push(...require('./lifesafety').alerts(user)); } catch (e) { /* optional module */ }
   try { out.push(...require('./plant').alerts(user)); } catch (e) { /* optional module */ }
+  try { out.push(...require('./privacy').alerts(user)); } catch (e) { /* optional module */ }
   const rank = { critical: 0, warn: 1, info: 2 };
   return out.sort((a, b) => rank[a.level] - rank[b.level]);
 }

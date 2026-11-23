@@ -25,7 +25,9 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowInsets;
 import android.view.WindowManager;
+import android.window.OnBackInvokedDispatcher;
 import android.webkit.CookieManager;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
@@ -92,6 +94,13 @@ public class MainActivity extends Activity {
 
         setContentView(root);
         setupWebView();
+        applyEdgeToEdge(root);
+        // Android 13+ predictive back. On Android 16 (target 36) onBackPressed() is no longer
+        // called, so back has to come through this callback.
+        if (Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::handleBack);
+        }
 
         if (saved != null) {
             web.restoreState(saved);
@@ -429,15 +438,37 @@ public class MainActivity extends Activity {
         if (data != null && HOST.equals(data.getHost())) web.loadUrl(data.toString());
     }
 
+    /**
+     * Android 15+ draws apps edge to edge (and Android 16 removes the opt-out), so the
+     * status bar and gesture bar sit on top of the page. Pad the content by the system bar
+     * and keyboard insets and let the navy root show behind the bars.
+     */
+    private void applyEdgeToEdge(FrameLayout root) {
+        if (Build.VERSION.SDK_INT < 35) return;
+        root.setBackgroundColor(NAVY);
+        root.setOnApplyWindowInsetsListener((v, insets) -> {
+            android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+            android.graphics.Insets ime = insets.getInsets(WindowInsets.Type.ime());
+            v.setPadding(bars.left, bars.top, bars.right, Math.max(bars.bottom, ime.bottom));
+            return WindowInsets.CONSUMED;
+        });
+        root.requestApplyInsets();
+    }
+
     @Override
+    @SuppressWarnings("deprecation")
     public void onBackPressed() {
-        if (offlineView.getVisibility() == View.VISIBLE) { super.onBackPressed(); return; }
+        handleBack();
+    }
+
+    private void handleBack() {
+        if (offlineView.getVisibility() == View.VISIBLE) { finish(); return; }
         // Let the app close an open sheet first, then go back in history.
         web.evaluateJavascript("(function(){var s=document.getElementById('sheetBg');if(s){closeSheet();return 'closed';}" +
                 "var p=document.querySelector('.photo-view');if(p){p.remove();return 'closed';}return 'none';})()", r -> {
             if (r != null && r.contains("closed")) return;
             if (web.canGoBack()) web.goBack();
-            else MainActivity.super.onBackPressed();
+            else finish();
         });
     }
 
