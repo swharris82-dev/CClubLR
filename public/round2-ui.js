@@ -19,46 +19,13 @@ async function loadMap(){
   try{ MAP=await api('/map'); drawMap(); }
   catch(e){ b.innerHTML='<div class="panel"><div class="note n-safe"><b>Failed</b>'+esc(e.message)+'</div></div>'; }
 }
-function mapSvg(){
-  const L=MAP.layout, W=MAP.canvas.w, H=MAP.canvas.h;
-  let s='<svg id="mapSvg" viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block;touch-action:'+(MAPEDIT?'none':'pan-y')+'" role="img" aria-label="Map of club buildings">'+
-    '<defs><pattern id="mow" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="40" height="40" fill="#DDE9D2"/><rect width="20" height="40" fill="#D5E4C8"/></pattern></defs>'+
-    '<rect width="'+W+'" height="'+H+'" fill="#E8EFDF"/>'+
-    '<path d="M0 60 C 200 20, 420 140, 620 60 S 950 30, 1000 90 L1000 0 L0 0Z" fill="url(#mow)" opacity=".9"/>'+
-    '<path d="M-20 1060 C 150 1000, 300 1120, 480 1070 S 820 980, 1020 1060 L1020 1320 L-20 1320Z" fill="url(#mow)" opacity=".9"/>'+
-    '<ellipse cx="880" cy="1180" rx="95" ry="55" fill="#BFD7EA" stroke="#A3C2DB" stroke-width="3"/>'+
-    '<circle cx="200" cy="1180" r="10" fill="#fff" stroke="#9FB38C" stroke-width="3"/><line x1="200" y1="1180" x2="200" y2="1130" stroke="#6B5320" stroke-width="3"/><path d="M200 1130 l24 8 -24 8z" fill="#B3362D"/>'+
-    '<path d="M500 1300 L500 720 M500 720 L880 720 M500 430 L500 250 L900 250" stroke="#D9D2C0" stroke-width="26" fill="none" stroke-linecap="round"/>'+
-    '<rect x="60" y="300" width="300" height="200" rx="10" fill="#E4E0D6" stroke="#D2CCBD"/>'+
-    Array.from({length:6},(_,i)=>'<line x1="'+(90+i*48)+'" y1="310" x2="'+(90+i*48)+'" y2="370" stroke="#fff" stroke-width="3"/><line x1="'+(90+i*48)+'" y1="430" x2="'+(90+i*48)+'" y2="490" stroke="#fff" stroke-width="3"/>').join('')+
-    '<text x="210" y="408" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="20" fill="#9A9383" letter-spacing="3">PARKING</text>'+
-    '<text x="500" y="1290" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="18" fill="#9A9383" letter-spacing="3">COUNTRY CLUB BLVD</text>'+
-    '<text x="170" y="1235" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="17" fill="#7E956B" letter-spacing="3">GOLF COURSE</text>';
-  MAP.buildings.forEach(b=>{
-    const r=L[b.name]; if(!r) return;
-    const c=ST_FILL[b.status]||ST_FILL.ok;
-    const words=b.name.split(' '), lines=[]; let cur='';
-    words.forEach(w=>{ if((cur+' '+w).trim().length>(r.w/16)&&cur){ lines.push(cur); cur=w; } else cur=(cur+' '+w).trim(); }); if(cur) lines.push(cur);
-    const fs=Math.max(20,Math.min(30,r.w/9));
-    const ty=r.y+r.h/2-(lines.length-1)*fs*0.6+fs*0.35;
-    s+='<g class="bld" data-b="'+esc(b.name)+'" style="cursor:'+(MAPEDIT?'move':'pointer')+'">'+
-      '<rect x="'+r.x+'" y="'+r.y+'" width="'+r.w+'" height="'+r.h+'" rx="8" fill="'+c[0]+'" stroke="'+c[1]+'" stroke-width="'+(b.status==='critical'?5:3)+'"'+(MAPEDIT?' stroke-dasharray="10 6"':'')+'/>'+
-      '<rect x="'+(r.x+6)+'" y="'+(r.y+6)+'" width="'+(r.w-12)+'" height="8" rx="3" fill="'+c[1]+'" opacity=".25"/>'+
-      lines.map((l,i)=>'<text x="'+(r.x+r.w/2)+'" y="'+(ty+i*fs*1.15)+'" text-anchor="middle" font-family="Libre Caslon Text,Georgia,serif" font-weight="700" font-size="'+fs+'" fill="#1A2436" pointer-events="none">'+esc(l)+'</text>').join('')+
-      (b.equipment?'<text x="'+(r.x+12)+'" y="'+(r.y+r.h-12)+'" font-family="IBM Plex Mono,monospace" font-size="17" fill="#4A5466" pointer-events="none">'+b.equipment+' eq</text>':'');
-    if(b.open) s+='<circle cx="'+(r.x+r.w-4)+'" cy="'+(r.y+4)+'" r="24" fill="'+c[1]+'" stroke="#fff" stroke-width="4"/><text x="'+(r.x+r.w-4)+'" y="'+(r.y+12)+'" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="700" font-size="22" fill="#fff" pointer-events="none">'+b.open+'</text>';
-    if(b.events&&b.events.length) s+='<g pointer-events="none"><rect x="'+(r.x+r.w-72)+'" y="'+(r.y+r.h-34)+'" width="62" height="24" rx="4" fill="#1F3A63"/><text x="'+(r.x+r.w-41)+'" y="'+(r.y+r.h-16)+'" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="14" fill="#D8BE7C">EVENT</text></g>';
-    if(MAPEDIT) s+='<rect class="rsz" data-b="'+esc(b.name)+'" x="'+(r.x+r.w-26)+'" y="'+(r.y+r.h-26)+'" width="26" height="26" fill="#1F3A63" style="cursor:nwse-resize"/>';
-    s+='</g>';
-  });
-  return s+'</svg>';
-}
+/* mapSvg() lives in map-art.js (illustrated aerial view). */
 function drawMap(){
   const n=MAP.buildings, em=n.filter(b=>b.status==='critical').length, wa=n.filter(b=>b.status==='warn').length;
   let h='<div class="panel" style="padding:10px"><div class="eyebrow" style="margin-bottom:6px">The grounds'+(MAPEDIT?' · arranging':'')+'</div>'+
     '<div class="legend" style="margin-bottom:8px;flex-wrap:wrap;display:flex;gap:12px;font-size:11px;font-family:var(--mono)">'+
-    [['critical','Emergency'],['warn','Needs attention'],['busy','Open work'],['ok','All clear']].map(([k,l])=>'<span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+ST_FILL[k][0]+';border:2px solid '+ST_FILL[k][1]+';margin-right:4px;vertical-align:-1px"></i>'+l+'</span>').join('')+'</div>'+
-    '<div id="mapWrap" style="border-radius:4px;overflow:hidden;border:1px solid var(--edge)">'+mapSvg()+'</div>'+
+    [['critical','Emergency'],['warn','Needs attention'],['busy','Open work'],['ok','All clear']].map(([k,l])=>'<span><i style="display:inline-block;width:12px;height:12px;border-radius:4px;background:#FFFDF8;border:3px solid '+(typeof MAP_HALO!=='undefined'?MAP_HALO[k]:ST_FILL[k][1])+';margin-right:5px;vertical-align:-2px"></i>'+l+'</span>').join('')+'</div>'+
+    '<div id="mapWrap" style="border-radius:10px;overflow:hidden;border:1px solid var(--edge);box-shadow:0 2px 10px rgba(26,36,54,.12)">'+mapSvg()+'</div>'+
     '<div class="dim" style="margin-top:6px;font-size:11px">'+(MAPEDIT?'Drag buildings into place. Drag the dark corner to resize.':'Tap a building to see its equipment and open work. Schematic, not to scale.')+'</div>';
   if(isMgr()) h+='<div class="acts" style="margin-top:10px">'+(MAPEDIT?'<button class="btn" onclick="saveMapLayout()">Save layout</button><button class="btn-2" onclick="MAPEDIT=false;loadMap()">Cancel</button><button class="btn-2" onclick="resetMapLayout()">Reset</button>':'<button class="btn-2" onclick="MAPEDIT=true;drawMap()">Arrange buildings</button>')+'</div>';
   h+='</div>';
