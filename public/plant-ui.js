@@ -55,7 +55,8 @@ const PL_SCEN=[
   ['tower','Tower VFD ignoring the BAS','The drive runs 60 Hz on AI1 while the BAS signal reads 3%. Condenser water gets overcooled.'],
   ['lowdt','Low chilled water delta T','Like 10/13: 833 gpm and about a 3.5°F delta T. Points to 3-way valves, wide-open coil valves, or too much pump flow.'],
   ['walkin','Walk-in loses condenser water','Chiller off, the BAS stops the condenser water pump, and the water-cooled walk-in trips on head pressure.'],
-  ['phx','PHX-1 free cooling with no flow','Like 11/13 and 11/14: PHX-1 on, its temperatures frozen, chilled water supply climbing, front of house warming.']
+  ['phx','PHX-1 free cooling with no flow','Like 11/13 and 11/14: PHX-1 on, its temperatures frozen, chilled water supply climbing, front of house warming.'],
+  ['ahufan','Kitchen AHU fan failure','AHU-7 is commanded on but the supply fan never proves. Kitchen heat builds and the alarm goes critical.']
 ];
 const PL_FAULTS=[
   ['LEAVING CHILLED LIQUID - FLOW SWITCH OPEN','c','The chilled water flow switch stayed open about 5 seconds while running, or never closed at the end of prelube. Restarts on its own once the switch closes.',['Building CHW pump running? Hz and amps at the drive, gpm on the BAS.','Changeover valves: in PHX-1 position the water can bypass the evaporator (11/7 trip).','Manual isolation valves, CHW strainer, air in the loop.','Flow switch paddle and wiring at the I/O board.']],
@@ -108,6 +109,7 @@ function plTc(t){
 function plSimReset(){
   PLSIM={t:300,st:0,run:true,fault:'',starts:[200],ar:0,lchw:44,chwr:52,chws:44.4,flow:480,ecwt:78,lcwt:86,oaDb:65,oaWb:58,sig:55,hz:33,fla:60,walk:36,cwp:true,chwp:true,phx:false,phxIn:57.5,phxOut:52.7,load:150,sp:44};
   PLHIST=[];PLDEMO_ALM={};PLDEMO_LOG=[];PLDEMO_ACK=new Set();
+  if(typeof ahuSimReset==='function')ahuSimReset();
   const keep=PLSCEN;PLSCEN='normal';for(let i=0;i<240;i++)plStep(true);PLSCEN=keep;PLSIM.st=0;
 }
 function plStep(warm){
@@ -148,6 +150,7 @@ function plStep(warm){
   const ms=Date.now()-(PLHIST.length?0:0);
   PLHIST.push({t:s.t,lchwt:s.lchw,chwr:s.chwr,chws:s.chws,ecwt:s.ecwt,lcwt:s.lcwt,oa_wb:s.oaWb,tower_sig_hz:s.sig*.6,tower_hz:s.hz,fla_pct:s.fla,walkin_temp:s.walk});
   if(PLHIST.length>1440)PLHIST.shift();
+  if(typeof ahuSimStep==='function')ahuSimStep(s);
   if(!warm)plDemoAlarms();
 }
 function plTrip(m){PLSIM.run=false;PLSIM.fault=m;plDemoLog('Chiller tripped: '+m)}
@@ -179,6 +182,7 @@ function plRules(V){
   if(V.sig!=null&&V.hz!=null&&Math.abs(V.sig*.6-V.hz)>10)out.push({rule:'tower',level:'warn',equipment:'Tower VFD 505002',title:'Tower VFD not following the BAS',detail:'BAS signal '+Math.round(V.sig)+'% (about '+Math.round(V.sig*.6)+' Hz) but the drive runs '+Math.round(V.hz)+' Hz.'});
   if(V.run&&V.ecwt<55)out.push({rule:'coldcw',level:'warn',equipment:'Condenser water',title:'Condenser water too cold for the chiller',detail:'Entering condenser water '+plF(V.ecwt)+'°F.'});
   if(V.run&&V.fla>45&&V.flow>300&&dt!=null&&dt<5)out.push({rule:'lowdt',level:'warn',equipment:'Chilled water loop',title:'Low chilled water delta T',detail:'Delta T '+dt.toFixed(1)+'°F at '+Math.round(V.flow)+' gpm.'});
+  if(typeof plAhuRules==='function')out.push(...plAhuRules(V));
   if(V.phx&&V.chws>50)out.push({rule:'phx',level:'critical',equipment:'PHX-1 heat exchanger',title:'PHX-1 on but chilled water is not cooling',detail:'CHW supply '+plF(V.chws)+'°F and climbing. PHX-1 CHW in/out '+plF(V.phxIn)+'/'+plF(V.phxOut)+'°F, not changing.'});
   return out;
 }
@@ -368,7 +372,7 @@ function plUpdateSvg(V,alarms){
   $('plPhxTxt').textContent=V.phx?'FREE COOLING ON':'OFF';$('plPhxTxt').setAttribute('fill',V.phx?'#7fd8a6':'#7f97b5');
   const warm=V.chws>50;document.querySelectorAll('.plWin').forEach(x=>x.setAttribute('fill',warm?'#ffb070':'#ffe7a6'));
   const hal={tower:0,chiller:0,walk:0,phx:0,bld:0},lv={};
-  alarms.forEach(a=>{const e=PL_EQ[a.rule];if(e){hal[e]=1;if(a.level==='critical'||lv[e]!=='critical')lv[e]=a.level}});
+  alarms.forEach(a=>{const e=PL_EQ[a.rule]||(String(a.rule).startsWith('ahu.')?'bld':'');if(e){hal[e]=1;if(a.level==='critical'||lv[e]!=='critical')lv[e]=a.level}});
   Object.keys(hal).forEach(k=>{const h=$('plH'+k);h.classList.toggle('on',!!hal[k]);h.classList.toggle('pl-warnh',lv[k]==='warn')});
 }
 
@@ -389,7 +393,7 @@ function plStartTimers(){
 }
 function plSetMode(m){PLFORCE=m;PLMODE=m;if(m==='demo'&&!PLSIM)plSimReset();plBuilt='';drawPlant();plStartTimers()}
 function drawPlant(){
-  const nav=[['plant','Plant'],['trends','Trends'],['faults','York faults'],['setup','Gateway']];
+  const nav=[['plant','Plant'],['ahus','Air handlers'],['trends','Trends'],['faults','York faults'],['setup','Gateway']];
   let h='<div class="filters">'+nav.map(([k,l])=>'<div class="'+(PLVIEW===k?'on':'')+'" onclick="PLVIEW=\''+k+'\';plBuilt=\'\';drawPlant()">'+l+'</div>').join('')+'</div>';
   h+='<div class="plbar">';
   if(PLMODE==='live')h+='<span class="plmode pl-live"><i></i>Live from the BAS</span><span class="dim" style="font-size:13px" id="plWhen"></span>'+
@@ -404,8 +408,11 @@ function drawPlant(){
   if(PLVIEW==='plant'){
     h+='<div class="plfig" id="plFig">'+plSvg()+'</div><div class="plhint">Swipe the drawing sideways to see the whole plant.</div>'+
       '<div class="panel"><div class="eyebrow">Active alarms <span id="plAlmN"></span></div><div id="plAlm"></div></div>'+
+      (typeof ahuStripHtml==='function'?ahuStripHtml():'')+
       '<div class="panel"><div class="eyebrow">Readings</div><div class="pltiles" id="plTiles"></div></div>'+
       '<div class="panel"><div class="eyebrow">'+(PLMODE==='demo'?'Demo event log':'Alarm history')+'</div><div class="pllog" id="plLog"></div></div>';
+  }else if(PLVIEW==='ahus'){
+    h+=ahuViewHtml();
   }else if(PLVIEW==='trends'){
     h+='<div class="panel"><div class="plbar" style="justify-content:space-between"><div class="eyebrow" style="margin:0">Last 4 hours</div>'+
       '<select aria-label="Trend" onchange="PLTREND=this.value;plChart()">'+Object.entries(PL_TRENDS).map(([k,t])=>'<option value="'+k+'"'+(k===PLTREND?' selected':'')+'>'+t.n+'</option>').join('')+'</select></div>'+
@@ -428,7 +435,8 @@ function plRefresh(){
   if(!$('plantBody')||TAB!=='plant')return;
   const V=plView(),A=plAlarms();
   if($('plWhen'))$('plWhen').textContent=PLMODE==='demo'?'Plant time '+V.clock:V.clock;
-  if(PLVIEW==='plant'){plUpdateSvg(V,A);plAlarmCards(A);plTiles(V);plLog()}
+  if(PLVIEW==='plant'){plUpdateSvg(V,A);plAlarmCards(A);plTiles(V);plLog();if(typeof ahuStrip==='function')ahuStrip(A)}
+  if(PLVIEW==='ahus')ahuRefresh(V,A);
   if(PLVIEW==='trends'&&PLMODE==='demo')plChart();
 }
 function plAlarmCards(A){
@@ -436,7 +444,7 @@ function plAlarmCards(A){
   if(!A.length){$('plAlm').innerHTML='<div class="dim" style="font-size:14px">No active alarms. The plant is running inside its limits.</div>';return}
   const wr=!(ME&&(ME.role==='viewer'||ME.role==='staff'));
   $('plAlm').innerHTML=A.sort((a,b)=>(a.level==='critical'?0:1)-(b.level==='critical'?0:1)).map(a=>{
-    const f=a.fault?PL_FAULTS.find(x=>x[0]===a.fault):null, checks=PL_CHECKS[a.rule]||(f?f[3]:[]);
+    const f=a.fault?PL_FAULTS.find(x=>x[0]===a.fault):null, checks=PL_CHECKS[a.rule]||(typeof plAhuChecks==='function'&&plAhuChecks(a.rule))||(f?f[3]:[]);
     return '<div class="plalm '+(a.level==='critical'?'':'pl-warn')+'"><h4>'+esc(a.title)+'</h4><p>'+esc(a.detail)+'</p>'+
       '<div class="m">'+esc(a.equipment||'')+' · since '+esc(a.since||'')+(a.acked?' · acknowledged'+(a.acked_by?' by '+esc(a.acked_by):''):'')+(a.wo_id?' · work order #'+a.wo_id:'')+'</div>'+
       (f?'<p>'+esc(f[2])+'</p>':'')+(checks.length?'<ul>'+checks.map(c=>'<li>'+esc(c)+'</li>').join('')+'</ul>':'')+
@@ -479,9 +487,10 @@ async function plAck(id){
 async function plWo(id){
   const a=plAlarms().find(x=>String(x.id)===String(id));if(!a)return;
   if(String(id).startsWith('d-')){toast('Demo alarm. No work order made.');return}
-  const f=a.fault?PL_FAULTS.find(x=>x[0]===a.fault):null, checks=PL_CHECKS[a.rule]||(f?f[3]:[]);
+  const f=a.fault?PL_FAULTS.find(x=>x[0]===a.fault):null, checks=PL_CHECKS[a.rule]||(typeof plAhuChecks==='function'&&plAhuChecks(a.rule))||(f?f[3]:[]);
+  const ahu=String(a.rule).startsWith('ahu.')&&typeof ahuMeta==='function'?ahuMeta().find(x=>'ahu.'+x.dev===String(a.rule).split('.').slice(0,2).join('.')):null;
   try{
-    const r=await api('/workorders',{method:'POST',body:{title:a.title.slice(0,160),building:'Central plant',location:a.equipment||'',
+    const r=await api('/workorders',{method:'POST',body:{title:a.title.slice(0,160),building:ahu?ahu.building:'Central plant',location:ahu?ahu.tag+' · '+ahu.name:(a.equipment||''),
       category:a.rule==='tower'||a.rule==='coldcw'?'Cooling tower':'HVAC',priority:a.level==='critical'?'high':'normal',
       description:'From plant alarm at '+(a.since||'')+'.\n'+a.detail+'\n\nChecks:\n'+checks.map(c=>'- '+c).join('\n')}});
     const wo=r.workorder&&r.workorder.id;
@@ -528,5 +537,8 @@ function plSetupHtml(){
     '<div class="panel"><div class="eyebrow">Points</div><table class="plpts"><thead><tr><th>Point</th><th>BACnet</th><th class="n">Latest</th></tr></thead><tbody>'+
     (p.points||[]).map(x=>'<tr><td>'+esc(x.label)+'<div class="dim" style="font-size:11.5px">'+esc(x.key)+'</div></td><td>'+(x.device?esc(x.device+(x.object?' · '+x.object:'')):'')+'</td><td class="n">'+
       (x.ts?esc(x.text||(x.value==null?'':(+x.value).toFixed(1)+' '+(x.units||'')))+'<div class="dim" style="font-size:11.5px">'+plAgo(x.ts)+'</div>':'<span class="dim">none</span>')+'</td></tr>').join('')+
-    '</tbody></table></div>';
+    '</tbody></table></div>'+
+    '<div class="panel"><div class="eyebrow">Air handler points</div><p style="font-size:14px;margin-top:0">Send each AHU point as <b>ahu.&lt;device&gt;.&lt;point&gt;</b>, for example <b>ahu.101102.cd</b> for the AHU-2 cold deck. Single-zone units use <b>cd</b> and <b>cd_sp</b> for supply air.</p>'+
+    '<table class="plpts"><thead><tr><th>Point</th><th>Key</th></tr></thead><tbody>'+(p.ahu_points||[]).map(x=>'<tr><td>'+esc(x.label)+(x.units?' <span class="dim">('+esc(x.units)+')</span>':'')+'</td><td><b>'+esc(x.key)+'</b></td></tr>').join('')+'</tbody></table>'+
+    '<table class="plpts" style="margin-top:10px"><thead><tr><th>Unit</th><th>BAS device</th><th class="n">Last data</th></tr></thead><tbody>'+(p.ahus||[]).map(a=>'<tr><td>'+esc(a.tag)+'<div class="dim" style="font-size:11.5px">'+esc(a.name)+'</div></td><td>'+a.dev+'</td><td class="n">'+(a.ts?plAgo(a.ts):'<span class="dim">none</span>')+'</td></tr>').join('')+'</tbody></table></div>';
 }

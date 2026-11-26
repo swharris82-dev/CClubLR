@@ -120,7 +120,7 @@ const money = n => '$' + Math.round(n || 0).toLocaleString('en-US');
 const clubName = () => (db.prepare('SELECT name FROM properties WHERE id=1').get() || {}).name || 'Country Club of Little Rock';
 const b64ok = s => typeof s === 'string' && s.length < 2400000 && /^[A-Za-z0-9+/=]+$/.test(s);
 
-const DEFAULT_BUILDINGS = ['Clubhouse', 'Central Plant', 'Indoor Tennis Center', 'Fitness Center', 'Pool Pavilion',
+const DEFAULT_BUILDINGS = ['Clubhouse', 'Central Plant', 'Indoor Tennis Center', 'Tennis Dome', 'Fitness Center', 'Pool Pavilion',
   'Family & Teen Center', 'Golf Shop', 'Cart Barn', 'Maintenance Shop', 'Grounds / Course'];
 function buildings() {
   const all = db.prepare(`SELECT DISTINCT building FROM units WHERE building IS NOT NULL AND building != '' ORDER BY building`).all().map(r => r.building);
@@ -139,7 +139,8 @@ const DEFAULT_LAYOUT = {
   'Pool Pavilion':        { x: 130, y: 760, w: 200, h: 120 },
   'Family & Teen Center': { x: 130, y: 610, w: 170, h: 110 },
   'Fitness Center':       { x: 380, y: 760, w: 170, h: 110 },
-  'Indoor Tennis Center': { x: 600, y: 790, w: 280, h: 190 },
+  'Indoor Tennis Center': { x: 640, y: 750, w: 220, h: 90 },
+  'Tennis Dome':          { x: 590, y: 870, w: 330, h: 200 },
   'Golf Shop':            { x: 420, y: 300, w: 170, h: 100 },
   'Cart Barn':            { x: 640, y: 290, w: 170, h: 110 },
   'Maintenance Shop':     { x: 740, y: 110, w: 180, h: 110 },

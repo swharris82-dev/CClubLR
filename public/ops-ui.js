@@ -509,7 +509,8 @@ function userSheet(id){
     '<div class="dim" id="usHelp" style="margin-top:6px"></div>'+
     (locked?'<div class="dim" style="margin-top:10px">Only an admin can change an admin account.</div>':
       '<button class="btn full" style="margin-top:14px" onclick="saveUser('+u.id+')">'+(pending?'Approve':'Save')+'</button>'+
-      (u.id===ME.id?'':'<button class="btn-2 full" style="margin-top:8px" onclick="resetUser('+u.id+')">Reset password</button>'))+errBox('usMsg')+'</div>';
+      (u.id===ME.id?'':'<button class="btn-2 full" style="margin-top:8px" onclick="resetUser('+u.id+')">Reset password</button>'+
+        '<button class="btn-2 full btn-danger" style="margin-top:8px" onclick="removeUser('+u.id+')">'+(pending?'Decline signup':'Remove from team')+'</button>'))+errBox('usMsg')+'</div>';
   sheet(u.name,u.role_label,h);
   const help=()=>{ const r=TEAM.roles.find(x=>x.key===(locked?'admin':val('usR'))); $('usHelp').textContent=r?r.help:''; };
   if($('usR')) $('usR').onchange=help; help();
@@ -517,6 +518,14 @@ function userSheet(id){
 async function saveUser(id){
   try{ await api('/users/'+id,{method:'PUT',body:{name:val('usN'),role:val('usR'),dept:val('usD'),phone:val('usP'),active:$('usA').checked}});
     toast('Saved'); closeSheet(); loadTeam(); refreshAlerts(); loadMeta(); }
+  catch(e){ showErr('usMsg',e); }
+}
+async function removeUser(id){
+  const u=TEAM.users.find(x=>x.id===id); if(!u) return;
+  if(!confirm('Remove '+u.name+' from Clubhouse IQ?\n\nTheir sign-in is deleted. Work orders and logs they touched keep their name. Open work assigned to them goes back to unassigned.\n\nThis cannot be undone.')) return;
+  try{ const d=await api('/users/'+id,{method:'DELETE'});
+    toast(u.name+' removed'+(d.unassigned?' · '+d.unassigned+' work order'+(d.unassigned>1?'s':'')+' unassigned':''));
+    closeSheet(); TEAM.users=TEAM.users.filter(x=>x.id!==id); loadTeam(); refreshAlerts(); loadMeta(); }
   catch(e){ showErr('usMsg',e); }
 }
 async function resetUser(id){

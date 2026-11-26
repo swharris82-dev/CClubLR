@@ -207,6 +207,7 @@
 
 <script src="/ops-ui.js"></script>
 <script src="/round2-ui.js"></script>
+<script src="/map3d.js"></script>
 <script>
 let TOKEN = null; try{ TOKEN = localStorage.getItem('ciq_token'); }catch(e){}
 const store = { set:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}}, del:k=>{try{localStorage.removeItem(k);}catch(e){}} };
@@ -1455,6 +1456,7 @@ function showDemoBanner(){
 <script src="/live-ui.js"></script>
 <script src="/ls-ui.js"></script>
 <script src="/plant-ui.js"></script>
+<script src="/ahu-ui.js"></script>
 <script>document.querySelectorAll('.langBtn').forEach(function(b){b.textContent=window.LANG==='es'?'English':'Español';b.onclick=function(){toggleLang();};});</script>
 </body>
 </html>

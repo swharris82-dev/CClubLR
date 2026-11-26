@@ -232,6 +232,22 @@ const SAMPLE = [
     ]
   },
 
+  /* ================= TENNIS DOME ================= */
+  {
+    apt: 'BUBBLE-1', building: 'Tennis Dome',
+    system_type: 'Rooftop / package unit', manufacturer: 'Trane',
+    system_meta: { serves: 'Tennis dome heat, cooling and inflation air', tons: 'Verify' },
+    switch_present: 'unk', switch_functioning: 'unk',
+    notes: 'SAMPLE DATA. Bubble Unit 1. Dome stays up on this unit and Bubble Unit 2; check static pressure and the backup blower.'
+  },
+  {
+    apt: 'BUBBLE-2', building: 'Tennis Dome',
+    system_type: 'Rooftop / package unit', manufacturer: 'Trane',
+    system_meta: { serves: 'Tennis dome heat, cooling and inflation air', tons: 'Verify' },
+    switch_present: 'unk', switch_functioning: 'unk',
+    notes: 'SAMPLE DATA. Bubble Unit 2.'
+  },
+
   /* ================= FITNESS ================= */
   {
     apt: 'HP-FC-01', building: FIT,

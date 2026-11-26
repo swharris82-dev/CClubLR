@@ -973,6 +973,22 @@ function mount(app, auth, hooks = {}) {
       .run(clip(b.name, 80) || u.name, role, b.phone === undefined ? u.phone : clip(b.phone, 30), b.dept === undefined ? u.dept : clip(b.dept, 60), active, u.id);
     res.json({ user: publicUser(db.prepare('SELECT * FROM users WHERE id=?').get(u.id)) });
   });
+  /* Remove a person for good. History (work orders, logs, sign-offs) keeps
+     their name because those records store names, not account ids. Open work
+     still assigned to them goes back to the unassigned pile. */
+  app.delete('/api/users/:id', auth, (req, res) => {
+    const u = db.prepare('SELECT * FROM users WHERE id=?').get(req.params.id);
+    if (!u) return res.status(404).json({ error: 'Account not found' });
+    if (u.id === req.user.id) return res.status(400).json({ error: 'You cannot remove your own account' });
+    const err = canTouch(req.user, u, u.role); if (err) return res.status(403).json({ error: err });
+    if (u.role === 'admin' && adminsLeft(u.id) === 0) return res.status(400).json({ error: 'You need at least one active admin' });
+    const freed = db.transaction(() => {
+      const n = db.prepare(`UPDATE work_orders SET assigned_to='' WHERE assigned_to=? AND status IN ('new','open','in_progress','on_hold')`).run(u.name).changes;
+      db.prepare('DELETE FROM users WHERE id=?').run(u.id);
+      return n;
+    })();
+    res.json({ ok: true, unassigned: freed });
+  });
   app.post('/api/users/:id/reset', auth, (req, res) => {
     const u = db.prepare('SELECT * FROM users WHERE id=?').get(req.params.id);
     if (!u) return res.status(404).json({ error: 'Account not found' });

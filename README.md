@@ -30,9 +30,11 @@ Repository: github.com/swharris82-dev/CClubLR
 ## Features
 
 ### Property map
-- Schematic map of the club's buildings: Central Plant, Clubhouse, Indoor Tennis Center, Fitness Center, Pool Pavilion, Family & Teen Center, Golf Shop
-- Each building is colored by status: **critical**, **warning**, **busy**, or **OK**
-- Managers can drag buildings to arrange the map
+- 3D model of the grounds: Clubhouse, Central Plant (with a running cooling tower fan, tower plume and boiler stack), Tennis Dome, Indoor Tennis Center, Fitness Center, Pool Pavilion, Family & Teen Center, Golf Shop, Cart Barn, Maintenance Shop, and the course
+- Buildings rise into place when the map opens. Drag sideways to turn the grounds, pinch to zoom, two fingers to move, or use the buttons to turn, zoom, switch to a top view, or slowly orbit
+- Each building carries a floating status pin: **emergency** (pulsing), **needs attention**, **open work**, or **all clear**, with the open work order count. A dashed ring on the ground marks any building that needs work, and one button colors whole buildings by status
+- Tap a building and the camera flies to it, highlights it, and opens its equipment, open work, PM, and events
+- Managers arrange buildings on the 2D plan, and the 3D model follows it
 
 ### Equipment registry
 - Club-specific equipment types: boilers, cooling tower, pumps, plate heat exchanger, water treatment, air handling units, rooftop units, walk-in coolers, ice machines, commercial kitchen equipment, pool equipment
@@ -145,8 +147,10 @@ Options: report title, date range (30 days, 90 days, 12 months, this year), devi
 - More, then Plant. A live drawing of the plant: cooling tower and fan, York YK chiller with its OptiView status, CW and CHW pumps, PHX-1, the clubhouse loop, and the water-cooled walk-in. Pipes are colored by water temperature and show flow when the pump runs.
 - Alarms open and clear on their own: chiller shutdown (with the York panel message), short cycling, walk-in above 41°F, tower VFD not following the BAS, condenser water too cold, low chilled water delta T, PHX-1 on with no cooling, and the gateway going quiet. Each alarm lists what to check and turns into a work order with one tap. Active alarms also show on the dashboard alert list.
 - Readings, 4-hour trends, and a York fault lookup summarized from the service and operation manuals.
+- Air handlers: AHU-1 to AHU-11 and the Commons DOAS, each with a live drawing (OA damper, filter, spinning supply fan, hot and cold decks on the multizones) and a card showing mixed air, deck or supply temperature, valves and damper. Tap one for its full picture, output bars, readings (fan runtime, filter drop, CHW request), a 4-hour trend, its equipment record, and a one-tap work order.
+- Air handler alarms: supply fan commanded on but not running, heating and cooling at the same time, CHW valve wide open but not making the deck or supply temperature (with the plant CHW supply shown next to it), hot deck far over setpoint (the HW override seen on AHU-2), and the outside air damper closed while occupied. Each lists what to check from the 11/13 findings.
 - Data comes from a read-only BACnet gateway on the BAS network that posts to `/api/plant/ingest` with the `X-Plant-Key` header (`PLANT_INGEST_KEY`). The Gateway tab shows the point list, the BACnet object for each, and the last reading. Nothing in the app writes to the BAS.
-- Demo mode: with no gateway connected, the screen runs a simulation of the club's plant with seven scenarios taken from real events (flow switch trips, low temperature short cycling, the tower drive ignoring the BAS, low delta T, the walk-in losing condenser water, PHX-1 with no flow). Demo alarms never make real work orders.
+- Demo mode: with no gateway connected, the screen runs a simulation of the club's plant with eight scenarios taken from real events (flow switch trips, low temperature short cycling, the tower drive ignoring the BAS, low delta T, the walk-in losing condenser water, PHX-1 with no flow, the kitchen AHU fan failing). The demo air handlers start from the 11/13 findings on AHU-2 and AHU-5. Demo alarms never make real work orders.
 
 ### Android app
 - Installs like any other app
@@ -181,6 +185,11 @@ Permissions are enforced on the server, not just hidden in the screen.
 1. Open the **Team** tab.
 2. Tap **Add person**, enter name and email, and pick a role.
 3. Share the temporary password with them.
+
+### Remove a user (admin or manager)
+1. Open the **Team** tab and tap the person.
+2. Tap **Remove from team** (or **Decline signup** for a new signup) and confirm.
+3. Their sign-in is deleted. Work orders and logs they touched keep their name, and any open work assigned to them goes back to unassigned. To pause someone instead, uncheck **Account is on**.
 
 ### Fill in an air handler from its nameplate
 1. Open the unit (for example, AHU-2) from the building list.

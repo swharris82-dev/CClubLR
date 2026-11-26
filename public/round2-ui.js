@@ -55,18 +55,24 @@ function mapSvg(){
 }
 function drawMap(){
   const n=MAP.buildings, em=n.filter(b=>b.status==='critical').length, wa=n.filter(b=>b.status==='warn').length;
-  let h='<div class="panel" style="padding:10px"><div class="eyebrow" style="margin-bottom:6px">The grounds'+(MAPEDIT?' · arranging':'')+'</div>'+
-    '<div class="legend" style="margin-bottom:8px;flex-wrap:wrap;display:flex;gap:12px;font-size:11px;font-family:var(--mono)">'+
-    [['critical','Emergency'],['warn','Needs attention'],['busy','Open work'],['ok','All clear']].map(([k,l])=>'<span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+ST_FILL[k][0]+';border:2px solid '+ST_FILL[k][1]+';margin-right:4px;vertical-align:-1px"></i>'+l+'</span>').join('')+'</div>'+
-    '<div id="mapWrap" style="border-radius:4px;overflow:hidden;border:1px solid var(--edge)">'+mapSvg()+'</div>'+
-    '<div class="dim" style="margin-top:6px;font-size:11px">'+(MAPEDIT?'Drag buildings into place. Drag the dark corner to resize.':'Tap a building to see its equipment and open work. Schematic, not to scale.')+'</div>';
+  const legend='<div class="legend" style="margin-bottom:8px;flex-wrap:wrap;display:flex;gap:12px;font-size:11px;font-family:var(--mono)">'+
+    [['critical','Emergency'],['warn','Needs attention'],['busy','Open work'],['ok','All clear']].map(([k,l])=>'<span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+ST_FILL[k][1]+';margin-right:4px;vertical-align:-1px"></i>'+l+'</span>').join('')+'</div>';
+  const use3d=!MAPEDIT&&typeof map3dMount==='function'&&!!document.createElement('canvas').getContext;
+  let h='<div class="panel" style="padding:10px"><div class="eyebrow" style="margin-bottom:6px">The grounds'+(MAPEDIT?' · arranging the plan':'')+'</div>'+legend;
+  if(use3d) h+='<div id="map3dHost"></div><div class="dim" style="margin-top:6px;font-size:11px">Drag sideways to turn the grounds. Pinch to zoom, two fingers to move. Tap a building to fly in. Schematic, not to scale.</div>';
+  else h+='<div id="mapWrap" style="border-radius:4px;overflow:hidden;border:1px solid var(--edge)">'+mapSvg()+'</div>'+
+    '<div class="dim" style="margin-top:6px;font-size:11px">'+(MAPEDIT?'Drag buildings into place. Drag the dark corner to resize. The 3D view follows this plan.':'Tap a building to see its equipment and open work. Schematic, not to scale.')+'</div>';
   if(isMgr()) h+='<div class="acts" style="margin-top:10px">'+(MAPEDIT?'<button class="btn" onclick="saveMapLayout()">Save layout</button><button class="btn-2" onclick="MAPEDIT=false;loadMap()">Cancel</button><button class="btn-2" onclick="resetMapLayout()">Reset</button>':'<button class="btn-2" onclick="MAPEDIT=true;drawMap()">Arrange buildings</button>')+'</div>';
   h+='</div>';
   h+='<div class="panel"><div class="eyebrow">Buildings</div>'+n.slice().sort((a,b)=>({critical:0,warn:1,busy:2,ok:3}[a.status]-{critical:0,warn:1,busy:2,ok:3}[b.status])).map(b=>
-    '<div class="att" onclick="buildingSheet(\''+esc(b.name).replace(/'/g,"\\'")+'\')"><span class="lv" style="background:'+ST_FILL[b.status][1]+'"></span><div style="flex:1;min-width:0"><div class="t">'+esc(b.name)+'</div>'+
+    '<div class="att" onclick="mapPick(\''+esc(b.name).replace(/'/g,"\\'")+'\')"><span class="lv" style="background:'+ST_FILL[b.status][1]+'"></span><div style="flex:1;min-width:0"><div class="t">'+esc(b.name)+'</div>'+
     '<div class="m">'+[b.equipment+' equipment',b.open?b.open+' open':'',b.emergency?b.emergency+' emergency':'',b.pm_late?b.pm_late+' PM late':'',b.safety?b.safety+' safety':'',(b.events||[]).length?'event '+fmtDate(b.events[0].start_date):''].filter(Boolean).join(' · ')+'</div></div><span class="dim">›</span></div>').join('')+'</div>';
   $('mapBody').innerHTML=h;
-  wireMap();
+  if(use3d) map3dMount($('map3dHost'),MAP); else wireMap();
+}
+function mapPick(name){
+  if(!MAPEDIT&&typeof map3dFocus==='function'&&$('map3dHost')){ map3dFocus(name); setTimeout(()=>buildingSheet(name),750); }
+  else buildingSheet(name);
 }
 function svgPt(svg,e){ const p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
 function wireMap(){

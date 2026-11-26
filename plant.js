@@ -1,6 +1,7 @@
 /**
  * Central plant monitor: York YK chiller, cooling tower and VFD, PHX-1,
- * building chilled water loop, and the water-cooled walk-in.
+ * building chilled water loop, the water-cooled walk-in, and the main
+ * air handlers the plant serves (AHU-1 to AHU-11 and the Commons DOAS).
  *
  * Readings come in from the read-only BACnet gateway on the plant network.
  * The gateway POSTs to /api/plant/ingest with the X-Plant-Key header
@@ -48,6 +49,56 @@ const POINTS = [
 ].map(([key, label, device, object, units]) => ({ key, label, device, object, units }));
 const KEYS = new Set(POINTS.map(p => p.key));
 const STALE_MIN = 10;
+
+/* ---------------- main air handlers ----------------
+   BAS device numbers from the Compass AHU pages (AZ60 controllers).
+   mz = multizone with a hot deck and a cold deck. The gateway sends
+   points as  ahu.<device>.<point>, e.g. ahu.101102.cd  */
+const AHUS = [
+  { dev: 101101, tag: 'AHU-1', name: 'Ballroom', building: 'Clubhouse', mz: false },
+  { dev: 101102, tag: 'AHU-2', name: 'Upper administration', building: 'Clubhouse', mz: true },
+  { dev: 101103, tag: 'AHU-3', name: 'Adams, Washington, Jefferson', building: 'Clubhouse', mz: true },
+  { dev: 101104, tag: 'AHU-4', name: 'Garden Room, Centennial Bar, Presidents Lounge', building: 'Clubhouse', mz: true },
+  { dev: 101105, tag: 'AHU-5', name: 'Locker rooms, grills, veg prep', building: 'Clubhouse', mz: true },
+  { dev: 101106, tag: 'AHU-6', name: 'Pro Shop', building: 'Golf Shop', mz: false },
+  { dev: 101107, tag: 'AHU-7', name: 'Kitchen', building: 'Clubhouse', mz: false },
+  { dev: 101109, tag: 'AHU-9', name: 'Garden Room', building: 'Clubhouse', mz: false },
+  { dev: 101110, tag: 'AHU-10', name: "Men's Bar, Mixed Grill", building: 'Clubhouse', mz: false },
+  { dev: 101111, tag: 'AHU-11', name: 'Terrace Room', building: 'Clubhouse', mz: false },
+  { dev: 201101, tag: 'DOAS-1', name: 'Commons dedicated outside air', building: 'Fitness Center', mz: false }
+];
+// point, label, units. cd/cd_sp double as supply air on single-path units.
+const AHU_PTS = [
+  ['occ', 'Occupied', ''], ['fan_cmd', 'Supply fan command', ''], ['fan_status', 'Supply fan status', ''],
+  ['mat', 'Mixed air', '°F'], ['cd', 'Cold deck / supply air', '°F'], ['cd_sp', 'Cold deck / supply setpoint', '°F'],
+  ['hd', 'Hot deck', '°F'], ['hd_sp', 'Hot deck setpoint', '°F'], ['chw_vlv', 'CHW valve', '%'], ['hw_vlv', 'HW valve', '%'],
+  ['oa_dmp', 'OA damper', '%'], ['chw_req', 'Chilled water request', ''], ['space', 'Space / return air', '°F'],
+  ['sf_hours', 'Supply fan runtime', 'hr'], ['filter_dp', 'Filter pressure drop', 'in. wc']
+].map(([key, label, units]) => ({ key, label, units }));
+const AHU_KEYS = new Set();
+AHUS.forEach(a => AHU_PTS.forEach(p => AHU_KEYS.add(`ahu.${a.dev}.${p.key}`)));
+const validKey = k => KEYS.has(k) || AHU_KEYS.has(k);
+
+// Same rules run in the browser demo (public/plant-ui.js plAhuRules).
+function ahuHits(a, x, plant) {
+  const out = [], on = x.fan_status === 1, sp = x.cd_sp, dk = a.mz ? 'cold deck' : 'supply air';
+  if (x.fan_cmd === 1 && x.fan_status === 0)
+    out.push({ r: 'fan', level: 'critical', title: `${a.tag} supply fan commanded on but not running`, detail: `${a.name}. Fan status off with the command on.` });
+  if (on && x.chw_vlv >= 40 && x.hw_vlv >= 40)
+    out.push({ r: 'fight', level: 'warn', title: `${a.tag} heating and cooling at the same time`, detail: `CHW valve ${Math.round(x.chw_vlv)}%, HW valve ${Math.round(x.hw_vlv)}%. Look for an override on one of the valve outputs.` });
+  if (on && x.chw_vlv >= 95 && x.cd != null && sp != null && x.cd - sp > 8)
+    out.push({ r: 'nocool', level: 'warn', title: `${a.tag} not making its ${dk} temperature`, detail: `${dk[0].toUpperCase() + dk.slice(1)} ${f1(x.cd)}°F against ${f1(sp)}°F with the CHW valve wide open. Plant CHW supply ${f1(plant.chws)}°F.` });
+  if (on && a.mz && x.hd != null && x.hd_sp != null && x.hd - x.hd_sp > 10)
+    out.push({ r: 'hothd', level: 'warn', title: `${a.tag} hot deck ${Math.round(x.hd - x.hd_sp)}°F over setpoint`, detail: `Hot deck ${f1(x.hd)}°F, setpoint ${f1(x.hd_sp)}°F, HW valve ${x.hw_vlv == null ? '?' : Math.round(x.hw_vlv) + '%'}.` });
+  if (on && x.occ === 1 && x.oa_dmp != null && x.oa_dmp < 1)
+    out.push({ r: 'nooa', level: 'warn', title: `${a.tag} outside air damper closed while occupied`, detail: `OA damper ${Math.round(x.oa_dmp)}%. No fresh air to ${a.name}.` });
+  return out.map(h => Object.assign(h, { id: `ahu.${a.dev}.${h.r}`, eq: a.tag }));
+}
+function ahuValues(v, a) {
+  const x = {}; let ts = '';
+  AHU_PTS.forEach(p => { const r = v[`ahu.${a.dev}.${p.key}`]; x[p.key] = r ? num(r.value) : null; if (r && r.ts > ts) ts = r.ts; });
+  return { x, ts };
+}
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS plant_readings (
@@ -134,18 +185,20 @@ function evaluate() {
   x.starts2h = startsSince(iso(new Date(Date.now() - 2 * 3600e3)));
   const now = iso();
   const open = db.prepare('SELECT * FROM plant_alarms WHERE cleared_at IS NULL').all();
-  for (const r of RULES) {
-    const hit = r.test(x);
-    const cur = open.find(a => a.rule === r.id);
-    if (hit && !cur) {
-      db.prepare(`INSERT INTO plant_alarms (rule, level, equipment, title, detail, fault, started_at) VALUES (?,?,?,?,?,?,?)`)
-        .run(r.id, r.level, r.eq, hit.title, hit.detail, hit.fault || '', now);
-    } else if (hit && cur) {
-      db.prepare('UPDATE plant_alarms SET detail=?, title=? WHERE id=?').run(hit.detail, hit.title, cur.id);
-    } else if (!hit && cur) {
-      db.prepare('UPDATE plant_alarms SET cleared_at=? WHERE id=?').run(now, cur.id);
-    }
+  const hits = [];
+  for (const r of RULES) { const h = r.test(x); if (h) hits.push(Object.assign({ id: r.id, level: r.level, eq: r.eq }, h)); }
+  for (const a of AHUS) {
+    const { x: ax, ts } = ahuValues(v, a);
+    if (ts && (Date.now() - Date.parse(ts)) < STALE_MIN * 60000) hits.push(...ahuHits(a, ax, x));
   }
+  for (const h of hits) {
+    const cur = open.find(a => a.rule === h.id);
+    if (!cur) db.prepare(`INSERT INTO plant_alarms (rule, level, equipment, title, detail, fault, started_at) VALUES (?,?,?,?,?,?,?)`)
+      .run(h.id, h.level, h.eq, h.title, h.detail, h.fault || '', now);
+    else db.prepare('UPDATE plant_alarms SET detail=?, title=? WHERE id=?').run(h.detail, h.title, cur.id);
+  }
+  const hitIds = new Set(hits.map(h => h.id));
+  for (const cur of open) if (!hitIds.has(cur.rule)) db.prepare('UPDATE plant_alarms SET cleared_at=? WHERE id=?').run(now, cur.id);
   return x;
 }
 
@@ -170,6 +223,8 @@ function status() {
   return {
     live, last_ts: lastTs || null, gateway_key_set: (process.env.PLANT_INGEST_KEY || '').length >= 24,
     points: POINTS.map(p => Object.assign({}, p, v[p.key] ? { value: v[p.key].value, text: v[p.key].text, ts: v[p.key].ts } : {})),
+    ahu_points: AHU_PTS,
+    ahus: AHUS.map(a => { const { x, ts } = ahuValues(v, a); return Object.assign({}, a, { values: x, ts: ts || null }); }),
     starts_1h: startsSince(iso(new Date(Date.now() - 3600e3))),
     starts_2h: startsSince(iso(new Date(Date.now() - 2 * 3600e3))),
     alarms: db.prepare('SELECT * FROM plant_alarms WHERE cleared_at IS NULL ORDER BY level, started_at DESC').all(),
@@ -186,12 +241,12 @@ function mount(app, auth) {
     let rows = [];
     if (Array.isArray(b.readings)) rows = b.readings;
     else if (b.values && typeof b.values === 'object') rows = Object.entries(b.values).map(([key, value]) => ({ key, value, ts: b.ts }));
-    if (!rows.length || rows.length > 500) return res.status(400).json({ error: 'Send 1 to 500 readings' });
+    if (!rows.length || rows.length > 1000) return res.status(400).json({ error: 'Send 1 to 1000 readings' });
     const ins = db.prepare('INSERT INTO plant_readings (ts, key, value, text) VALUES (?,?,?,?)');
     let n = 0, skipped = [];
     db.transaction(() => {
       for (const r of rows) {
-        if (!r || !KEYS.has(r.key)) { skipped.push(r && r.key); continue; }
+        if (!r || !validKey(r.key)) { skipped.push(r && r.key); continue; }
         const t = r.ts && !isNaN(Date.parse(r.ts)) ? iso(new Date(r.ts)) : iso();
         const isText = r.key === 'fault_text';
         ins.run(t, r.key, isText ? null : num(r.value), isText ? String(r.value == null ? '' : r.value).slice(0, 120) : (r.text ? String(r.text).slice(0, 120) : null));
@@ -212,7 +267,7 @@ function mount(app, auth) {
   app.get('/api/plant/trend', auth, (req, res) => {
     if (req.user.role === 'staff') return res.status(403).json({ error: 'Not available for department staff' });
     const hours = Math.min(Math.max(parseInt(req.query.hours, 10) || 4, 1), 168);
-    const keys = String(req.query.keys || '').split(',').filter(k => KEYS.has(k)).slice(0, 6);
+    const keys = String(req.query.keys || '').split(',').filter(validKey).slice(0, 6);
     if (!keys.length) return res.json({ series: {} });
     const bucket = hours > 24 ? 1800 : 300;
     const since = iso(new Date(Date.now() - hours * 3600e3));
@@ -249,4 +304,4 @@ function alerts(user) {
   } catch (e) { return []; }
 }
 
-module.exports = { mount, alerts, POINTS, RULES, evaluate };
+module.exports = { mount, alerts, POINTS, RULES, AHUS, AHU_PTS, ahuHits, evaluate };
