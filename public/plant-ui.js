@@ -407,7 +407,7 @@ function drawPlant(){
     '<button class="btn-2" id="plPauseB" onclick="PLPAUSE=!PLPAUSE;this.textContent=PLPAUSE?\'Resume\':\'Pause\'">'+(PLPAUSE?'Resume':'Pause')+'</button>'+
     (PL&&PL.live?'<button class="btn-2" onclick="plSetMode(\'live\')">Back to live</button>':'');
   h+='</div>';
-  if(PLMODE==='demo')h+='<div class="note" style="background:#FBF1DC;color:#6B4A00"><b>Simulated data</b><span id="plScenNote">'+esc(PL_SCEN.find(s=>s[0]===PLSCEN)[2])+'</span> '+(PL&&PL.live?'':'No gateway is sending plant data yet, so this screen runs a demo of the club\'s plant.')+'</div>';
+  if(PLMODE==='demo')h+='<div class="note" style="background:#FBF1DC;color:#6B4A00"><b>Simulated data</b><span id="plScenNote">'+esc(PL_SCEN.find(s=>s[0]===PLSCEN)[2])+'</span> '+(PL&&PL.live?'':(PL&&PL.last_ts?'<b style="display:block;margin-top:4px">The plant gateway last sent data '+esc(plAgo(PL.last_ts))+' ('+esc(new Date(PL.last_ts).toLocaleString())+'). Check that the HVAC PC is on and the Clubhouse IQ Gateway task is running. This screen shows the demo until it reports again.</b>':'No gateway is sending plant data yet, so this screen runs a demo of the club\'s plant.'))+'</div>';
   if(PLVIEW==='plant'){
     h+='<div class="plfig" id="plFig">'+plSvg()+'</div><div class="plhint">Swipe the drawing sideways to see the whole plant.</div>'+
       '<div class="panel"><div class="eyebrow">Active alarms <span id="plAlmN"></span></div><div id="plAlm"></div></div>'+
