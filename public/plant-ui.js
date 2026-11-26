@@ -399,8 +399,7 @@ function drawPlant(){
   const nav=[['plant','Plant'],['ahus','Air handlers'],['fcus','Fan coils'],['efs','Exhaust fans'],['refs','Walk-ins'],['zones','Zones'],['bas','All BAS'],['trends','Trends'],['faults','York faults'],['setup','Gateway']];
   let h='<div class="filters">'+nav.map(([k,l])=>'<div class="'+(PLVIEW===k?'on':'')+'" onclick="PLVIEW=\''+k+'\';plBuilt=\'\';drawPlant()">'+l+'</div>').join('')+'</div>';
   h+='<div class="plbar">';
-  if(PLMODE==='live')h+='<span class="plmode pl-live"><i></i>Live from the BAS</span><span class="dim" style="font-size:13px" id="plWhen"></span>'+
-    '<button class="btn-2" onclick="plSetMode(\'demo\')">Demo mode</button>';
+  if(PLMODE==='live')h+='<span class="plmode pl-live"><i></i>Live from the BAS</span><span class="dim" style="font-size:13px" id="plWhen"></span>';
   else h+='<span class="plmode pl-demo"><i></i>Demo mode</span><span class="dim" style="font-size:13px" id="plWhen"></span>'+
     '<select id="plScen" aria-label="Demo scenario" onchange="plScenario(this.value)">'+PL_SCEN.map(([k,n])=>'<option value="'+k+'"'+(k===PLSCEN?' selected':'')+'>'+n+'</option>').join('')+'</select>'+
     '<select aria-label="Speed" onchange="PLSPEED=+this.value">'+[[1,'1 min/sec'],[5,'5 min/sec'],[15,'15 min/sec']].map(([v,l])=>'<option value="'+v+'"'+(v===PLSPEED?' selected':'')+'>'+l+'</option>').join('')+'</select>'+
@@ -534,7 +533,8 @@ async function plChart(){
   t.s.forEach(([k,,c])=>{const s=series[k]||[];if(s.length>1)o+='<polyline fill="none" stroke="'+c+'" stroke-width="2.2" points="'+s.map(p=>X(p[0]).toFixed(1)+','+Y(p[1]).toFixed(1)).join(' ')+'"/>'});
   svg.innerHTML=o;
 }
-function plSetupHtml(){
+function plSetupHtml(){ return plSetupHtml0()+plDemoSwitchHtml(); }
+function plSetupHtml0(){
   const p=PL||{},url=location.origin+'/api/plant/ingest';
   return '<div class="panel"><div class="eyebrow">Gateway status</div>'+
     '<div style="font-size:14px;line-height:1.7">Last reading: <b>'+(p.last_ts?plAgo(p.last_ts):'none yet')+'</b><br>Plant key on the server: <b>'+(p.gateway_key_set?'set':'not set')+'</b>'+
@@ -548,4 +548,9 @@ function plSetupHtml(){
     '<div class="panel"><div class="eyebrow">Air handler points</div><p style="font-size:14px;margin-top:0">Send each AHU point as <b>ahu.&lt;device&gt;.&lt;point&gt;</b>, for example <b>ahu.101102.cd</b> for the AHU-2 cold deck. Single-zone units use <b>cd</b> and <b>cd_sp</b> for supply air.</p>'+
     '<table class="plpts"><thead><tr><th>Point</th><th>Key</th></tr></thead><tbody>'+(p.ahu_points||[]).map(x=>'<tr><td>'+esc(x.label)+(x.units?' <span class="dim">('+esc(x.units)+')</span>':'')+'</td><td><b>'+esc(x.key)+'</b></td></tr>').join('')+'</tbody></table>'+
     '<table class="plpts" style="margin-top:10px"><thead><tr><th>Unit</th><th>BAS device</th><th class="n">Last data</th></tr></thead><tbody>'+(p.ahus||[]).map(a=>'<tr><td>'+esc(a.tag)+'<div class="dim" style="font-size:11.5px">'+esc(a.name)+'</div></td><td>'+a.dev+'</td><td class="n">'+(a.ts?plAgo(a.ts):'<span class="dim">none</span>')+'</td></tr>').join('')+'</tbody></table></div>';
+}
+
+function plDemoSwitchHtml(){
+  return '<div class="panel"><div class="eyebrow">Demo mode</div><p style="font-size:14px;margin-top:0">Runs a simulation of the plant with real fault scenarios, for training or showing the app. It does not change any real data.</p>'+
+    (PLMODE==='live'?'<button class="btn-2" onclick="PLVIEW=\'plant\';plSetMode(\'demo\')">Switch to demo mode</button>':(PL&&PL.live?'<button class="btn" onclick="PLVIEW=\'plant\';plSetMode(\'live\')">Back to live data</button>':'<span class="dim" style="font-size:13px">Demo runs on its own until the gateway sends data.</span>'))+'</div>';
 }
