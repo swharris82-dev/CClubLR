@@ -144,7 +144,10 @@ function ahuMini(a){
   s+='<rect x="4" y="22" width="26" height="42" rx="3" fill="#18325a" stroke="#3b5a85"/>';
   for(let i=0;i<4;i++) s+='<line id="am-'+d+'-dmp'+i+'" x1="13" y1="'+(29+i*9)+'" x2="21" y2="'+(29+i*9)+'" stroke="#8DB8E0" stroke-width="2.2" stroke-linecap="round" style="transform-box:fill-box;transform-origin:center;transition:transform .8s"/>';
   // duct + filter
-  s+='<rect x="30" y="26" width="'+(mz?92:150)+'" height="34" fill="#13294b" stroke="#2f4f7a"/>';
+  s+='<defs><linearGradient id="ahCab'+d+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d4c78"/><stop offset="1" stop-color="#132a4c"/></linearGradient>'+
+     '<pattern id="ahFin'+d+'" width="3" height="6" patternUnits="userSpaceOnUse"><line x1="1.5" y1="0" x2="1.5" y2="6" stroke="#dfeaf7" stroke-width=".7" opacity=".7"/></pattern></defs>';
+  s+='<rect x="30" y="26" width="'+(mz?92:150)+'" height="34" fill="url(#ahCab'+d+')" stroke="#4d6e9a"/>';
+  s+='<rect x="64" y="64" width="14" height="10" rx="2" fill="#5a7fae" stroke="#8DB8E0"/><line x1="71" y1="64" x2="78" y2="56" stroke="#8DB8E0" stroke-width="1.4"/>';
   s+='<rect x="40" y="26" width="8" height="34" fill="url(#ahHatch'+d+')" stroke="#5d7aa3"/>';
   s+='<defs><pattern id="ahHatch'+d+'" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#2b4670"/><line x1="0" y1="0" x2="0" y2="4" stroke="#7f9cc4" stroke-width="1.4"/></pattern></defs>';
   // fan
@@ -154,12 +157,12 @@ function ahuMini(a){
   if(mz){
     s+='<path d="M122 26 L150 10 L250 10 L250 36 L150 36 L136 43" fill="#13294b" stroke="#2f4f7a"/>';
     s+='<path d="M122 60 L150 76 L250 76 L250 50 L150 50 L136 43" fill="#13294b" stroke="#2f4f7a"/>';
-    s+='<rect id="am-'+d+'-hc" x="156" y="12" width="10" height="22" rx="2" fill="#e2603a"/><rect id="am-'+d+'-cc" x="156" y="52" width="10" height="22" rx="2" fill="#3d8fd6"/>';
+    s+='<rect id="am-'+d+'-hc" x="156" y="12" width="12" height="22" rx="2" fill="#e2603a"/><rect x="156" y="12" width="12" height="22" fill="url(#ahFin'+d+')"/><rect id="am-'+d+'-cc" x="156" y="52" width="12" height="22" rx="2" fill="#3d8fd6"/><rect x="156" y="52" width="12" height="22" fill="url(#ahFin'+d+')"/>';
     s+='<path id="am-'+d+'-fh" class="ah-flow" d="M96 40 L140 23 L246 23"/><path id="am-'+d+'-fc" class="ah-flow" d="M96 46 L140 63 L246 63"/>';
     s+='<text id="am-'+d+'-hdT" x="240" y="27" text-anchor="end" font-size="12" font-weight="800" fill="#fff">--</text><text id="am-'+d+'-cdT" x="240" y="67" text-anchor="end" font-size="12" font-weight="800" fill="#fff">--</text>';
     s+='<text x="172" y="27" font-size="9" fill="#a9bdd6">HOT</text><text x="172" y="67" font-size="9" fill="#a9bdd6">COLD</text>';
   }else{
-    s+='<rect id="am-'+d+'-cc" x="128" y="28" width="10" height="30" rx="2" fill="#3d8fd6"/>';
+    s+='<rect id="am-'+d+'-cc" x="126" y="28" width="14" height="30" rx="2" fill="#3d8fd6"/><rect x="126" y="28" width="14" height="30" fill="url(#ahFin'+d+')"/>';
     s+='<path d="M180 26 L250 26 L250 60 L180 60" fill="#13294b" stroke="#2f4f7a"/>';
     s+='<path id="am-'+d+'-fc" class="ah-flow" d="M34 43 L246 43"/>';
     s+='<text x="150" y="38" font-size="9" fill="#a9bdd6">SUPPLY</text><text id="am-'+d+'-cdT" x="244" y="48" text-anchor="end" font-size="13" font-weight="800" fill="#fff">--</text>';
@@ -227,11 +230,13 @@ function ahuOpen(dev){
     '<div class="panel"><div class="plbar" style="justify-content:space-between;margin-bottom:4px"><div class="eyebrow" style="margin:0">Last 4 hours</div>'+
       '<select aria-label="Trend" onchange="AHTR=this.value;ahuChart()"><option value="temps"'+(AHTR==='temps'?' selected':'')+'>Air temperatures</option><option value="outs"'+(AHTR==='outs'?' selected':'')+'>Valves and damper</option></select></div>'+
       '<div class="pllegend" id="ahLeg"></div><div class="plchart" style="height:220px"><svg id="ahChart"></svg></div></div>'+
+    '<div class="panel"><div class="eyebrow">BAS points'+(typeof isMgr==='function'&&isMgr()?' and mapping':'')+'</div><div id="eqDetPts" class="dim" style="font-size:13px">'+(PLMODE==='demo'?'Shows every point on this controller once the BAS scanner sends data.':'Loading…')+'</div></div>'+
     '<div class="acts" style="margin-bottom:12px">'+(typeof canWork==='function'&&canWork()?'<button class="btn-2" onclick="ahuRecord(\''+esc(a.tag)+'\')">Equipment record</button>':'')+
       (wr?'<button class="btn" onclick="ahuWo('+dev+')">Make work order</button>':'')+'</div>'+
     '<div id="ahDet"></div>';
   sheet(a.tag+' · '+a.name,a.building+(a.mz?' · multizone':'')+' · BAS '+a.dev,h);
   ahuDetRefresh(plAlarms()); ahuChart();
+  if(PLMODE!=='demo'&&typeof eqPts==='function') eqPts('ahu.'+dev);
 }
 function ahuBig(a){
   const d='big', mz=a.mz;
@@ -245,20 +250,24 @@ function ahuBig(a){
   s+='<defs><pattern id="abH" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#2b4670"/><line x1="0" y1="0" x2="0" y2="6" stroke="#7f9cc4" stroke-width="2"/></pattern></defs>';
   s+='<rect x="104" y="80" width="16" height="100" fill="url(#abH)" stroke="#5d7aa3"/><text x="112" y="198" text-anchor="middle" font-size="11" fill="#a9bdd6">FILTER</text><text id="ab-dpT" x="112" y="212" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">--</text>';
   s+='<text x="150" y="98" text-anchor="middle" font-size="11" fill="#a9bdd6">MIXED</text><text id="ab-matT" x="150" y="116" text-anchor="middle" font-size="16" fill="#fff" font-weight="800">--</text>';
-  s+='<circle cx="222" cy="130" r="38" fill="#0b1a33" stroke="#5d7aa3" stroke-width="3"/>';
+  s+='<defs><pattern id="abFin" width="4" height="8" patternUnits="userSpaceOnUse"><line x1="2" y1="0" x2="2" y2="8" stroke="#eaf2fb" stroke-width=".9" opacity=".65"/></pattern>'+
+     '<radialGradient id="abHub"><stop offset="0" stop-color="#1d3a63"/><stop offset="1" stop-color="#081428"/></radialGradient></defs>';
+  s+='<path d="M170 168 L205 150 M178 178 L212 160" stroke="#8DB8E0" stroke-width="2"/>';
+  s+='<rect x="150" y="164" width="34" height="20" rx="3" fill="#5a7fae" stroke="#8DB8E0"/><text x="167" y="177" text-anchor="middle" font-size="8" fill="#fff">MOTOR</text>';
+  s+='<circle cx="222" cy="130" r="38" fill="url(#abHub)" stroke="#5d7aa3" stroke-width="3"/>';
   s+='<g id="ab-fan" class="pl-spin stop" style="animation-duration:.8s">'+[0,51,103,154,206,257,309].map(r=>'<path d="M222 130 L222 98 Q236 106 227 130Z" fill="#8DB8E0" transform="rotate('+r+' 222 130)"/>').join('')+'</g><circle cx="222" cy="130" r="7" fill="#cfe0f5"/>';
   s+='<text id="ab-fanT" x="222" y="190" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">--</text>';
   if(mz){
     s+='<path d="M300 80 L350 40 L630 40 L630 110 L350 110 L320 130" fill="#13294b" stroke="#2f4f7a" stroke-width="2"/>';
     s+='<path d="M300 180 L350 220 L630 220 L630 150 L350 150 L320 130" fill="#13294b" stroke="#2f4f7a" stroke-width="2"/>';
-    s+='<rect id="ab-hc" x="370" y="44" width="22" height="62" rx="4" fill="#e2603a"/><rect id="ab-cc" x="370" y="154" width="22" height="62" rx="4" fill="#3d8fd6"/>';
+    s+='<rect id="ab-hc" x="370" y="44" width="22" height="62" rx="4" fill="#e2603a"/><rect x="370" y="44" width="22" height="62" fill="url(#abFin)"/><rect id="ab-cc" x="370" y="154" width="22" height="62" rx="4" fill="#3d8fd6"/><rect x="370" y="154" width="22" height="62" fill="url(#abFin)"/>';
     s+='<text x="381" y="32" text-anchor="middle" font-size="11" fill="#a9bdd6">HW COIL</text><text x="381" y="240" text-anchor="middle" font-size="11" fill="#a9bdd6">CHW COIL</text>';
     s+='<path id="ab-fh" class="ah-flow" style="stroke-width:3.5;stroke-dasharray:1 18" d="M262 118 L340 75 L620 75"/><path id="ab-fc" class="ah-flow" style="stroke-width:3.5;stroke-dasharray:1 18" d="M262 142 L340 185 L620 185"/>';
     s+='<text x="610" y="62" text-anchor="end" font-size="11" fill="#a9bdd6">HOT DECK</text><text id="ab-hdT" x="610" y="100" text-anchor="end" font-size="20" fill="#fff" font-weight="800">--</text>';
     s+='<text x="610" y="172" text-anchor="end" font-size="11" fill="#a9bdd6">COLD DECK</text><text id="ab-cdT" x="610" y="210" text-anchor="end" font-size="20" fill="#fff" font-weight="800">--</text>';
     s+='<text id="ab-hsp" x="404" y="100" font-size="11" fill="#a9bdd6">--</text><text id="ab-csp" x="404" y="210" font-size="11" fill="#a9bdd6">--</text>';
   }else{
-    s+='<rect id="ab-cc" x="330" y="84" width="24" height="92" rx="4" fill="#3d8fd6"/><text x="342" y="198" text-anchor="middle" font-size="11" fill="#a9bdd6">CHW COIL</text>';
+    s+='<rect id="ab-cc" x="330" y="84" width="24" height="92" rx="4" fill="#3d8fd6"/><rect x="330" y="84" width="24" height="92" fill="url(#abFin)"/><text x="342" y="198" text-anchor="middle" font-size="11" fill="#a9bdd6">CHW COIL</text>';
     s+='<path id="ab-fc" class="ah-flow" style="stroke-width:3.5;stroke-dasharray:1 18" d="M262 130 L620 130"/>';
     s+='<text x="610" y="104" text-anchor="end" font-size="11" fill="#a9bdd6">SUPPLY AIR</text><text id="ab-cdT" x="610" y="160" text-anchor="end" font-size="22" fill="#fff" font-weight="800">--</text><text id="ab-csp" x="610" y="176" text-anchor="end" font-size="11" fill="#a9bdd6">--</text>';
   }

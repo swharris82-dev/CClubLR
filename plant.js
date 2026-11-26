@@ -77,7 +77,8 @@ const AHU_PTS = [
 ].map(([key, label, units]) => ({ key, label, units }));
 const AHU_KEYS = new Set();
 AHUS.forEach(a => AHU_PTS.forEach(p => AHU_KEYS.add(`ahu.${a.dev}.${p.key}`)));
-const validKey = k => KEYS.has(k) || AHU_KEYS.has(k);
+const bas = require('./bas');
+const validKey = k => KEYS.has(k) || AHU_KEYS.has(k) || bas.validKey(k);
 
 // Same rules run in the browser demo (public/plant-ui.js plAhuRules).
 function ahuHits(a, x, plant) {
@@ -191,6 +192,7 @@ function evaluate() {
     const { x: ax, ts } = ahuValues(v, a);
     if (ts && (Date.now() - Date.parse(ts)) < STALE_MIN * 60000) hits.push(...ahuHits(a, ax, x));
   }
+  hits.push(...bas.hits(v));
   for (const h of hits) {
     const cur = open.find(a => a.rule === h.id);
     if (!cur) db.prepare(`INSERT INTO plant_alarms (rule, level, equipment, title, detail, fault, started_at) VALUES (?,?,?,?,?,?,?)`)
@@ -207,6 +209,9 @@ function prune() {
   if (Date.now() - lastPrune < 3600e3) return;
   lastPrune = Date.now();
   db.prepare(`DELETE FROM plant_readings WHERE ts < ?`).run(iso(new Date(Date.now() - 90 * 86400e3)));
+  // Air side and BAS equipment points are many; keep three weeks of those.
+  db.prepare(`DELETE FROM plant_readings WHERE ts < ? AND (key LIKE 'ahu.%' OR key LIKE 'fcu.%' OR key LIKE 'ef.%' OR key LIKE 'ref.%' OR key LIKE 'zone.%' OR key LIKE 'dev.%')`)
+    .run(iso(new Date(Date.now() - 21 * 86400e3)));
 }
 
 function keyOk(req) {
@@ -224,6 +229,8 @@ function status() {
     live, last_ts: lastTs || null, gateway_key_set: (process.env.PLANT_INGEST_KEY || '').length >= 24,
     points: POINTS.map(p => Object.assign({}, p, v[p.key] ? { value: v[p.key].value, text: v[p.key].text, ts: v[p.key].ts } : {})),
     ahu_points: AHU_PTS,
+    equip: bas.equipment(v),
+    equip_roles: bas.ROLES,
     ahus: AHUS.map(a => { const { x, ts } = ahuValues(v, a); return Object.assign({}, a, { values: x, ts: ts || null }); }),
     starts_1h: startsSince(iso(new Date(Date.now() - 3600e3))),
     starts_2h: startsSince(iso(new Date(Date.now() - 2 * 3600e3))),
@@ -234,6 +241,7 @@ function status() {
 
 /* ---------------- routes ---------------- */
 function mount(app, auth) {
+  bas.mount(app, auth, { keyOk, evaluate, prune });
   // Gateway feed. Not behind staff login: uses the plant key instead.
   app.post('/api/plant/ingest', (req, res) => {
     if (!keyOk(req)) return res.status(401).json({ error: 'Bad or missing plant key' });
