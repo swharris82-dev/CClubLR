@@ -73,7 +73,7 @@ if os.name == "nt":
     except Exception:  # noqa: BLE001
         pass
 
-VERSION = "2026-11-27b"
+VERSION = "2026-11-27c"
 CACHE = os.path.join(HERE, "bas_scan_cache.json")
 LOG = os.path.join(HERE, "bas_scan.log")
 
@@ -360,12 +360,11 @@ class Scanner:
         n, err = await self.rp(addr, oid, "object-list", 0)
         if n is None:
             raise RuntimeError(f"object-list: {err}")
-        out = []
-        for i in range(1, min(int(n), self.cfg["max_objects"]) + 1):
-            o, err = await self.rp(addr, oid, "object-list", i)
-            if o is not None:
-                out.append(o)
-        return out
+        # MS/TP controllers (480-byte APDU, no segmentation) can't send the whole
+        # list at once; read the entries several at a time instead of one by one.
+        idx = list(range(1, min(int(n), self.cfg["max_objects"]) + 1))
+        res = await asyncio.gather(*[self.rp(addr, oid, "object-list", i) for i in idx])
+        return [o for o, _err in res if o is not None]
 
     async def read_names(self, dev, info):
         addr = info["address"]
@@ -380,35 +379,49 @@ class Scanner:
         else:
             objs = [o for o in await self.object_list(addr, dev) if str(o[0]) in SHORT][: self.cfg["max_objects"]]
         pts = {}
-        for i in range(0, len(objs), 12):
-            chunk = objs[i:i + 12]
-            plist = []
-            for o in chunk:
-                plist += [o, ["object-name", "description", "units"] if str(o[0]).startswith("analog") else ["object-name", "description"]]
-            res, err = await self.rpm(addr, plist)
+
+        def props(o):
+            return ["object-name", "description", "units"] if str(o[0]).startswith("analog") else ["object-name", "description"]
+
+        def take(res):
+            for o, prop, _, val in res:
+                p = pts.setdefault(short_obj(o), {"name": "", "units": ""})
+                if str(prop) == "object-name" and val is not None:
+                    p["name"] = str(val)
+                elif str(prop) == "description" and val is not None:
+                    p["desc"] = str(val).strip()
+                elif str(prop) == "units" and val is not None:
+                    p["units"] = unit_str(val)
+
+        async def one(o):
+            res, _ = await self.rpm(addr, [o, props(o)])
             if res is not None:
-                for o, prop, _, val in res:
-                    p = pts.setdefault(short_obj(o), {"name": "", "units": ""})
-                    if str(prop) == "object-name" and val is not None:
-                        p["name"] = str(val)
-                    elif str(prop) == "description" and val is not None:
-                        p["desc"] = str(val).strip()
-                    elif str(prop) == "units" and val is not None:
-                        p["units"] = unit_str(val)
+                take(res)
+                return
+            p = pts.setdefault(short_obj(o), {"name": "", "units": ""})
+            v, _ = await self.rp(addr, o, "object-name")
+            if v is not None:
+                p["name"] = str(v)
+            d, _ = await self.rp(addr, o, "description")
+            if d is not None:
+                p["desc"] = str(d).strip()
+            if str(o[0]).startswith("analog"):
+                u, _ = await self.rp(addr, o, "units")
+                if u is not None:
+                    p["units"] = unit_str(u)
+
+        async def chunk(c):
+            # small RPM chunks fit an MS/TP reply; on failure fall back per object
+            plist = []
+            for o in c:
+                plist += [o, props(o)]
+            res, _ = await self.rpm(addr, plist)
+            if res is not None:
+                take(res)
             else:
-                info["rpm"] = False
-                for o in chunk:
-                    v, _ = await self.rp(addr, o, "object-name")
-                    p = pts.setdefault(short_obj(o), {"name": "", "units": ""})
-                    if v is not None:
-                        p["name"] = str(v)
-                    d, _ = await self.rp(addr, o, "description")
-                    if d is not None:
-                        p["desc"] = str(d).strip()
-                    if str(o[0]).startswith("analog"):
-                        u, _ = await self.rp(addr, o, "units")
-                        if u is not None:
-                            p["units"] = unit_str(u)
+                await asyncio.gather(*[one(o) for o in c])
+
+        await asyncio.gather(*[chunk(objs[i:i + 4]) for i in range(0, len(objs), 4)])
         # Alerton VLC object names are generic ("AI 00"); Compass puts the real
         # label in the description ("Supply Air Temperature"). Use it when set.
         for p in pts.values():
@@ -424,11 +437,12 @@ class Scanner:
         out = {}
         t0 = time.time()
         use_rpm = info.get("rpm", True)
-        for i in range(0, len(objs), 20):
+        step = 20 if info.get("ip") else 10
+        for i in range(0, len(objs), step):
             if time.time() - t0 > self.cfg["device_budget_sec"]:
                 log.info("Device %s: time budget hit after %d of %d points", dev, len(out), len(objs))
                 break
-            chunk = objs[i:i + 20]
+            chunk = objs[i:i + step]
             ids = [ObjectIdentifier(f"{LONG[o.split()[0]]},{o.split()[1]}") for o in chunk]
             res = None
             if use_rpm:
@@ -436,8 +450,6 @@ class Scanner:
                 for o in ids:
                     plist += [o, ["present-value"]]
                 res, err = await self.rpm(addr, plist)
-                if res is None:
-                    use_rpm = info["rpm"] = False
             if res is not None:
                 for o, prop, _, val in res:
                     out[short_obj(o)] = to_value(val)
