@@ -624,6 +624,7 @@ function plAlarmCards(A){
         (a.wo_id?'':'<button class="btn" onclick="plWo(\''+a.id+'\')">Make work order</button>')+'</div>':'')+'</div>';
   }).join('');
 }
+function plTile(l,v,u,cls){return '<div class="pltile '+(cls?'pl-'+cls:'')+'"><div class="l">'+l+'</div><span class="v">'+v+'</span><span class="u">'+(u||'')+'</span></div>'}
 /* Tiles are built once, then updated in place so numbers can count and a
    small trace of the last two hours sits behind each one (demo history). */
 function plTiles(V){
