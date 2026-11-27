@@ -20,6 +20,7 @@ address) and can be overridden in bas_scan.json next to this file.
 """
 import asyncio
 import json
+import re
 import logging
 import logging.handlers
 import os
@@ -72,7 +73,7 @@ if os.name == "nt":
     except Exception:  # noqa: BLE001
         pass
 
-VERSION = "2026-11-27"
+VERSION = "2026-11-27b"
 CACHE = os.path.join(HERE, "bas_scan_cache.json")
 LOG = os.path.join(HERE, "bas_scan.log")
 
@@ -110,6 +111,8 @@ DEFAULTS = {
     "probe_timeout": 3.0,
     "probe_concurrency": 8,
 }
+
+GENERIC = re.compile(r"^(AI|AO|AV|BI|BO|BV|MI|MO|MV|MSI|MSO|MSV)[\s-]*\d+$", re.I)
 
 UNITS = {
     "degreesFahrenheit": "°F", "degreesCelsius": "°C", "percent": "%",
@@ -381,13 +384,15 @@ class Scanner:
             chunk = objs[i:i + 12]
             plist = []
             for o in chunk:
-                plist += [o, ["object-name", "units"] if str(o[0]).startswith("analog") else ["object-name"]]
+                plist += [o, ["object-name", "description", "units"] if str(o[0]).startswith("analog") else ["object-name", "description"]]
             res, err = await self.rpm(addr, plist)
             if res is not None:
                 for o, prop, _, val in res:
                     p = pts.setdefault(short_obj(o), {"name": "", "units": ""})
                     if str(prop) == "object-name" and val is not None:
                         p["name"] = str(val)
+                    elif str(prop) == "description" and val is not None:
+                        p["desc"] = str(val).strip()
                     elif str(prop) == "units" and val is not None:
                         p["units"] = unit_str(val)
             else:
@@ -397,10 +402,19 @@ class Scanner:
                     p = pts.setdefault(short_obj(o), {"name": "", "units": ""})
                     if v is not None:
                         p["name"] = str(v)
+                    d, _ = await self.rp(addr, o, "description")
+                    if d is not None:
+                        p["desc"] = str(d).strip()
                     if str(o[0]).startswith("analog"):
                         u, _ = await self.rp(addr, o, "units")
                         if u is not None:
                             p["units"] = unit_str(u)
+        # Alerton VLC object names are generic ("AI 00"); Compass puts the real
+        # label in the description ("Supply Air Temperature"). Use it when set.
+        for p in pts.values():
+            d = p.pop("desc", "")
+            if d and not GENERIC.match(d):
+                p["name"] = d
         info["points"] = pts
         info["names_at"] = time.time()
 

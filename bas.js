@@ -134,9 +134,9 @@ const AHU_DEVS = new Set([101101, 101102, 101103, 101104, 101105, 101106, 101107
 /* AHU point names on the Alerton AZ60 pages -> plant.js ahu.<dev>.<key> */
 const AHU_PAT = [
   ['occ', /^(?!.*(set\s*point|stpt|offset)).*(\bocc(upied)?\b|system mode)/i, ['BV', 'BI', 'MSV']],
-  ['fan_cmd', /supply fan.*(cmd|command|start)|\bsf\b.*cmd/i, ['BO', 'BV']],
+  ['fan_cmd', /supply fan.*(cmd|command|start|enable)|\bsf\b.*(cmd|enable)/i, ['BO', 'BV']],
   ['fan_status', /supply fan.*(status|proof)|\bsf\b.*(sts|status)/i, ['BI', 'BV']],
-  ['cd_sp', /cold deck.*(set\s*point|stpt|sp)|supply.*(set\s*point|stpt)|clg.*sat.*sp/i, ['AV']],
+  ['cd_sp', /cold deck.*(set\s*point|stpt|sp)|supply.*(set\s*point|stpt)|clg.*sat.*sp|current supply temp.*\bsp\b/i, ['AV']],
   ['hd_sp', /hot deck.*(set\s*point|stpt|sp)/i, ['AV']],
   ['cd', /cold deck|supply air t|discharge air t|\bsat\b|\bdat\b/i, ['AI', 'AV'], true],
   ['hd', /hot deck/i, ['AI', 'AV'], true],
