@@ -1610,3 +1610,26 @@ Object.assign(window.ES_DICT, {
 "Demo": "Demo", "BAS in control": "El BAS controla", "setpoint": "punto de ajuste", "waiting for a reading": "esperando lectura", "Save": "Guardar",
 "Device": "Dispositivo", "Object": "Objeto"
 });
+
+// ---- Equipment and Diagnose v3 (Nov 27) ----
+Object.assign(window.ES_DICT, {
+"Browse all equipment": "Ver todo el equipo", "All equipment": "Todo el equipo", "Safety device issue": "Problema de dispositivo de seguridad",
+"With service history": "Con historial de servicio", "Poor condition": "Mala condición", "All types": "Todos los tipos", "All buildings": "Todos los edificios",
+"Air handling": "Manejo de aire", "Heat pumps": "Bombas de calor", "Refrigeration": "Refrigeración", "Water and pool": "Agua y piscina", "Other": "Otro",
+"Sort by tag": "Ordenar por etiqueta", "Most service": "Más servicio", "Oldest first": "Más antiguo primero", "Worst condition": "Peor condición",
+"No equipment matches.": "Ningún equipo coincide.", "Safety": "Seguridad", "Diagnose": "Diagnosticar", "Live video": "Video en vivo", "Work order": "Orden de trabajo",
+"Log a job": "Registrar trabajo", "Location, type and details": "Ubicación, tipo y detalles", "Diagnosing": "Diagnosticando", "No equipment picked": "Ningún equipo elegido",
+"Pick the unit for sharper answers. It brings in its history and the plant status.": "Elija la unidad para respuestas más precisas. Trae su historial y el estado de la planta.",
+"Pick": "Elegir", "Change": "Cambiar", "Sees what you point at": "Ve lo que usted apunta", "Hears you, talks back": "Le escucha y responde",
+"Reads plates and fault codes": "Lee placas y códigos de falla", "Knows the unit history": "Conoce el historial de la unidad", "Checks central plant status": "Revisa la planta central",
+"Saves the call to history": "Guarda la llamada en el historial", "Start live video": "Iniciar video en vivo", "Live video not set up": "Video en vivo no configurado",
+"Uses the camera and microphone. Works best on Wi-Fi or a strong LTE signal.": "Usa la cámara y el micrófono. Funciona mejor con Wi-Fi o buena señal LTE.",
+"Written diagnosis": "Diagnóstico escrito", "No signal, or noisy room? Describe it and get ranked causes, the first move, and what to bring.": "¿Sin señal o mucho ruido? Descríbalo y reciba causas ordenadas, el primer paso y qué llevar.",
+"No heat": "Sin calefacción", "No cooling": "Sin enfriamiento", "Not keeping setpoint": "No mantiene el punto de ajuste", "Fan not running": "Ventilador no funciona",
+"Tripped or locked out": "Disparado o bloqueado", "Short cycling": "Ciclos cortos", "Leaking water": "Fuga de agua", "Noisy or vibrating": "Ruido o vibración",
+"Odor or smoke": "Olor o humo", "Ice on coil": "Hielo en el serpentín", "High head pressure": "Alta presión de descarga", "Won't start": "No arranca",
+"Run diagnosis": "Ejecutar diagnóstico", "Reading the equipment record and history": "Leyendo el registro y el historial del equipo", "Checking central plant status": "Revisando el estado de la planta central",
+"Ranking likely causes": "Ordenando las causas probables", "Writing the first move and truck list": "Escribiendo el primer paso y la lista para el camión",
+"Still not sure?": "¿Todavía no está seguro?", "Show it on camera. The live assistant picks up from this description.": "Muéstrelo en cámara. El asistente en vivo sigue desde esta descripción.",
+"Live video diagnosis": "Diagnóstico por video en vivo"
+});
