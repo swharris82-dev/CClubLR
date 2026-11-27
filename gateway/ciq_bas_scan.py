@@ -42,7 +42,37 @@ try:
 except Exception:  # older bacpypes3
     pass
 
-VERSION = "2026-11-26"
+# Windows: when a request goes to a host that isn't running BACnet, it answers
+# "port unreachable" and Windows then reports WSAECONNRESET on the UDP socket.
+# After that, replies stop arriving (the 11/27 sweep found 0 devices this way).
+# Turn that reporting off right after bacpypes3 opens its socket.
+if os.name == "nt":
+    try:
+        from bacpypes3.ipv4 import IPv4DatagramServer as _IDS
+
+        _orig_set_local = _IDS.set_local_transport_protocol
+
+        def _set_local_no_connreset(self, address, task):
+            _orig_set_local(self, address, task)
+            try:
+                import ctypes
+                from ctypes import wintypes
+                sk = self.local_transport.get_extra_info("socket")
+                ws2 = ctypes.WinDLL("ws2_32")
+                ws2.WSAIoctl.argtypes = [ctypes.c_size_t, wintypes.DWORD, ctypes.c_void_p, wintypes.DWORD,
+                                         ctypes.c_void_p, wintypes.DWORD, ctypes.POINTER(wintypes.DWORD),
+                                         ctypes.c_void_p, ctypes.c_void_p]
+                flag, ret = wintypes.BOOL(False), wintypes.DWORD(0)
+                ws2.WSAIoctl(sk.fileno(), 0x9800000C, ctypes.byref(flag), ctypes.sizeof(flag), None, 0,
+                             ctypes.byref(ret), None, None)  # SIO_UDP_CONNRESET off
+            except Exception:  # noqa: BLE001
+                pass
+
+        _IDS.set_local_transport_protocol = _set_local_no_connreset
+    except Exception:  # noqa: BLE001
+        pass
+
+VERSION = "2026-11-27"
 CACHE = os.path.join(HERE, "bas_scan_cache.json")
 LOG = os.path.join(HERE, "bas_scan.log")
 
@@ -58,13 +88,13 @@ DEFAULTS = {
     # Plant controllers the gateway already reads point by point. The VLX
     # has 3,112 points with generic names, so only these objects are read.
     "device_objects": {"120": ["AI 2009", "BO 2009"]},
-    "skip_devices": [5001, 505002],
-    # IP routers to the MS/TP trunks. The VLX routes networks 101 and 102.
+    "skip_devices": [0, 5001, 505002],  # 0 = Compass workstation on this PC
+    # IP routers to MS/TP trunks. Found 11/27: only the VLX (.198) routes, to
+    # network 102 (chiller 5001, tower drive 505002, read by the gateway).
     "routers": ["192.168.1.198"],
-    # MS/TP networks to sweep. Alerton device numbers are network*1000+MAC
-    # (101105 = network 101, MAC 105), so these cover the AHU, zone, fan coil
-    # and exhaust fan controllers.
-    "networks": [101, 102, 201],
+    # MS/TP networks to sweep MAC by MAC. Empty by default: a blind sweep loads
+    # the VLX router and starves the gateway's chiller reads.
+    "networks": [],
     "max_mac": 127,
     # Also look for IP controllers on the BAS subnet (.1 to .254).
     "ip_sweep": True,
@@ -74,11 +104,11 @@ DEFAULTS = {
     "names_every_hours": 24,       # re-read object names once a day
     "discover_every_hours": 24,
     "device_budget_sec": 75,       # MS/TP is slow; cap time per device per cycle
-    "max_objects": 800,
+    "max_objects": 3000,
     "read_timeout": 6.0,
     "concurrency": 6,
     "probe_timeout": 3.0,
-    "probe_concurrency": 12,
+    "probe_concurrency": 8,
 }
 
 UNITS = {

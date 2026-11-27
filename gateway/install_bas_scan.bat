@@ -47,11 +47,14 @@ timeout /t 2 /nobreak >nul
 
 if exist "%GW%\ciq_bas_scan.py" copy /y "%GW%\ciq_bas_scan.py" "%GW%\ciq_bas_scan.prev.py" >nul
 copy /y "%SRC%ciq_bas_scan.py" "%GW%\ciq_bas_scan.py" >nul
-if exist "%SRC%bas_scan.json" if not exist "%GW%\bas_scan.json" copy /y "%SRC%bas_scan.json" "%GW%\bas_scan.json" >nul
+if exist "%GW%\bas_scan.json" copy /y "%GW%\bas_scan.json" "%GW%\bas_scan.prev.json" >nul
+if exist "%SRC%bas_scan.json" copy /y "%SRC%bas_scan.json" "%GW%\bas_scan.json" >nul
+REM forget the old discovery so new settings take effect now
+if exist "%GW%\bas_scan_cache.json" del /q "%GW%\bas_scan_cache.json"
 echo copied files >> "%OUT%"
 
 echo  Finding BAS controllers and reading their points.
-echo  This first scan can take 10 to 20 minutes. Leave this window open.
+echo  This first scan can take 5 to 15 minutes. Leave this window open.
 echo.
 pushd "%GW%"
 "%PY%" -I ciq_bas_scan.py test --send > "%RES%\bas_scan_test.txt" 2>&1

@@ -1,10 +1,25 @@
 {
   "_note": "Optional settings for ciq_bas_scan.py. Server URL, plant key and the PC's BAS address come from the gateway's config.json.",
-  "routers": ["192.168.1.198"],
-  "networks": [101, 102, 201],
+  "routers": [
+    "192.168.1.198"
+  ],
+  "networks": [],
   "ip_sweep": true,
-  "device_objects": {"120": ["AI 2009", "BO 2009"]},
-  "skip_devices": [5001, 505002],
-  "extra_devices": {},
-  "interval_sec": 300
+  "device_objects": {
+    "120": [
+      "AI 2009",
+      "BO 2009"
+    ]
+  },
+  "skip_devices": [
+    0,
+    5001,
+    505002
+  ],
+  "extra_devices": {
+    "101": "192.168.1.197",
+    "201": "192.168.1.199"
+  },
+  "interval_sec": 300,
+  "_found_2026_11_27": "BACnet/IP controllers: 101 at .197 (2124 objects), 120 VLX at .198, 201 Ascent at .199 (2575 objects). Only .198 routes (network 102). Device 0 is Compass on this PC; skipped."
 }

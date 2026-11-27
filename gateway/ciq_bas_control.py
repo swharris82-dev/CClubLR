@@ -45,7 +45,37 @@ try:
 except Exception:
     pass
 
-VERSION = "ctl-2026-11-26"
+# Windows: when a request goes to a host that isn't running BACnet, it answers
+# "port unreachable" and Windows then reports WSAECONNRESET on the UDP socket.
+# After that, replies stop arriving (the 11/27 sweep found 0 devices this way).
+# Turn that reporting off right after bacpypes3 opens its socket.
+if os.name == "nt":
+    try:
+        from bacpypes3.ipv4 import IPv4DatagramServer as _IDS
+
+        _orig_set_local = _IDS.set_local_transport_protocol
+
+        def _set_local_no_connreset(self, address, task):
+            _orig_set_local(self, address, task)
+            try:
+                import ctypes
+                from ctypes import wintypes
+                sk = self.local_transport.get_extra_info("socket")
+                ws2 = ctypes.WinDLL("ws2_32")
+                ws2.WSAIoctl.argtypes = [ctypes.c_size_t, wintypes.DWORD, ctypes.c_void_p, wintypes.DWORD,
+                                         ctypes.c_void_p, wintypes.DWORD, ctypes.POINTER(wintypes.DWORD),
+                                         ctypes.c_void_p, ctypes.c_void_p]
+                flag, ret = wintypes.BOOL(False), wintypes.DWORD(0)
+                ws2.WSAIoctl(sk.fileno(), 0x9800000C, ctypes.byref(flag), ctypes.sizeof(flag), None, 0,
+                             ctypes.byref(ret), None, None)  # SIO_UDP_CONNRESET off
+            except Exception:  # noqa: BLE001
+                pass
+
+        _IDS.set_local_transport_protocol = _set_local_no_connreset
+    except Exception:  # noqa: BLE001
+        pass
+
+VERSION = "ctl-2026-11-27"
 LOG = os.path.join(HERE, "bas_control.log")
 DEFAULTS = {
     "server_url": "",
