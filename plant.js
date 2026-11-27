@@ -45,7 +45,15 @@ const POINTS = [
   ['phx_on', 'PHX-1 free cooling', 120, '', ''],
   ['phx_chw_in', 'PHX-1 CHW in', 120, '', '°F'],
   ['phx_chw_out', 'PHX-1 CHW out', 120, '', '°F'],
-  ['walkin_temp', 'Walk-in cooler', 120, '', '°F']
+  ['walkin_temp', 'Walk-in cooler', 120, '', '°F'],
+  ['hws', 'Heating hot water supply', 120, '', '°F'],
+  ['hwr', 'Heating hot water return', 120, '', '°F'],
+  ['hw_gpm', 'Heating hot water flow', 120, '', 'gpm'],
+  ['hw_pump', 'Hot water pump', 120, '', ''],
+  ['boiler1_on', 'Boiler B-1 enabled', 120, '', ''],
+  ['boiler2_on', 'Boiler B-2 enabled', 120, '', ''],
+  ['boiler1_fire', 'Boiler B-1 firing rate', 120, '', '%'],
+  ['boiler2_fire', 'Boiler B-2 firing rate', 120, '', '%']
 ].map(([key, label, device, object, units]) => ({ key, label, device, object, units }));
 const KEYS = new Set(POINTS.map(p => p.key));
 const STALE_MIN = 10;
@@ -172,6 +180,8 @@ const RULES = [
     } },
   { id: 'phx', level: 'critical', eq: 'PHX-1 heat exchanger',
     test: x => (x.phx_on === 1 && x.chws > 50) ? { title: 'PHX-1 on but chilled water is not cooling', detail: `CHW supply ${f1(x.chws)}°F. PHX-1 CHW in/out ${f1(x.phx_chw_in)}/${f1(x.phx_chw_out)}°F.` } : null },
+  { id: 'boiler', level: 'critical', eq: 'Boilers B-1 / B-2',
+    test: x => (x.hw_pump === 1 && x.hws != null && x.hws < 120) ? { title: 'Hot water supply low: boilers not making heat', detail: `HW supply ${f1(x.hws)}°F, flow ${x.hw_gpm == null ? '?' : Math.round(x.hw_gpm) + ' gpm'}. Hot decks and fan coils on this loop lose heat.` } : null },
   { id: 'stale', level: 'warn', eq: 'Plant gateway',
     test: x => x.staleMin != null && x.staleMin > STALE_MIN ? { title: 'No plant data from the gateway', detail: `Last reading ${Math.round(x.staleMin)} minutes ago. Check the gateway box and the BAS network.` } : null }
 ];
