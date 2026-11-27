@@ -20,6 +20,7 @@ address) and can be overridden in bas_scan.json next to this file.
 """
 import asyncio
 import json
+import math
 import re
 import logging
 import logging.handlers
@@ -73,7 +74,7 @@ if os.name == "nt":
     except Exception:  # noqa: BLE001
         pass
 
-VERSION = "2026-11-27c"
+VERSION = "2026-11-27d"
 CACHE = os.path.join(HERE, "bas_scan_cache.json")
 LOG = os.path.join(HERE, "bas_scan.log")
 
@@ -237,7 +238,9 @@ def to_value(v):
     if isinstance(v, bool):
         return 1 if v else 0
     try:
-        return round(float(v), 3)
+        f = float(v)
+        # NaN / Infinity are not valid JSON; the server rejects the whole batch
+        return round(f, 3) if math.isfinite(f) else None
     except Exception:
         return s[:60]
 
@@ -498,7 +501,13 @@ def post(cfg, report):
                 log.info("Sent %d devices: %s", len(report[i:i + 20]), r.read()[:200].decode(errors="replace"))
         except Exception as e:  # noqa: BLE001
             ok = False
-            log.info("Send failed: %s", e)
+            detail = ""
+            try:
+                detail = e.read()[:300].decode(errors="replace")  # HTTPError body says why
+            except Exception:  # noqa: BLE001
+                pass
+            log.info("Send failed: %s %s", e, detail)
+            print(f"Send failed for devices {[d['dev'] for d in report[i:i + 20]]}: {e} {detail}", flush=True)
     return ok
 
 
@@ -542,7 +551,10 @@ async def main():
                 print(f"{d:>8}  {a}")
             return
     if mode == "test":
-        rep = await sc.scan(names_due=True)
+        # reuse names read in the last day (a full name read of 58 MS/TP
+        # controllers takes about 20 minutes); devices without names still get them
+        oldest = min((i.get("names_at", 0) for i in sc.cache.get("devices", {}).values() if i.get("points")), default=0)
+        rep = await sc.scan(names_due=time.time() - oldest > cfg["names_every_hours"] * 3600)
         text = summary(rep, sc.cache)
         print(text)
         os.makedirs(os.path.join(HERE, "..", "update", "results"), exist_ok=True)
