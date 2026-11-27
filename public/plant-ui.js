@@ -160,6 +160,11 @@ function plStep(warm){
   if(sc==='flow'&&st%90>=20&&st%90<30)s.flow=Math.max(0,s.flow*(st%90<22?.4:.02));
   if(sc==='walkin'){s.run=false;s.fault='';s.cwp=false}
   if(sc==='phx'){s.run=false;s.fault='';s.phx=true}
+  // operator overrides from the Controls screen (demo)
+  const O=s.ov||{};
+  if(O.chw_pump===0){s.chwp=false;s.flow=0}else if(O.chw_pump===1)s.chwp=true;
+  if(O.cw_pump===0)s.cwp=false;else if(O.cw_pump===1)s.cwp=true;
+  if(O.chiller_en===0&&s.run){s.run=false;plDemoLog('Chiller stopped: enable turned off from Controls')}
   if(s.ar>0)s.ar--;
   if(s.run){
     if(s.flow<150)plTrip('LEAVING CHILLED LIQUID - FLOW SWITCH OPEN');
@@ -167,7 +172,7 @@ function plStep(warm){
   }else if(s.fault){
     const ok=s.fault.indexOf('FLOW')>=0?s.flow>300:s.lchw>s.sp+2;
     if(ok&&s.ar===0)plStart();
-  }else if(sc!=='walkin'&&sc!=='phx')plStart();
+  }else if(sc!=='walkin'&&sc!=='phx'&&O.chiller_en!==0)plStart();
   const dT=s.flow>50?s.load*24/s.flow:0;
   if(s.run){
     if(sc==='lowtemp')s.lchw+=-0.35+plR(.05);else s.lchw+=(s.sp-s.lchw)*.25+plR(.15);
@@ -175,18 +180,23 @@ function plStep(warm){
   }else{s.lchw+=(54-s.lchw)*.08+plR(.1);s.fla=0}
   s.chwr=s.lchw+dT+(s.run?0:.2);s.chws=s.lchw+.4;
   if(sc==='phx'){s.chws=Math.min(56,(s._chws||46)+.09);s._chws=s.chws;s.lchw=s.chws-.4;s.chwr=s.chws+2.2}else s._chws=0;
-  const tsp=Math.max(70,s.oaWb+5),target=s.run||s.phx?tsp:s.oaDb-3;
+  const tsp=Math.max(s.twMin==null?70:s.twMin,s.oaWb+(s.appr==null?5:s.appr)),target=s.run||s.phx?tsp:s.oaDb-3;
   s.sig+=(plClamp((s.ecwt-tsp)*22+50,0,100)-s.sig)*.3;
+  if(O.tower_fan_sig!=null)s.sig=O.tower_fan_sig;
+  if(O.tower_fan_en===0)s.sig=0;
   if(sc==='tower'){s.sig=3+plR(.5);s.hz=60;s.ecwt+=((s.oaWb+3)-s.ecwt)*.08}
-  else{s.hz=plClamp(s.sig*.6,0,60)+plR(.3);if(s.hz<0)s.hz=0;s.ecwt+=(target-s.ecwt)*.15+plR(.2)}
+  else{s.hz=plClamp(s.sig*.6,0,60)+plR(.3);if(s.hz<0)s.hz=0;
+    // with the fan held, water temperature follows fan speed, not the setpoint
+    const tgt=O.tower_fan_sig!=null||O.tower_fan_en===0?s.oaWb+3+(1-s.hz/60)*16:target;
+    s.ecwt+=((s.run||s.phx?tgt:target)-s.ecwt)*.15+plR(.2)}
   s.lcwt=s.ecwt+(s.run?3+7*s.load/220:.4);
   if(sc==='walkin')s.walk=Math.min(55,s.walk+.13+plR(.02));else s.walk+=(36-s.walk)*.2+plR(.25);
   // heating hot water: outdoor reset, lead/lag boilers on firing rate
-  const hwSp=plClamp(160-(s.oaDb-40)*1.1,125,160);
-  s.hwp=true;s.hwFlow=60+plR(1.5);
-  if(sc==='boiler'&&st>=8){s.hwFlow=0;s.bLock=true}else s.bLock=false;
+  const hwMax=s.hwMax==null?160:s.hwMax,hwSp=plClamp(hwMax-(s.oaDb-40)*1.1,Math.min(120,hwMax),hwMax);
+  s.hwp=O.hw_pump!==0;s.hwFlow=s.hwp?60+plR(1.5):0;
+  if((sc==='boiler'&&st>=8)||!s.hwp){s.hwFlow=0;s.bLock=true}else s.bLock=false;
   const need=plClamp((hwSp-s.hws)*9+(78-s.oaDb)*2.2+18,0,100);
-  if(s.bLock){s.b1=0;s.b2=0}
+  if(s.bLock||O.boiler_en===0){s.b1=0;s.b2=0}
   else{s.b1+=(Math.min(need,100)-s.b1)*.35;s.b2+=((need>70?(need-70)*3:0)-s.b2)*.35;s.b1=plClamp(s.b1+plR(1),0,100);s.b2=plClamp(s.b2,0,100);if(s.b2<4)s.b2=0}
   const heat=(s.b1+s.b2)*.05;
   s.hws+=heat-(s.hws-70)*.012-(s.bLock?.9:0)+plR(.15);s.hws=plClamp(s.hws,58,185);
@@ -562,7 +572,7 @@ function plStartTimers(){
 }
 function plSetMode(m){PLFORCE=m;PLMODE=m;if(m==='demo'&&!PLSIM)plSimReset();plBuilt='';drawPlant();plStartTimers()}
 function drawPlant(){
-  const nav=[['plant','Plant'],['ahus','Air handlers'],['fcus','Fan coils'],['efs','Exhaust fans'],['refs','Walk-ins'],['zones','Zones'],['bas','All BAS'],['trends','Trends'],['faults','York faults'],['setup','Gateway']];
+  const nav=[['plant','Plant'],['controls','Controls'],['ahus','Air handlers'],['fcus','Fan coils'],['efs','Exhaust fans'],['refs','Walk-ins'],['zones','Zones'],['bas','All BAS'],['trends','Trends'],['faults','York faults'],['setup','Gateway']];
   let h='<div class="filters">'+nav.map(([k,l])=>'<div class="'+(PLVIEW===k?'on':'')+'" onclick="PLVIEW=\''+k+'\';plBuilt=\'\';drawPlant()">'+l+'</div>').join('')+'</div>';
   h+='<div class="plbar">';
   if(PLMODE==='live')h+='<span class="plmode pl-live"><i></i>Live from the BAS</span><span class="dim" style="font-size:13px" id="plWhen"></span>';
@@ -579,6 +589,8 @@ function drawPlant(){
       (typeof ahuStripHtml==='function'?ahuStripHtml():'')+
       '<div class="panel"><div class="eyebrow">Readings</div><div class="pltiles" id="plTiles"></div></div>'+
       '<div class="panel"><div class="eyebrow">'+(PLMODE==='demo'?'Demo event log':'Alarm history')+'</div><div class="pllog" id="plLog"></div></div>';
+  }else if(PLVIEW==='controls'&&typeof ctlViewHtml==='function'){
+    h+=ctlViewHtml();
   }else if(PLVIEW==='ahus'){
     h+=ahuViewHtml();
   }else if(typeof eqViewHtml==='function'&&['fcus','efs','refs','zones','bas'].includes(PLVIEW)){

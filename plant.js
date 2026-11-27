@@ -252,6 +252,7 @@ function status() {
 /* ---------------- routes ---------------- */
 function mount(app, auth) {
   bas.mount(app, auth, { keyOk, evaluate, prune });
+  require('./controls').mount(app, auth, keyOk);
   // Gateway feed. Not behind staff login: uses the plant key instead.
   app.post('/api/plant/ingest', (req, res) => {
     if (!keyOk(req)) return res.status(401).json({ error: 'Bad or missing plant key' });

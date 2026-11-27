@@ -1,0 +1,8 @@
+{
+  "_note": "Settings for ciq_bas_control.py. Server URL, plant key and this PC's BAS address come from the gateway's config.json. Set allow_writes to false to stop every write from Clubhouse IQ at once (values are still read).",
+  "allow_writes": true,
+  "allow_devices": [120],
+  "addresses": {"120": "192.168.1.198"},
+  "priority": 8,
+  "poll_sec": 10
+}
